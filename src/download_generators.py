@@ -215,9 +215,13 @@ def _try_download_gen_info(cache_path: Path) -> pd.DataFrame | None:
 def _enrich_with_gen_info(generators: pd.DataFrame, gen_info: pd.DataFrame) -> pd.DataFrame:
     """Enrich registration list data with location/REZ/voltage from Gen Info."""
     enrichment_cols = []
-    for col in ["LOCATION", "REZ_NAME", "VOLTAGE_KV", "UNIT_STATUS"]:
+    # NAMEPLATE_MW: prefer Gen Info nameplate over Registration List reg cap
+    prefer_enriched = set()
+    for col in ["LOCATION", "REZ_NAME", "VOLTAGE_KV", "UNIT_STATUS", "NAMEPLATE_MW"]:
         if col in gen_info.columns:
             enrichment_cols.append(col)
+            if col == "NAMEPLATE_MW":
+                prefer_enriched.add(col)
 
     if not enrichment_cols:
         return generators
@@ -225,12 +229,15 @@ def _enrich_with_gen_info(generators: pd.DataFrame, gen_info: pd.DataFrame) -> p
     enrich = gen_info[["DUID"] + enrichment_cols].drop_duplicates(subset="DUID", keep="first")
     result = generators.merge(enrich, on="DUID", how="left", suffixes=("", "_enriched"))
 
-    # Use enriched values where original is missing
     for col in enrichment_cols:
         enriched_col = f"{col}_enriched"
         if enriched_col in result.columns:
             if col in result.columns:
-                result[col] = result[col].fillna(result[enriched_col])
+                if col in prefer_enriched:
+                    # Prefer enriched value, fall back to original
+                    result[col] = result[enriched_col].fillna(result[col])
+                else:
+                    result[col] = result[col].fillna(result[enriched_col])
             else:
                 result[col] = result[enriched_col]
             result = result.drop(columns=[enriched_col])
