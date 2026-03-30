@@ -182,8 +182,8 @@ function detectColumns(keys) {
   });
 
   // ELI projected
-  if (keys.includes('ELI_CURTAILMENT_NEAR')) defs.push({key:'ELI_CURTAILMENT_NEAR', label:'2026-28', group:'eli'});
-  if (keys.includes('ELI_CURTAILMENT_MED')) defs.push({key:'ELI_CURTAILMENT_MED', label:'2030-35', group:'eli'});
+  if (keys.includes('ELI_CURTAILMENT_NEAR')) defs.push({key:'ELI_CURTAILMENT_NEAR', label:'Near (26-28)', group:'eli'});
+  if (keys.includes('ELI_CURTAILMENT_MED')) defs.push({key:'ELI_CURTAILMENT_MED', label:'Med (29-35)', group:'eli'});
 
   // MLF
   keys.filter(k => k.startsWith('MLF_')).sort().forEach(k => {
@@ -345,7 +345,7 @@ function renderTable() {
   }
 
   // Group header row + column header row
-  const groupLabels = {actual:'Actual Curtailment', eli:'Projected Curtailment', mlf:'Marginal Loss Factor', 'isp-c':'ISP Curtailment', 'isp-o':'ISP Offloading'};
+  const groupLabels = {actual:'Actual Curtailment', eli:'ELI Projected', mlf:'Marginal Loss Factor', 'isp-c':'ISP Curtailment Forecast', 'isp-o':'ISP Offloading Forecast'};
   let groupRow = '<tr><th class="group-header" rowspan="2"><input type="checkbox" class="cb" id="selectAll" ' + (allChecked ? 'checked' : '') + '></th>';
   let colRow = '<tr>';
   let i = 0;
@@ -410,8 +410,10 @@ function renderTable() {
         const fg = textColorForBg(val, false);
         cells.push(`<td class="val-cell" style="background:${bg};color:${fg}">${(val * 100).toFixed(1)}%</td>`);
       } else if (raw === 'N/A' || (d.group !== 'meta' && !isNum && (raw === '' || raw === undefined || raw === null))) {
-        const display = (row.REZ === 'N' && (d.group === 'isp-c' || d.group === 'isp-o')) ? 'N/A' : '-';
-        cells.push(`<td class="na-cell">${display}</td>`);
+        const isNonRezIsp = row.REZ === 'N' && (d.group === 'isp-c' || d.group === 'isp-o');
+        const display = isNonRezIsp ? 'N/A' : '-';
+        const tip = isNonRezIsp ? ' title="ISP forecasts are only available for generators within a Renewable Energy Zone (REZ)"' : '';
+        cells.push(`<td class="na-cell"${tip}>${display}</td>`);
       } else if (d.key === 'NAMEPLATE_MW' && isNum) {
         cells.push(`<td>${val.toFixed(0)}</td>`);
       } else if (d.key === 'FUEL_TYPE') {
