@@ -81,19 +81,7 @@ ELI_APPENDIX_URLS = {
     ),
 }
 
-# NEMWEB SCADA data for actual curtailment calculation
-NEMWEB_SCADA_URL_TEMPLATE = (
-    "https://nemweb.com.au/Data_Archive/Wholesale_Electricity/MMSDM/"
-    "{year}/MMSDM_{year}_{month:02d}/MMSDM_Historical_Data_SQLLoader/DATA/"
-    "PUBLIC_ARCHIVE%23DISPATCH_UNIT_SCADA%23FILE01%23{year}{month:02d}010000.zip"
-)
-
-# UIGF (Unconstrained Intermittent Generation Forecast)
-NEMWEB_UIGF_URL_TEMPLATE = (
-    "https://nemweb.com.au/Data_Archive/Wholesale_Electricity/MMSDM/"
-    "{year}/MMSDM_{year}_{month:02d}/MMSDM_Historical_Data_SQLLoader/DATA/"
-    "PUBLIC_ARCHIVE%23INTERMITTENT_GEN_FCST_DATA%23FILE01%23{year}{month:02d}010000.zip"
-)
+# SCADA + DISPATCHLOAD: fetched via NEMOSIS (dynamic_data_compiler)
 
 # ─── Paths (relative to project root) ──────────────────────────────────────
 
@@ -106,8 +94,7 @@ GENERATOR_CACHE = "data/generators.feather"
 MLF_CACHE = "data/mlf_tracker.feather"
 ELI_CURTAILMENT_CACHE = "data/eli_curtailment.feather"
 REZ_FORECAST_CACHE = "data/rez_forecasts.feather"
-SCADA_CACHE_DIR = "data/scada"
-UIGF_CACHE_DIR = "data/uigf"
+NEMOSIS_CACHE_DIR = "data/nemosis_cache"
 CURTAILMENT_CACHE = "data/actual_curtailment.feather"
 
 # ─── Network ────────────────────────────────────────────────────────────────
