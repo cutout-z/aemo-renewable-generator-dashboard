@@ -12,8 +12,8 @@ data/*.csv
 data/*.xls
 data/*.xlsx
 
-# Keep feather caches for GitHub Actions
-# !data/*.feather
+data/*.feather
+data/nemosis_cache/
 
 # OS
 .DS_Store
