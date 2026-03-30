@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AEMO Solar & Wind Curtailment Dashboard</title>
+<title>AEMO Renewable Generator Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -25,7 +25,10 @@
 
   .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; max-height: 75vh; }
   table { border-collapse: collapse; width: 100%; font-size: 0.82rem; }
-  th { background: var(--accent); color: #fff; padding: 8px 10px; text-align: center; position: sticky; top: 0; white-space: nowrap; z-index: 1; cursor: pointer; }
+  th { background: var(--accent); color: #fff; padding: 8px 10px; text-align: center; position: sticky; white-space: nowrap; z-index: 1; cursor: pointer; }
+  th.group-header { top: 0; z-index: 2; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--bg); cursor: default; }
+  th.group-header:hover { background: inherit; }
+  th.col-header { top: 32px; }
   th:first-child { text-align: center; width: 40px; cursor: default; }
   th:nth-child(2) { text-align: left; }
   th:hover { background: #3a62a4; }
@@ -76,7 +79,7 @@
 </head>
 <body>
 
-<h1>AEMO Solar & Wind Curtailment Dashboard</h1>
+<h1>AEMO Renewable Generator Dashboard</h1>
 <p class="subtitle">Projected curtailment, MLFs, ISP forecasts, and actual curtailment for NEM solar and wind generators</p>
 
 <div class="stats" id="stats"></div>
@@ -175,29 +178,35 @@ function detectColumns(keys) {
 
   // Actual curtailment
   keys.filter(k => k.startsWith('CURTAILMENT_ACTUAL_')).sort().forEach(k => {
-    defs.push({key:k, label:k.replace('CURTAILMENT_ACTUAL_','Actual '), group:'actual'});
+    defs.push({key:k, label:k.replace('CURTAILMENT_ACTUAL_',''), group:'actual'});
   });
 
   // ELI projected
-  if (keys.includes('ELI_CURTAILMENT_NEAR')) defs.push({key:'ELI_CURTAILMENT_NEAR', label:'ELI Near', group:'eli'});
-  if (keys.includes('ELI_CURTAILMENT_MED')) defs.push({key:'ELI_CURTAILMENT_MED', label:'ELI Med', group:'eli'});
+  if (keys.includes('ELI_CURTAILMENT_NEAR')) defs.push({key:'ELI_CURTAILMENT_NEAR', label:'Near (26-28)', group:'eli'});
+  if (keys.includes('ELI_CURTAILMENT_MED')) defs.push({key:'ELI_CURTAILMENT_MED', label:'Med (30-35)', group:'eli'});
 
   // MLF
   keys.filter(k => k.startsWith('MLF_')).sort().forEach(k => {
     defs.push({key:k, label:k.replace('MLF_',''), group:'mlf'});
   });
 
-  // ISP curtailment forecast
+  // ISP curtailment forecast — use FY labels from data if available
   keys.filter(k => k.startsWith('ISP_CURTAILMENT_FY')).sort().forEach(k => {
-    if (!k.endsWith('_LABEL')) defs.push({key:k, label:k.replace('ISP_CURTAILMENT_','C '), group:'isp-c'});
+    if (!k.endsWith('_LABEL')) {
+      const labelKey = k + '_LABEL';
+      defs.push({key:k, label:k.replace('ISP_CURTAILMENT_',''), group:'isp-c', labelKey: keys.includes(labelKey) ? labelKey : null});
+    }
   });
-  if (keys.includes('ISP_CURTAILMENT_AVG')) defs.push({key:'ISP_CURTAILMENT_AVG', label:'C Avg', group:'isp-c'});
+  if (keys.includes('ISP_CURTAILMENT_AVG')) defs.push({key:'ISP_CURTAILMENT_AVG', label:'Avg', group:'isp-c'});
 
   // ISP offloading forecast
   keys.filter(k => k.startsWith('ISP_OFFLOADING_FY')).sort().forEach(k => {
-    if (!k.endsWith('_LABEL')) defs.push({key:k, label:k.replace('ISP_OFFLOADING_','O '), group:'isp-o'});
+    if (!k.endsWith('_LABEL')) {
+      const labelKey = k + '_LABEL';
+      defs.push({key:k, label:k.replace('ISP_OFFLOADING_',''), group:'isp-o', labelKey: keys.includes(labelKey) ? labelKey : null});
+    }
   });
-  if (keys.includes('ISP_OFFLOADING_AVG')) defs.push({key:'ISP_OFFLOADING_AVG', label:'O Avg', group:'isp-o'});
+  if (keys.includes('ISP_OFFLOADING_AVG')) defs.push({key:'ISP_OFFLOADING_AVG', label:'Avg', group:'isp-o'});
 
   return defs.filter(d => keys.includes(d.key));
 }
@@ -328,14 +337,42 @@ function renderTable() {
   const rows = getFiltered();
   const allChecked = rows.length > 0 && rows.every(r => selected.has(r.DUID));
 
-  // Header
-  thead.innerHTML = '<tr><th><input type="checkbox" class="cb" id="selectAll" ' +
-    (allChecked ? 'checked' : '') + '></th>' +
-    colDefs.map(d => {
-      const sortCls = d.key === sortCol ? (sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc') : '';
-      const groupCls = d.group !== 'meta' ? ` col-group-${d.group}` : '';
-      return `<th class="${sortCls}${groupCls}" data-col="${d.key}">${d.label}</th>`;
-    }).join('') + '</tr>';
+  // Resolve ISP FY labels from first data row
+  if (rows.length > 0) {
+    colDefs.forEach(d => {
+      if (d.labelKey && rows[0][d.labelKey]) d.label = rows[0][d.labelKey];
+    });
+  }
+
+  // Group header row
+  const groupLabels = {meta:'', actual:'Actual Curtailment', eli:'ELI Projected', mlf:'Marginal Loss Factor', 'isp-c':'ISP Curtailment Forecast', 'isp-o':'ISP Offloading Forecast'};
+  let groupRow = '<tr><th class="group-header" rowspan="2"><input type="checkbox" class="cb" id="selectAll" ' + (allChecked ? 'checked' : '') + '></th>';
+  let i = 0;
+  while (i < colDefs.length) {
+    const g = colDefs[i].group;
+    let span = 0;
+    while (i + span < colDefs.length && colDefs[i + span].group === g) span++;
+    const groupCls = g !== 'meta' ? ` col-group-${g}` : '';
+    const label = groupLabels[g] || g;
+    if (g === 'meta') {
+      groupRow += `<th class="group-header${groupCls}" colspan="${span}"></th>`;
+    } else {
+      groupRow += `<th class="group-header${groupCls}" colspan="${span}">${label}</th>`;
+    }
+    i += span;
+  }
+  groupRow += '</tr>';
+
+  // Column header row
+  let colRow = '<tr>';
+  colDefs.forEach(d => {
+    const sortCls = d.key === sortCol ? (sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc') : '';
+    const groupCls = d.group !== 'meta' ? ` col-group-${d.group}` : '';
+    colRow += `<th class="col-header ${sortCls}${groupCls}" data-col="${d.key}">${d.label}</th>`;
+  });
+  colRow += '</tr>';
+
+  thead.innerHTML = groupRow + colRow;
 
   document.getElementById('selectAll').onchange = toggleSelectAll;
   thead.querySelectorAll('th[data-col]').forEach(th => {
