@@ -1,8 +1,8 @@
-# AEMO Solar & Wind Curtailment Dashboard
+# AEMO Renewable Generator Dashboard
 
 Interactive dashboard tracking curtailment, marginal loss factors (MLFs), and ISP forecasts for NEM solar and wind generators.
 
-**Live dashboard:** [cutout-z.github.io/aemo-solar-curtailment](https://cutout-z.github.io/aemo-solar-curtailment/)
+**Live dashboard:** [cutout-z.github.io/aemo-renewable-generator-dashboard](https://cutout-z.github.io/aemo-renewable-generator-dashboard/)
 
 ## What it shows
 
