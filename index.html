@@ -33,8 +33,8 @@
   th:nth-child(2) { text-align: left; }
   th:hover { background: #3a62a4; }
   th:first-child:hover { background: var(--accent); }
-  th.sorted-asc::after { content: " \u25B2"; }
-  th.sorted-desc::after { content: " \u25BC"; }
+  th.sorted-asc::after { content: " \25B2"; }
+  th.sorted-desc::after { content: " \25BC"; }
   td { padding: 6px 10px; text-align: center; border-bottom: 1px solid var(--border); white-space: nowrap; }
   td:first-child { text-align: center; width: 40px; }
   td:nth-child(2) { text-align: left; font-weight: 500; }
@@ -182,8 +182,8 @@ function detectColumns(keys) {
   });
 
   // ELI projected
-  if (keys.includes('ELI_CURTAILMENT_NEAR')) defs.push({key:'ELI_CURTAILMENT_NEAR', label:'Near (26-28)', group:'eli'});
-  if (keys.includes('ELI_CURTAILMENT_MED')) defs.push({key:'ELI_CURTAILMENT_MED', label:'Med (30-35)', group:'eli'});
+  if (keys.includes('ELI_CURTAILMENT_NEAR')) defs.push({key:'ELI_CURTAILMENT_NEAR', label:'2026-28', group:'eli'});
+  if (keys.includes('ELI_CURTAILMENT_MED')) defs.push({key:'ELI_CURTAILMENT_MED', label:'2030-35', group:'eli'});
 
   // MLF
   keys.filter(k => k.startsWith('MLF_')).sort().forEach(k => {
@@ -345,7 +345,7 @@ function renderTable() {
   }
 
   // Group header row + column header row
-  const groupLabels = {actual:'Actual Curtailment', eli:'ELI Projected', mlf:'Marginal Loss Factor', 'isp-c':'ISP Curtailment', 'isp-o':'ISP Offloading'};
+  const groupLabels = {actual:'Actual Curtailment', eli:'Projected Curtailment', mlf:'Marginal Loss Factor', 'isp-c':'ISP Curtailment', 'isp-o':'ISP Offloading'};
   let groupRow = '<tr><th class="group-header" rowspan="2"><input type="checkbox" class="cb" id="selectAll" ' + (allChecked ? 'checked' : '') + '></th>';
   let colRow = '<tr>';
   let i = 0;
