@@ -344,32 +344,34 @@ function renderTable() {
     });
   }
 
-  // Group header row
-  const groupLabels = {meta:'', actual:'Actual Curtailment', eli:'ELI Projected', mlf:'Marginal Loss Factor', 'isp-c':'ISP Curtailment Forecast', 'isp-o':'ISP Offloading Forecast'};
+  // Group header row + column header row
+  const groupLabels = {actual:'Actual Curtailment', eli:'ELI Projected', mlf:'Marginal Loss Factor', 'isp-c':'ISP Curtailment', 'isp-o':'ISP Offloading'};
   let groupRow = '<tr><th class="group-header" rowspan="2"><input type="checkbox" class="cb" id="selectAll" ' + (allChecked ? 'checked' : '') + '></th>';
+  let colRow = '<tr>';
   let i = 0;
   while (i < colDefs.length) {
     const g = colDefs[i].group;
     let span = 0;
     while (i + span < colDefs.length && colDefs[i + span].group === g) span++;
-    const groupCls = g !== 'meta' ? ` col-group-${g}` : '';
-    const label = groupLabels[g] || g;
     if (g === 'meta') {
-      groupRow += `<th class="group-header${groupCls}" colspan="${span}"></th>`;
+      // Meta columns span both rows — no group label needed
+      for (let j = i; j < i + span; j++) {
+        const d = colDefs[j];
+        const sortCls = d.key === sortCol ? (sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc') : '';
+        groupRow += `<th class="group-header ${sortCls}" rowspan="2" data-col="${d.key}" style="cursor:pointer">${d.label}</th>`;
+      }
     } else {
-      groupRow += `<th class="group-header${groupCls}" colspan="${span}">${label}</th>`;
+      const groupCls = ` col-group-${g}`;
+      groupRow += `<th class="group-header${groupCls}" colspan="${span}">${groupLabels[g] || g}</th>`;
+      for (let j = i; j < i + span; j++) {
+        const d = colDefs[j];
+        const sortCls = d.key === sortCol ? (sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc') : '';
+        colRow += `<th class="col-header ${sortCls}${groupCls}" data-col="${d.key}">${d.label}</th>`;
+      }
     }
     i += span;
   }
   groupRow += '</tr>';
-
-  // Column header row
-  let colRow = '<tr>';
-  colDefs.forEach(d => {
-    const sortCls = d.key === sortCol ? (sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc') : '';
-    const groupCls = d.group !== 'meta' ? ` col-group-${d.group}` : '';
-    colRow += `<th class="col-header ${sortCls}${groupCls}" data-col="${d.key}">${d.label}</th>`;
-  });
   colRow += '</tr>';
 
   thead.innerHTML = groupRow + colRow;
