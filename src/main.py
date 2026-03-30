@@ -63,10 +63,14 @@ def run(full_refresh: bool = False, skip_scada: bool = False):
         logger.info("Loading cached ELI curtailment data...")
         eli_data = pd.read_feather(eli_cache)
     else:
-        eli_data = fetch_eli_curtailment(cache_dir)
-        if not eli_data.empty:
-            eli_cache.parent.mkdir(parents=True, exist_ok=True)
-            eli_data.reset_index(drop=True).to_feather(eli_cache)
+        try:
+            eli_data = fetch_eli_curtailment(cache_dir)
+            if not eli_data.empty:
+                eli_cache.parent.mkdir(parents=True, exist_ok=True)
+                eli_data.reset_index(drop=True).to_feather(eli_cache)
+        except Exception as e:
+            logger.warning(f"ELI curtailment download failed: {e}")
+            eli_data = pd.DataFrame()
 
     # ── Step 4: REZ forecasts ────────────────────────────────────────────
     rez_cache = PROJECT_ROOT / config.REZ_FORECAST_CACHE
@@ -74,10 +78,14 @@ def run(full_refresh: bool = False, skip_scada: bool = False):
         logger.info("Loading cached REZ forecast data...")
         rez_data = pd.read_feather(rez_cache)
     else:
-        rez_data = fetch_rez_forecasts(cache_dir)
-        if not rez_data.empty:
-            rez_cache.parent.mkdir(parents=True, exist_ok=True)
-            rez_data.reset_index(drop=True).to_feather(rez_cache)
+        try:
+            rez_data = fetch_rez_forecasts(cache_dir)
+            if not rez_data.empty:
+                rez_cache.parent.mkdir(parents=True, exist_ok=True)
+                rez_data.reset_index(drop=True).to_feather(rez_cache)
+        except Exception as e:
+            logger.warning(f"REZ forecast download failed: {e}")
+            rez_data = pd.DataFrame()
 
     # ── Step 5: Actual curtailment from SCADA + UIGF ────────────────────
     curt_cache = PROJECT_ROOT / config.CURTAILMENT_CACHE

@@ -4,6 +4,8 @@ Source: Appendices to AEMO's Enhanced Locational Information (ELI) report.
 These contain ISP curtailment and economic offloading forecasts by REZ for upcoming FYs.
 """
 
+from __future__ import annotations
+
 import logging
 import time
 from pathlib import Path

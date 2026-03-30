@@ -1,5 +1,7 @@
 """Fetch MLF data from the existing aemo-mlf-tracker dashboard."""
 
+from __future__ import annotations
+
 import logging
 from io import StringIO
 from pathlib import Path

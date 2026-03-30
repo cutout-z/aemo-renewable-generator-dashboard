@@ -1,6 +1,7 @@
 """Merge all data sources into a single per-farm summary DataFrame."""
 
 import logging
+from pathlib import Path
 
 import pandas as pd
 
@@ -44,8 +45,15 @@ def build_summary(
     else:
         logger.warning("No actual curtailment data to merge")
 
-    # 3. Merge ELI projected curtailment on LOCATION + VOLTAGE_KV + REGION
-    if not eli_curtailment.empty:
+    # 3. Merge ELI projected curtailment
+    # First try per-DUID data (from seeded workbook), then location-based
+    eli_duid_path = Path(__file__).resolve().parent.parent / config.DATA_DIR / "eli_per_duid.feather"
+    if eli_duid_path.exists():
+        eli_duid = pd.read_feather(eli_duid_path)
+        summary = summary.merge(eli_duid, on="DUID", how="left")
+        matched = summary["ELI_CURTAILMENT_NEAR"].notna().sum() if "ELI_CURTAILMENT_NEAR" in summary.columns else 0
+        logger.info(f"Merged per-DUID ELI curtailment ({matched}/{len(summary)} matched)")
+    elif not eli_curtailment.empty:
         summary = _merge_eli(summary, eli_curtailment)
     else:
         logger.warning("No ELI curtailment data to merge")

@@ -5,6 +5,8 @@ The ELI report contains projected curtailment by connection point for:
 - Medium term (5-10 years): curtailment % at each connection point
 """
 
+from __future__ import annotations
+
 import logging
 import time
 from pathlib import Path
