@@ -85,7 +85,7 @@ ELI_APPENDIX_URLS = {
 NEMWEB_SCADA_URL_TEMPLATE = (
     "https://nemweb.com.au/Data_Archive/Wholesale_Electricity/MMSDM/"
     "{year}/MMSDM_{year}_{month:02d}/MMSDM_Historical_Data_SQLLoader/DATA/"
-    "PUBLIC_ARCHIVE%23DISPATCH_UNIT_SCADA%23FILE01%23{year}{month:02d}010000.CSV"
+    "PUBLIC_ARCHIVE%23DISPATCH_UNIT_SCADA%23FILE01%23{year}{month:02d}010000.zip"
 )
 
 # UIGF (Unconstrained Intermittent Generation Forecast)

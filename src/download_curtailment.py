@@ -188,8 +188,14 @@ def _load_scada_month(
         logger.warning(f"SCADA download failed for {year}-{month:02d}: {e}")
         return None
 
+    # Extract CSV from ZIP
+    csv_content = _extract_csv_from_zip(resp.content)
+    if csv_content is None:
+        logger.warning(f"No CSV found in SCADA ZIP for {year}-{month:02d}")
+        return None
+
     # Parse AEMO CSV format
-    df = _parse_aemo_csv(resp.content, ["SETTLEMENTDATE", "DUID", "SCADAVALUE"])
+    df = _parse_aemo_csv(csv_content, ["SETTLEMENTDATE", "DUID", "SCADAVALUE"])
     if df is None or df.empty:
         return None
 
@@ -264,6 +270,19 @@ def _load_uigf_month(
     logger.info(f"Cached UIGF {year}-{month:02d} ({len(df_cache):,} rows)")
 
     return df_cache[df_cache["DUID"].isin(duids)].copy()
+
+
+def _extract_csv_from_zip(content: bytes) -> bytes | None:
+    """Extract CSV content from a ZIP archive."""
+    try:
+        with zipfile.ZipFile(io.BytesIO(content)) as zf:
+            csv_names = [n for n in zf.namelist() if n.upper().endswith(".CSV")]
+            if not csv_names:
+                return None
+            return zf.read(csv_names[0])
+    except zipfile.BadZipFile:
+        # Content might be raw CSV, not zipped
+        return content
 
 
 def _parse_aemo_csv(content: bytes, required_cols: list[str]) -> pd.DataFrame | None:
