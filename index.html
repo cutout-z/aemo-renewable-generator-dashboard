@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AEMO Solar & Wind Curtailment Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root { --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3a; --text: #e0e0e0; --muted: #888; --accent: #4472C4; --green: #63BE7B; --red: #F8696B; --yellow: #FFEB84; --solar: #f39c12; --wind: #3498db; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 24px; }
+  h1 { font-size: 1.5rem; margin-bottom: 4px; }
+  .subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 20px; }
+
+  .controls { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+  .tab { padding: 8px 18px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); border-radius: 6px 6px 0 0; cursor: pointer; font-size: 0.9rem; transition: all 0.15s; }
+  .tab:hover { color: var(--text); border-color: var(--accent); }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .filters { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+  select, input[type="text"] { padding: 6px 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 4px; font-size: 0.85rem; }
+  input[type="text"] { width: 200px; }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; max-height: 75vh; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.82rem; }
+  th { background: var(--accent); color: #fff; padding: 8px 10px; text-align: center; position: sticky; top: 0; white-space: nowrap; z-index: 1; cursor: pointer; }
+  th:first-child { text-align: center; width: 40px; cursor: default; }
+  th:nth-child(2) { text-align: left; }
+  th:hover { background: #3a62a4; }
+  th:first-child:hover { background: var(--accent); }
+  th.sorted-asc::after { content: " \u25B2"; }
+  th.sorted-desc::after { content: " \u25BC"; }
+  td { padding: 6px 10px; text-align: center; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td:first-child { text-align: center; width: 40px; }
+  td:nth-child(2) { text-align: left; font-weight: 500; }
+  td:nth-child(3) { text-align: left; }
+  tr:hover td { background: rgba(68,114,196,0.08); }
+  tr.selected td { background: rgba(68,114,196,0.18); }
+
+  .cb { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+  .val-cell { font-variant-numeric: tabular-nums; }
+  .na-cell { color: var(--muted); font-style: italic; }
+
+  .stats { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 18px; min-width: 140px; }
+  .stat-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; }
+  .stat-value { font-size: 1.3rem; font-weight: 600; margin-top: 2px; }
+
+  .actions { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .action-btn { padding: 8px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--accent); font-size: 0.85rem; cursor: pointer; transition: all 0.15s; }
+  .action-btn:hover { background: var(--accent); color: #fff; }
+  .action-btn:disabled { opacity: 0.4; cursor: default; }
+  .action-btn:disabled:hover { background: var(--surface); color: var(--accent); }
+  .sel-count { color: var(--muted); font-size: 0.85rem; }
+
+  .downloads { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .dl-btn { display: inline-block; padding: 8px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--accent); text-decoration: none; font-size: 0.85rem; transition: all 0.15s; }
+  .dl-btn:hover { background: var(--accent); color: #fff; }
+  .footer { margin-top: 24px; color: var(--muted); font-size: 0.78rem; }
+  .loading { text-align: center; padding: 40px; color: var(--muted); }
+
+  /* Column group headers */
+  .col-group-eli { background: #5a4a8a !important; }
+  .col-group-eli:hover { background: #4a3a7a !important; }
+  .col-group-mlf { background: #2e7d32 !important; }
+  .col-group-mlf:hover { background: #1b5e20 !important; }
+  .col-group-isp-c { background: #c62828 !important; }
+  .col-group-isp-c:hover { background: #b71c1c !important; }
+  .col-group-isp-o { background: #e65100 !important; }
+  .col-group-isp-o:hover { background: #bf360c !important; }
+  .col-group-actual { background: #00695c !important; }
+  .col-group-actual:hover { background: #004d40 !important; }
+</style>
+</head>
+<body>
+
+<h1>AEMO Solar & Wind Curtailment Dashboard</h1>
+<p class="subtitle">Projected curtailment, MLFs, ISP forecasts, and actual curtailment for NEM solar and wind generators</p>
+
+<div class="stats" id="stats"></div>
+
+<div class="controls">
+  <div class="tabs" id="tabs"></div>
+  <div class="filters">
+    <select id="fuelFilter"><option value="">All Types</option><option value="Solar">Solar</option><option value="Wind">Wind</option></select>
+    <select id="rezFilter"><option value="">All REZ</option><option value="Y">REZ Only</option><option value="N">Non-REZ Only</option></select>
+    <input type="text" id="search" placeholder="Search DUID, project, REZ...">
+  </div>
+</div>
+
+<div class="actions" id="actions">
+  <button class="action-btn" id="exportSelected" disabled>Export Selected to Excel</button>
+  <button class="action-btn" id="clearSelection" style="display:none">Clear Selection</button>
+  <span class="sel-count" id="selCount"></span>
+</div>
+
+<div class="table-wrap"><div class="loading" id="loading">Loading data...</div><table id="table" style="display:none"><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+
+<div class="downloads" id="downloads"></div>
+<div class="footer" id="footer"></div>
+
+<script>
+const STATES = {NSW1:'NSW',QLD1:'QLD',VIC1:'VIC',SA1:'SA',TAS1:'TAS'};
+const EXCEL_FILES = {NSW1:'NSW_curtailment.xlsx',QLD1:'QLD_curtailment.xlsx',VIC1:'VIC_curtailment.xlsx',SA1:'SA_curtailment.xlsx',TAS1:'TAS_curtailment.xlsx'};
+
+let allData = [];
+let colDefs = [];  // [{key, label, group}]
+let activeRegion = 'ALL';
+let sortCol = null;
+let sortDir = 'asc';
+let selected = new Set();
+
+// ── Colour functions ─────────────────────────────────────────────────────
+
+function mlfColor(val) {
+  if (val === '' || val === null || isNaN(val)) return '';
+  const lo = 0.80, mid = 0.95, hi = 1.05;
+  const v = Math.max(lo, Math.min(hi, val));
+  let r, g, b;
+  if (v <= mid) {
+    const t = (v - lo) / (mid - lo);
+    r = Math.round(248 + (255 - 248) * t);
+    g = Math.round(105 + (235 - 105) * t);
+    b = Math.round(107 + (132 - 107) * t);
+  } else {
+    const t = (v - mid) / (hi - mid);
+    r = Math.round(255 + (99 - 255) * t);
+    g = Math.round(235 + (190 - 235) * t);
+    b = Math.round(132 + (123 - 132) * t);
+  }
+  return `rgb(${r},${g},${b})`;
+}
+
+function curtailmentColor(val) {
+  // 0% = green, 5% = yellow, 15%+ = red (inverted from MLF)
+  if (val === '' || val === null || isNaN(val)) return '';
+  const v = Math.max(0, Math.min(0.20, val));
+  let r, g, b;
+  if (v <= 0.05) {
+    const t = v / 0.05;
+    r = Math.round(99 + (255 - 99) * t);
+    g = Math.round(190 + (235 - 190) * t);
+    b = Math.round(123 + (132 - 123) * t);
+  } else {
+    const t = (v - 0.05) / 0.15;
+    r = Math.round(255 + (248 - 255) * t);
+    g = Math.round(235 + (105 - 235) * t);
+    b = Math.round(132 + (107 - 132) * t);
+  }
+  return `rgb(${r},${g},${b})`;
+}
+
+function textColorForBg(val, isMlf) {
+  if (val === '' || val === null || isNaN(val)) return '';
+  if (isMlf) return val >= 0.85 && val <= 1.02 ? '#1a1a1a' : '#e0e0e0';
+  return val >= 0.02 && val <= 0.12 ? '#1a1a1a' : '#e0e0e0';
+}
+
+// ── Column detection ─────────────────────────────────────────────────────
+
+function detectColumns(keys) {
+  const defs = [];
+  const showRegion = activeRegion === 'ALL';
+
+  // Meta columns
+  defs.push({key:'DUID', label:'DUID', group:'meta'});
+  defs.push({key:'PROJECT_NAME', label:'Project', group:'meta'});
+  defs.push({key:'FUEL_TYPE', label:'Fuel', group:'meta'});
+  if (showRegion) defs.push({key:'STATE', label:'State', group:'meta'});
+  defs.push({key:'NAMEPLATE_MW', label:'MW', group:'meta'});
+  defs.push({key:'REZ', label:'REZ', group:'meta'});
+  defs.push({key:'REZ_NAME', label:'REZ Name', group:'meta'});
+
+  // Actual curtailment
+  keys.filter(k => k.startsWith('CURTAILMENT_ACTUAL_')).sort().forEach(k => {
+    defs.push({key:k, label:k.replace('CURTAILMENT_ACTUAL_','Actual '), group:'actual'});
+  });
+
+  // ELI projected
+  if (keys.includes('ELI_CURTAILMENT_NEAR')) defs.push({key:'ELI_CURTAILMENT_NEAR', label:'ELI Near', group:'eli'});
+  if (keys.includes('ELI_CURTAILMENT_MED')) defs.push({key:'ELI_CURTAILMENT_MED', label:'ELI Med', group:'eli'});
+
+  // MLF
+  keys.filter(k => k.startsWith('MLF_')).sort().forEach(k => {
+    defs.push({key:k, label:k.replace('MLF_',''), group:'mlf'});
+  });
+
+  // ISP curtailment forecast
+  keys.filter(k => k.startsWith('ISP_CURTAILMENT_FY')).sort().forEach(k => {
+    if (!k.endsWith('_LABEL')) defs.push({key:k, label:k.replace('ISP_CURTAILMENT_','C '), group:'isp-c'});
+  });
+  if (keys.includes('ISP_CURTAILMENT_AVG')) defs.push({key:'ISP_CURTAILMENT_AVG', label:'C Avg', group:'isp-c'});
+
+  // ISP offloading forecast
+  keys.filter(k => k.startsWith('ISP_OFFLOADING_FY')).sort().forEach(k => {
+    if (!k.endsWith('_LABEL')) defs.push({key:k, label:k.replace('ISP_OFFLOADING_','O '), group:'isp-o'});
+  });
+  if (keys.includes('ISP_OFFLOADING_AVG')) defs.push({key:'ISP_OFFLOADING_AVG', label:'O Avg', group:'isp-o'});
+
+  return defs.filter(d => keys.includes(d.key));
+}
+
+// ── Filtering ────────────────────────────────────────────────────────────
+
+function getBaseRows() {
+  let rows = allData;
+  if (activeRegion !== 'ALL') {
+    const stateName = STATES[activeRegion];
+    rows = rows.filter(r => r.STATE === stateName || r.REGIONID === activeRegion);
+  }
+  return rows;
+}
+
+function getFiltered() {
+  const fuel = document.getElementById('fuelFilter').value;
+  const rez = document.getElementById('rezFilter').value;
+  const search = document.getElementById('search').value.toLowerCase();
+  let rows = getBaseRows();
+  if (fuel) rows = rows.filter(r => r.FUEL_TYPE === fuel);
+  if (rez) rows = rows.filter(r => r.REZ === rez);
+  if (search) rows = rows.filter(r =>
+    (r.DUID || '').toLowerCase().includes(search) ||
+    (r.PROJECT_NAME || '').toLowerCase().includes(search) ||
+    (r.REZ_NAME || '').toLowerCase().includes(search)
+  );
+  if (sortCol) {
+    rows.sort((a, b) => {
+      let va = a[sortCol], vb = b[sortCol];
+      const na = parseFloat(va), nb = parseFloat(vb);
+      if (!isNaN(na) && !isNaN(nb)) { va = na; vb = nb; }
+      if (va === '' || va === undefined || va === 'N/A') return 1;
+      if (vb === '' || vb === undefined || vb === 'N/A') return -1;
+      if (va < vb) return sortDir === 'asc' ? -1 : 1;
+      if (va > vb) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+  return rows;
+}
+
+// ── Stats ────────────────────────────────────────────────────────────────
+
+function renderStats() {
+  const rows = getBaseRows();
+  const solarCount = rows.filter(r => r.FUEL_TYPE === 'Solar').length;
+  const windCount = rows.filter(r => r.FUEL_TYPE === 'Wind').length;
+  const rezCount = rows.filter(r => r.REZ === 'Y').length;
+
+  // Find MLF columns and get average of latest
+  const mlfCols = colDefs.filter(d => d.group === 'mlf');
+  const latestMlf = mlfCols.length ? mlfCols[mlfCols.length - 1].key : null;
+  const mlfVals = latestMlf ? rows.map(r => parseFloat(r[latestMlf])).filter(v => !isNaN(v)) : [];
+  const avgMlf = mlfVals.length ? (mlfVals.reduce((a,b) => a+b, 0) / mlfVals.length).toFixed(4) : '-';
+
+  // Average near-term curtailment
+  const nearVals = rows.map(r => parseFloat(r.ELI_CURTAILMENT_NEAR)).filter(v => !isNaN(v));
+  const avgNear = nearVals.length ? (nearVals.reduce((a,b) => a+b, 0) / nearVals.length * 100).toFixed(1) + '%' : '-';
+
+  document.getElementById('stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Solar Farms</div><div class="stat-value" style="color:var(--solar)">${solarCount}</div></div>
+    <div class="stat-card"><div class="stat-label">Wind Farms</div><div class="stat-value" style="color:var(--wind)">${windCount}</div></div>
+    <div class="stat-card"><div class="stat-label">In REZ</div><div class="stat-value">${rezCount}</div></div>
+    <div class="stat-card"><div class="stat-label">Avg MLF${latestMlf ? ' (' + latestMlf.replace('MLF_','') + ')' : ''}</div><div class="stat-value">${avgMlf}</div></div>
+    <div class="stat-card"><div class="stat-label">Avg ELI Near Curtailment</div><div class="stat-value" style="color:${nearVals.length && parseFloat(avgNear) > 30 ? 'var(--red)' : 'var(--green)'}">${avgNear}</div></div>
+  `;
+}
+
+// ── Tabs ─────────────────────────────────────────────────────────────────
+
+function renderTabs() {
+  const container = document.getElementById('tabs');
+  container.innerHTML = '';
+
+  const allBtn = document.createElement('button');
+  allBtn.className = 'tab' + (activeRegion === 'ALL' ? ' active' : '');
+  allBtn.textContent = 'All';
+  allBtn.onclick = () => { activeRegion = 'ALL'; renderAll(); };
+  container.appendChild(allBtn);
+
+  for (const [id, name] of Object.entries(STATES)) {
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (id === activeRegion ? ' active' : '');
+    btn.textContent = name;
+    btn.onclick = () => { activeRegion = id; renderAll(); };
+    container.appendChild(btn);
+  }
+}
+
+// ── Selection ────────────────────────────────────────────────────────────
+
+function updateSelectionUI() {
+  const n = selected.size;
+  document.getElementById('exportSelected').disabled = n === 0;
+  document.getElementById('clearSelection').style.display = n > 0 ? '' : 'none';
+  document.getElementById('selCount').textContent = n > 0 ? `${n} asset${n > 1 ? 's' : ''} selected` : '';
+}
+
+function toggleSelect(duid) {
+  if (selected.has(duid)) selected.delete(duid); else selected.add(duid);
+  updateSelectionUI();
+  const row = document.querySelector(`tr[data-duid="${duid}"]`);
+  if (row) {
+    row.classList.toggle('selected', selected.has(duid));
+    const cb = row.querySelector('.cb');
+    if (cb) cb.checked = selected.has(duid);
+  }
+}
+
+function toggleSelectAll() {
+  const rows = getFiltered();
+  const allSelected = rows.every(r => selected.has(r.DUID));
+  if (allSelected) rows.forEach(r => selected.delete(r.DUID));
+  else rows.forEach(r => selected.add(r.DUID));
+  updateSelectionUI();
+  renderTable();
+}
+
+// ── Table ────────────────────────────────────────────────────────────────
+
+function renderTable() {
+  const thead = document.getElementById('thead');
+  const tbody = document.getElementById('tbody');
+  const keys = Object.keys(allData[0] || {});
+  colDefs = detectColumns(keys);
+
+  const rows = getFiltered();
+  const allChecked = rows.length > 0 && rows.every(r => selected.has(r.DUID));
+
+  // Header
+  thead.innerHTML = '<tr><th><input type="checkbox" class="cb" id="selectAll" ' +
+    (allChecked ? 'checked' : '') + '></th>' +
+    colDefs.map(d => {
+      const sortCls = d.key === sortCol ? (sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc') : '';
+      const groupCls = d.group !== 'meta' ? ` col-group-${d.group}` : '';
+      return `<th class="${sortCls}${groupCls}" data-col="${d.key}">${d.label}</th>`;
+    }).join('') + '</tr>';
+
+  document.getElementById('selectAll').onchange = toggleSelectAll;
+  thead.querySelectorAll('th[data-col]').forEach(th => {
+    th.onclick = () => {
+      const col = th.dataset.col;
+      if (sortCol === col) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+      else { sortCol = col; sortDir = 'asc'; }
+      renderTable();
+    };
+  });
+
+  // Body
+  tbody.innerHTML = rows.map(row => {
+    const duid = row.DUID || '';
+    const isSelected = selected.has(duid);
+    const cells = [`<td><input type="checkbox" class="cb" ${isSelected ? 'checked' : ''} data-duid="${duid}"></td>`];
+
+    colDefs.forEach(d => {
+      const raw = row[d.key];
+      const val = parseFloat(raw);
+      const isNum = !isNaN(val);
+
+      if (d.group === 'mlf' && isNum) {
+        const bg = mlfColor(val);
+        const fg = textColorForBg(val, true);
+        cells.push(`<td class="val-cell" style="background:${bg};color:${fg}">${val.toFixed(4)}</td>`);
+      } else if ((d.group === 'actual' || d.group === 'eli') && isNum) {
+        const bg = curtailmentColor(val);
+        const fg = textColorForBg(val, false);
+        cells.push(`<td class="val-cell" style="background:${bg};color:${fg}">${(val * 100).toFixed(1)}%</td>`);
+      } else if ((d.group === 'isp-c' || d.group === 'isp-o') && isNum) {
+        const bg = curtailmentColor(val);
+        const fg = textColorForBg(val, false);
+        cells.push(`<td class="val-cell" style="background:${bg};color:${fg}">${(val * 100).toFixed(1)}%</td>`);
+      } else if (raw === 'N/A' || (d.group !== 'meta' && !isNum && (raw === '' || raw === undefined || raw === null))) {
+        const display = (row.REZ === 'N' && (d.group === 'isp-c' || d.group === 'isp-o')) ? 'N/A' : '-';
+        cells.push(`<td class="na-cell">${display}</td>`);
+      } else if (d.key === 'NAMEPLATE_MW' && isNum) {
+        cells.push(`<td>${val.toFixed(0)}</td>`);
+      } else if (d.key === 'FUEL_TYPE') {
+        const color = raw === 'Solar' ? 'var(--solar)' : raw === 'Wind' ? 'var(--wind)' : '';
+        cells.push(`<td style="color:${color};font-weight:500">${raw || ''}</td>`);
+      } else {
+        cells.push(`<td>${raw || ''}</td>`);
+      }
+    });
+
+    return `<tr data-duid="${duid}" class="${isSelected ? 'selected' : ''}">${cells.join('')}</tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('.cb').forEach(cb => {
+    cb.onchange = (e) => { e.stopPropagation(); toggleSelect(cb.dataset.duid); };
+  });
+
+  document.getElementById('table').style.display = '';
+  document.getElementById('loading').style.display = 'none';
+  updateSelectionUI();
+}
+
+// ── Export ────────────────────────────────────────────────────────────────
+
+function exportSelectedToExcel() {
+  if (selected.size === 0) return;
+  const selectedRows = allData.filter(r => selected.has(r.DUID));
+  const keys = Object.keys(allData[0] || {});
+  const defs = detectColumns(keys);
+  const headers = defs.map(d => d.label);
+  const wsData = [headers];
+  selectedRows.forEach(row => {
+    wsData.push(defs.map(d => {
+      const val = row[d.key];
+      const num = parseFloat(val);
+      return isNaN(num) ? (val || '') : num;
+    }));
+  });
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols'] = defs.map(d => ({wch: d.group === 'meta' ? (d.key === 'PROJECT_NAME' ? 30 : 14) : 12}));
+  XLSX.utils.book_append_sheet(wb, ws, 'Selected');
+  XLSX.writeFile(wb, `curtailment_${selected.size}_assets.xlsx`);
+}
+
+// ── Downloads ────────────────────────────────────────────────────────────
+
+function renderDownloads() {
+  const container = document.getElementById('downloads');
+  container.innerHTML = '<strong style="width:100%;margin-bottom:4px">Download Excel:&nbsp;</strong>' +
+    Object.entries(STATES).map(([id, name]) =>
+      `<a class="dl-btn" href="outputs/${EXCEL_FILES[id]}" download>${name}</a>`
+    ).join('') +
+    `<a class="dl-btn" href="outputs/summary.csv" download>CSV (All)</a>`;
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────
+
+function renderAll() {
+  const keys = Object.keys(allData[0] || {});
+  colDefs = detectColumns(keys);
+  renderTabs();
+  renderStats();
+  renderTable();
+}
+
+document.getElementById('search').oninput = () => renderTable();
+document.getElementById('fuelFilter').onchange = () => { renderStats(); renderTable(); };
+document.getElementById('rezFilter').onchange = () => { renderStats(); renderTable(); };
+document.getElementById('exportSelected').onclick = exportSelectedToExcel;
+document.getElementById('clearSelection').onclick = () => { selected.clear(); updateSelectionUI(); renderTable(); };
+
+Papa.parse('outputs/summary.csv', {
+  download: true,
+  header: true,
+  skipEmptyLines: true,
+  complete: function(results) {
+    allData = results.data;
+    sortCol = 'ELI_CURTAILMENT_NEAR';
+    sortDir = 'desc';
+    renderAll();
+    renderDownloads();
+    document.getElementById('footer').textContent =
+      `${allData.length} generators tracked \u00B7 Source: AEMO ELI Report, NEM Generation Information, MMSDM Archive \u00B7 Dashboard auto-updates monthly`;
+  },
+  error: function() {
+    document.getElementById('loading').textContent = 'Failed to load data. Check that outputs/summary.csv exists.';
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+venv/
+
+# Data cache (large files)
+data/scada/
+data/uigf/
+data/*.csv
+data/*.xls
+data/*.xlsx
+
+# Keep feather caches for GitHub Actions
+# !data/*.feather
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp

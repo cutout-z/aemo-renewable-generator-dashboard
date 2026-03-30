@@ -1,0 +1,55 @@
+name: Monthly Curtailment Update
+
+on:
+  schedule:
+    # 16th of each month — refresh SCADA curtailment + MLF data
+    - cron: '0 0 16 * *'
+    # August 1 — post-ELI/MLF publication (~July)
+    - cron: '0 0 1 8 *'
+  workflow_dispatch:
+    inputs:
+      full_refresh:
+        description: 'Re-download all data from scratch'
+        required: false
+        default: 'false'
+      skip_scada:
+        description: 'Skip SCADA/UIGF curtailment calculation'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Curtailment Dashboard
+        run: |
+          ARGS=""
+          if [ "${{ github.event.inputs.full_refresh }}" = "true" ]; then
+            ARGS="$ARGS --full-refresh"
+          fi
+          if [ "${{ github.event.inputs.skip_scada }}" = "true" ]; then
+            ARGS="$ARGS --skip-scada"
+          fi
+          python -m src.main $ARGS
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add outputs/ data/*.feather
+          git diff --staged --quiet || git commit -m "Update curtailment data"
+          git push
