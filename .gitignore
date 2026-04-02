@@ -13,7 +13,7 @@ data/*.xls
 data/*.xlsx
 
 data/*.feather
-data/nemosis_cache/
+data/nemosis_cache
 
 # OS
 .DS_Store

@@ -137,6 +137,7 @@ def _parse_registration_list(xls_path: Path) -> pd.DataFrame:
     df = df.rename(columns=col_map)
     df = df.dropna(subset=["DUID"])
     df["DUID"] = df["DUID"].astype(str).str.strip()
+    df = df[df["DUID"] != "-"]  # Exclude placeholder DUIDs (e.g. Portland Wind Farm, Callide)
 
     # Filter to solar and wind
     mask = pd.Series(False, index=df.index)
