@@ -103,6 +103,21 @@ GitHub Actions runs on:
 - **August 1**: Annual refresh after ELI report and new FY MLFs are published (~July)
 - **Manual trigger**: `workflow_dispatch` with optional `full_refresh` and `skip_scada` flags
 
+## Output Validation
+
+After the pipeline runs and before committing, an automated validation step (`tests/validate_outputs.py`) checks:
+
+- `summary.csv` exists and has 100+ generators
+- No null values in identity columns (DUID, PROJECT_NAME, REGIONID, FUEL_TYPE)
+- Fuel types are strictly Solar or Wind
+- All 5 NEM regions are present
+- Nameplate capacity > 0 MW for all generators
+- MLF values in [0.5, 1.5]
+- Curtailment values in [0, 1]
+- All 5 regional Excel workbooks exist
+
+If any check fails, the workflow exits before committing — preventing bad data from reaching the dashboard.
+
 ## Outputs
 
 | File | Description |
