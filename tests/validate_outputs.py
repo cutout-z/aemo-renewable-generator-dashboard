@@ -45,6 +45,11 @@ def validate():
             nulls = df[col].isna().sum()
             check(nulls == 0, f"{col} has {nulls} null values")
 
+    # --- DUIDs are unique (guard against merge-side duplication) ---
+    if "DUID" in df.columns:
+        dup_count = len(df) - df["DUID"].nunique()
+        check(dup_count == 0, f"{dup_count} duplicate DUID row(s) in summary.csv")
+
     # --- Fuel types are Solar/Wind only ---
     if "FUEL_TYPE" in df.columns:
         unexpected = set(df["FUEL_TYPE"].unique()) - FUEL_TYPES
