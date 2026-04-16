@@ -41,6 +41,10 @@ jobs:
           if [ "${{ github.event.inputs.full_refresh }}" = "true" ]; then
             ARGS="$ARGS --full-refresh"
           fi
+          # August 1 annual run: FY window has shifted, must recompute curtailment
+          if [ "${{ github.event.schedule }}" = "0 0 1 8 *" ]; then
+            ARGS="$ARGS --full-refresh"
+          fi
           if [ "${{ github.event.inputs.skip_scada }}" = "true" ]; then
             ARGS="$ARGS --skip-scada"
           fi
