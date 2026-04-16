@@ -75,6 +75,17 @@ def calculate_actual_curtailment(
     scada = scada.dropna(subset=["SCADAVALUE"])
     logger.info(f"SCADA: {len(scada):,} rows for {scada['DUID'].nunique()} DUIDs")
 
+    # DISPATCHLOAD ZIPs contain all NEM units and are large. Delete the raw
+    # SCADA ZIPs/CSVs now that parquets are built, to free disk space.
+    _cache_path = Path(nemosis_cache)
+    removed = 0
+    for pattern in ("*.zip", "*.csv"):
+        for f in _cache_path.glob(pattern):
+            f.unlink(missing_ok=True)
+            removed += 1
+    if removed:
+        logger.info(f"Freed {removed} raw NEMOSIS files before DISPATCHLOAD download")
+
     # ── AVAILABILITY (unconstrained capacity) via NEMOSIS ─────────────────
     logger.info("Fetching DISPATCHLOAD (AVAILABILITY) via NEMOSIS...")
     dispatch = dynamic_data_compiler(
