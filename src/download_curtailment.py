@@ -10,10 +10,16 @@ Methodology:
 
     Both tables sourced via NEMOSIS from AEMO's MMSDM archive.
     Aggregated per DUID per financial year. Last 2 complete FYs (rolling).
+
+Memory strategy:
+    Loading 2 years of SCADA + DISPATCHLOAD simultaneously exceeds the ~7 GB runner
+    RAM limit. We process one FY at a time: download SCADA for FY, download DISPATCHLOAD
+    for FY, merge and aggregate to ~239 rows, then free everything before the next FY.
 """
 
 from __future__ import annotations
 
+import gc
 import logging
 from pathlib import Path
 
@@ -23,6 +29,106 @@ from nemosis import dynamic_data_compiler
 from . import config
 
 logger = logging.getLogger(__name__)
+
+
+def _fetch_and_aggregate_fy(
+    fy_start: int,
+    nemosis_cache: str,
+    duid_list: list[str],
+    full_refresh: bool,
+) -> pd.DataFrame | None:
+    """Download SCADA + DISPATCHLOAD for one financial year and return per-DUID aggregates.
+
+    Returns a DataFrame with columns [DUID, FY_START, total_scada, total_avail],
+    or None if data is unavailable.
+    """
+    fy_label = config.fy_label(fy_start)
+    start_time = f"{fy_start}/07/01 00:00:00"
+    end_time = f"{fy_start + 1}/07/01 00:00:00"
+
+    # ── SCADA ─────────────────────────────────────────────────────────────────
+    logger.info(f"Fetching DISPATCH_UNIT_SCADA for {fy_label}...")
+    scada = dynamic_data_compiler(
+        start_time=start_time,
+        end_time=end_time,
+        table_name="DISPATCH_UNIT_SCADA",
+        raw_data_location=nemosis_cache,
+        select_columns=["SETTLEMENTDATE", "DUID", "SCADAVALUE"],
+        filter_cols=["DUID"],
+        filter_values=[duid_list],
+        fformat="parquet",
+        rebuild=full_refresh,
+    )
+
+    if scada is None or scada.empty:
+        logger.warning(f"No SCADA data for {fy_label}")
+        return None
+
+    scada["SCADAVALUE"] = pd.to_numeric(scada["SCADAVALUE"], errors="coerce")
+    scada = scada.dropna(subset=["SCADAVALUE"])
+    scada["SETTLEMENTDATE"] = pd.to_datetime(scada["SETTLEMENTDATE"])
+    logger.info(f"SCADA {fy_label}: {len(scada):,} rows for {scada['DUID'].nunique()} DUIDs")
+
+    # Delete raw NEMOSIS downloads before loading DISPATCHLOAD (large ZIPs)
+    cache_path = Path(nemosis_cache)
+    removed = 0
+    for pattern in ("*.zip", "*.csv"):
+        for f in cache_path.glob(pattern):
+            f.unlink(missing_ok=True)
+            removed += 1
+    if removed:
+        logger.info(f"Freed {removed} raw NEMOSIS files before DISPATCHLOAD")
+
+    # ── DISPATCHLOAD ──────────────────────────────────────────────────────────
+    logger.info(f"Fetching DISPATCHLOAD for {fy_label}...")
+    dispatch = dynamic_data_compiler(
+        start_time=start_time,
+        end_time=end_time,
+        table_name="DISPATCHLOAD",
+        raw_data_location=nemosis_cache,
+        select_columns=["SETTLEMENTDATE", "DUID", "AVAILABILITY", "INTERVENTION"],
+        filter_cols=["DUID"],
+        filter_values=[duid_list],
+        fformat="parquet",
+        rebuild=full_refresh,
+    )
+
+    if dispatch is None or dispatch.empty:
+        logger.warning(f"No DISPATCHLOAD data for {fy_label}")
+        del scada
+        gc.collect()
+        return None
+
+    dispatch["INTERVENTION"] = pd.to_numeric(dispatch["INTERVENTION"], errors="coerce")
+    dispatch = dispatch[dispatch["INTERVENTION"] == 0]
+    dispatch["AVAILABILITY"] = pd.to_numeric(dispatch["AVAILABILITY"], errors="coerce")
+    dispatch = dispatch.dropna(subset=["AVAILABILITY"])
+    dispatch["SETTLEMENTDATE"] = pd.to_datetime(dispatch["SETTLEMENTDATE"])
+    logger.info(f"DISPATCHLOAD {fy_label}: {len(dispatch):,} rows for {dispatch['DUID'].nunique()} DUIDs")
+
+    # ── Merge and aggregate ───────────────────────────────────────────────────
+    merged = pd.merge(
+        scada[["SETTLEMENTDATE", "DUID", "SCADAVALUE"]],
+        dispatch[["SETTLEMENTDATE", "DUID", "AVAILABILITY"]],
+        on=["SETTLEMENTDATE", "DUID"],
+        how="inner",
+    )
+    logger.info(f"Merged {fy_label}: {len(merged):,} rows")
+
+    del scada, dispatch
+    gc.collect()
+
+    merged["FY_START"] = fy_start
+    annual = (
+        merged.groupby(["DUID", "FY_START"])
+        .agg(total_scada=("SCADAVALUE", "sum"), total_avail=("AVAILABILITY", "sum"))
+        .reset_index()
+    )
+
+    del merged
+    gc.collect()
+
+    return annual
 
 
 def calculate_actual_curtailment(
@@ -45,103 +151,29 @@ def calculate_actual_curtailment(
     logger.info(f"Calculating actual curtailment for {fy1_label} and {fy2_label}")
     logger.info(f"Tracking {len(generator_duids)} DUIDs")
 
-    start_time = f"{fy1_start}/07/01 00:00:00"
-    end_time = f"{fy_current_start}/07/01 00:00:00"
-
     nemosis_cache = str(Path(cache_dir) / "nemosis_cache")
     Path(nemosis_cache).mkdir(parents=True, exist_ok=True)
 
     duid_list = list(generator_duids)
 
-    # ── SCADA (actual output) via NEMOSIS ─────────────────────────────────
-    logger.info("Fetching DISPATCH_UNIT_SCADA via NEMOSIS...")
-    scada = dynamic_data_compiler(
-        start_time=start_time,
-        end_time=end_time,
-        table_name="DISPATCH_UNIT_SCADA",
-        raw_data_location=nemosis_cache,
-        select_columns=["SETTLEMENTDATE", "DUID", "SCADAVALUE"],
-        filter_cols=["DUID"],
-        filter_values=[duid_list],
-        fformat="parquet",
-        rebuild=full_refresh,
-    )
+    # Process one FY at a time to stay within runner memory limits
+    fy_results = []
+    for fy_start in [fy1_start, fy2_start]:
+        result = _fetch_and_aggregate_fy(fy_start, nemosis_cache, duid_list, full_refresh)
+        if result is not None:
+            fy_results.append(result)
 
-    if scada is None or scada.empty:
-        logger.warning("No SCADA data returned from NEMOSIS")
+    if not fy_results:
+        logger.warning("No curtailment data returned for any FY")
         return pd.DataFrame()
 
-    scada["SCADAVALUE"] = pd.to_numeric(scada["SCADAVALUE"], errors="coerce")
-    scada = scada.dropna(subset=["SCADAVALUE"])
-    logger.info(f"SCADA: {len(scada):,} rows for {scada['DUID'].nunique()} DUIDs")
+    annual = pd.concat(fy_results, ignore_index=True)
 
-    # DISPATCHLOAD ZIPs contain all NEM units and are large. Delete the raw
-    # SCADA ZIPs/CSVs now that parquets are built, to free disk space.
-    _cache_path = Path(nemosis_cache)
-    removed = 0
-    for pattern in ("*.zip", "*.csv"):
-        for f in _cache_path.glob(pattern):
-            f.unlink(missing_ok=True)
-            removed += 1
-    if removed:
-        logger.info(f"Freed {removed} raw NEMOSIS files before DISPATCHLOAD download")
-
-    # ── AVAILABILITY (unconstrained capacity) via NEMOSIS ─────────────────
-    logger.info("Fetching DISPATCHLOAD (AVAILABILITY) via NEMOSIS...")
-    dispatch = dynamic_data_compiler(
-        start_time=start_time,
-        end_time=end_time,
-        table_name="DISPATCHLOAD",
-        raw_data_location=nemosis_cache,
-        select_columns=["SETTLEMENTDATE", "DUID", "AVAILABILITY", "INTERVENTION"],
-        filter_cols=["DUID"],
-        filter_values=[duid_list],
-        fformat="parquet",
-        rebuild=full_refresh,
-    )
-
-    if dispatch is None or dispatch.empty:
-        logger.warning("No DISPATCHLOAD data returned from NEMOSIS")
-        return pd.DataFrame()
-
-    # Filter to non-intervention intervals (INTERVENTION is int64 in NEMOSIS)
-    dispatch["INTERVENTION"] = pd.to_numeric(dispatch["INTERVENTION"], errors="coerce")
-    dispatch = dispatch[dispatch["INTERVENTION"] == 0]
-    dispatch["AVAILABILITY"] = pd.to_numeric(dispatch["AVAILABILITY"], errors="coerce")
-    dispatch = dispatch.dropna(subset=["AVAILABILITY"])
-    logger.info(
-        f"DISPATCHLOAD: {len(dispatch):,} rows for {dispatch['DUID'].nunique()} DUIDs"
-    )
-
-    # ── Merge on SETTLEMENTDATE + DUID ────────────────────────────────────
-    scada["SETTLEMENTDATE"] = pd.to_datetime(scada["SETTLEMENTDATE"])
-    dispatch["SETTLEMENTDATE"] = pd.to_datetime(dispatch["SETTLEMENTDATE"])
-
-    merged = pd.merge(
-        scada[["SETTLEMENTDATE", "DUID", "SCADAVALUE"]],
-        dispatch[["SETTLEMENTDATE", "DUID", "AVAILABILITY"]],
-        on=["SETTLEMENTDATE", "DUID"],
-        how="inner",
-    )
-    logger.info(f"Merged: {len(merged):,} rows")
-
-    # ── Assign financial year ─────────────────────────────────────────────
-    merged["MONTH"] = merged["SETTLEMENTDATE"].dt.month
-    merged["FY_START"] = merged["SETTLEMENTDATE"].dt.year
-    merged.loc[merged["MONTH"] < 7, "FY_START"] -= 1
-
-    # ── Aggregate per DUID per FY ─────────────────────────────────────────
-    annual = (
-        merged.groupby(["DUID", "FY_START"])
-        .agg(total_scada=("SCADAVALUE", "sum"), total_avail=("AVAILABILITY", "sum"))
-        .reset_index()
-    )
-    annual["CURTAILMENT_PCT"] = (1 - annual["total_scada"] / annual["total_avail"]).clip(
-        lower=0
-    )
+    # ── Curtailment rate ──────────────────────────────────────────────────────
+    annual["CURTAILMENT_PCT"] = (1 - annual["total_scada"] / annual["total_avail"]).clip(lower=0)
     annual.loc[annual["total_avail"] == 0, "CURTAILMENT_PCT"] = 0
 
-    # ── Pivot to wide format ──────────────────────────────────────────────
+    # ── Pivot to wide format ──────────────────────────────────────────────────
     result_rows = []
     for duid in generator_duids:
         duid_data = annual[annual["DUID"] == duid]
