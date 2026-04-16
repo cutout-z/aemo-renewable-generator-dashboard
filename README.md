@@ -99,7 +99,7 @@ python -m src.main --skip-scada
 ### Automation
 
 GitHub Actions runs on:
-- **16th of each month**: Refresh SCADA curtailment data and MLFs
+- **3rd of each month**: Refresh SCADA curtailment data and MLFs
 - **August 1**: Annual refresh after ELI report and new FY MLFs are published (~July)
 - **Manual trigger**: `workflow_dispatch` with optional `full_refresh` and `skip_scada` flags
 
