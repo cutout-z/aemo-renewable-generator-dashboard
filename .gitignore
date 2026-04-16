@@ -5,14 +5,10 @@ __pycache__/
 .venv/
 venv/
 
-# Data cache (large files)
-data/scada/
-data/uigf/
+# Data cache — large non-feather artefacts (upstream workbooks etc.)
 data/*.csv
 data/*.xls
 data/*.xlsx
-
-data/nemosis_cache
 
 # OS
 .DS_Store

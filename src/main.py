@@ -12,7 +12,7 @@ from .download_generators import fetch_generators
 from .download_mlf import fetch_mlf_data
 from .download_eli import fetch_eli_curtailment
 from .download_rez import fetch_rez_forecasts
-from .download_curtailment import calculate_actual_curtailment
+from .fetch_curtailment import fetch_curtailment_by_fy
 from .merge import build_summary
 from .excel_output import generate_all_workbooks
 
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
-def run(full_refresh: bool = False, skip_scada: bool = False):
+def run(full_refresh: bool = False):
     """Main execution flow."""
     cache_dir = str(PROJECT_ROOT / config.DATA_DIR)
     output_dir = str(PROJECT_ROOT / config.OUTPUT_DIR)
@@ -87,18 +87,13 @@ def run(full_refresh: bool = False, skip_scada: bool = False):
             logger.warning(f"REZ forecast download failed: {e}")
             rez_data = pd.DataFrame()
 
-    # ── Step 5: Actual curtailment from SCADA + UIGF ────────────────────
+    # ── Step 5: Actual curtailment from credit dashboard ────────────────
     curt_cache = PROJECT_ROOT / config.CURTAILMENT_CACHE
-    if skip_scada:
-        logger.info("Skipping SCADA curtailment calculation (--skip-scada)")
-        actual_curtailment = pd.DataFrame()
-    elif not full_refresh and curt_cache.exists():
+    if not full_refresh and curt_cache.exists():
         logger.info("Loading cached actual curtailment data...")
         actual_curtailment = pd.read_feather(curt_cache)
     else:
-        actual_curtailment = calculate_actual_curtailment(
-            cache_dir, all_duids, full_refresh=full_refresh
-        )
+        actual_curtailment = fetch_curtailment_by_fy(all_duids)
         if not actual_curtailment.empty:
             curt_cache.parent.mkdir(parents=True, exist_ok=True)
             actual_curtailment.reset_index(drop=True).to_feather(curt_cache)
@@ -130,15 +125,10 @@ def main():
     parser.add_argument(
         "--full-refresh",
         action="store_true",
-        help="Re-download all data (default: use cached if available)",
-    )
-    parser.add_argument(
-        "--skip-scada",
-        action="store_true",
-        help="Skip SCADA/UIGF curtailment calculation (faster, uses cached or empty)",
+        help="Re-fetch all data from sources (default: use cached if available)",
     )
     args = parser.parse_args()
-    run(full_refresh=args.full_refresh, skip_scada=args.skip_scada)
+    run(full_refresh=args.full_refresh)
 
 
 if __name__ == "__main__":

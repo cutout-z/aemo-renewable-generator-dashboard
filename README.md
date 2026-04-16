@@ -10,7 +10,7 @@ For every utility-scale solar and wind farm in the NEM:
 
 | Category | Columns | Update frequency |
 |----------|---------|-----------------|
-| **Actual curtailment** | Last 2 FYs of metered curtailment (SCADA vs UIGF) | Monthly |
+| **Actual curtailment** | Last 2 completed FYs, sourced from the credit dashboard | Monthly |
 | **ELI projected curtailment** | Near-term (2026-28) and medium-term (2030-35) projections | Annual (July) |
 | **Marginal loss factors** | Last 2 actual FYs + current year draft | Annual (July/Oct) |
 | **ISP curtailment forecast** | Next 3 FY forecasts + average, by REZ | Annual (July) |
@@ -24,24 +24,21 @@ For every utility-scale solar and wind farm in the NEM:
 | Projected curtailment | AEMO Enhanced Locational Information (ELI) Report | [aemo.com.au/.../inputs-assumptions-methodologies](https://aemo.com.au/energy-systems/electricity/national-electricity-market-nem/nem-forecasting-and-planning/forecasting-and-planning-data/inputs-assumptions-and-methodologies) |
 | REZ forecasts | Appendices to AEMO ELI Report | Same as above |
 | MLFs | AEMO MLF Tracker (via [cutout-z/aemo-mlf-tracker](https://github.com/cutout-z/aemo-mlf-tracker)) | [cutout-z.github.io/aemo-mlf-tracker](https://cutout-z.github.io/aemo-mlf-tracker/) |
-| Actual curtailment | AEMO NEMWEB MMSDM Archive (DISPATCH_UNIT_SCADA + INTERMITTENT_GEN_FCST_DATA) | [nemweb.com.au/Data_Archive](https://nemweb.com.au/Data_Archive/Wholesale_Electricity/MMSDM/) |
+| Actual curtailment | AEMO Generator Credit Dashboard ([cutout-z/aemo-generator-credit-dashboard](https://github.com/cutout-z/aemo-generator-credit-dashboard)) | [cutout-z.github.io/aemo-generator-credit-dashboard/data/curtailment_by_fy.csv](https://cutout-z.github.io/aemo-generator-credit-dashboard/data/curtailment_by_fy.csv) |
 
 ## Methodology
 
 ### Actual curtailment
 
-Calculated from AEMO's 5-minute dispatch data:
+Sourced from the [Generator Credit Dashboard](https://github.com/cutout-z/aemo-generator-credit-dashboard), which computes monthly per-DUID curtailment from AEMO's `INTERMITTENT_GEN_SCADA` table (quality flags separate grid curtailment from mechanical outages from Dec 2024 onwards). Its pipeline re-pulls only the last two months of dispatch each run, so the shared history is never rebuilt from scratch.
+
+This dashboard fetches the credit dashboard's published FY rollup (`curtailment_by_fy.csv`) and surfaces the last two completed financial years. The rollup is a generation-weighted average across the 12 months of each FY:
 
 ```
-curtailment % = 1 - (actual_MW / uigf_MW)
+curtailment_FY = Σ(monthly_curtailment × monthly_generation) / Σ(monthly_generation)
 ```
 
-- **actual_MW**: `DISPATCH_UNIT_SCADA` — actual dispatched MW per 5-minute interval
-- **uigf_MW**: `INTERMITTENT_GEN_FCST_DATA` — AEMO's unconstrained intermittent generation forecast (what the generator *would have* produced without network constraints or curtailment)
-
-Aggregated monthly per DUID, then averaged to financial year. This is the standard methodology used by AEMO in their Quarterly Energy Dynamics reports.
-
-UIGF is available for all semi-scheduled generators (i.e., all utility-scale solar and wind farms). Values are clipped to [0, 1] — negative curtailment (actual > UIGF) is set to zero.
+Values are in [0, 1]. Partial FYs (`months_covered < 12`) are excluded from the cross-sectional table.
 
 ### ELI projected curtailment
 
@@ -72,11 +69,11 @@ Data sourced from the [AEMO MLF Tracker](https://github.com/cutout-z/aemo-mlf-tr
 ### Pipeline
 
 ```
-NEM Generation Info → download_generators.py → generator listing (spine)
-MLF Tracker CSV     → download_mlf.py        → MLF columns
-ELI Chart Data      → download_eli.py         → projected curtailment
-ELI Appendices      → download_rez.py         → REZ forecasts
-SCADA + UIGF        → download_curtailment.py → actual curtailment
+NEM Generation Info   → download_generators.py → generator listing (spine)
+MLF Tracker CSV       → download_mlf.py        → MLF columns
+ELI Chart Data        → download_eli.py        → projected curtailment
+ELI Appendices        → download_rez.py        → REZ forecasts
+Credit Dashboard CSV  → fetch_curtailment.py   → actual curtailment
                     ↓
                 merge.py → summary.csv → index.html (dashboard)
                          → *.xlsx      (per-state workbooks)
@@ -87,11 +84,11 @@ SCADA + UIGF        → download_curtailment.py → actual curtailment
 ```bash
 pip install -r requirements.txt
 
-# Full run (includes SCADA download — slow first time, ~50-150MB per month)
-python -m src.main --full-refresh
+# Fetch + merge + write outputs
+python -m src.main
 
-# Quick run (skip SCADA, use cached data)
-python -m src.main --skip-scada
+# Ignore feather caches and re-fetch everything
+python -m src.main --full-refresh
 
 # Then open index.html in a browser
 ```
@@ -99,9 +96,8 @@ python -m src.main --skip-scada
 ### Automation
 
 GitHub Actions runs on:
-- **3rd of each month**: Refresh SCADA curtailment data and MLFs
-- **August 1**: Annual refresh after ELI report and new FY MLFs are published (~July)
-- **Manual trigger**: `workflow_dispatch` with optional `full_refresh` and `skip_scada` flags
+- **20th of each month**: refresh generator listing, MLFs, ELI, and fetch the credit dashboard's latest FY curtailment rollup (credit dashboard itself runs on the 18th).
+- **Manual trigger**: `workflow_dispatch` with optional `full_refresh` flag.
 
 ## Output Validation
 

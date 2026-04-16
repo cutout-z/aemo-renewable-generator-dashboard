@@ -81,7 +81,13 @@ ELI_APPENDIX_URLS = {
     ),
 }
 
-# SCADA + DISPATCHLOAD: fetched via NEMOSIS (dynamic_data_compiler)
+# Actual curtailment: consolidated FY rollup from the credit dashboard pipeline.
+# The credit dashboard computes monthly curtailment per DUID from
+# INTERMITTENT_GEN_SCADA and publishes the FY rollup via GitHub Pages.
+CREDIT_CURTAILMENT_URL = (
+    "https://cutout-z.github.io/aemo-generator-credit-dashboard/"
+    "data/curtailment_by_fy.csv"
+)
 
 # ─── Paths (relative to project root) ──────────────────────────────────────
 
@@ -94,7 +100,6 @@ GENERATOR_CACHE = "data/generators.feather"
 MLF_CACHE = "data/mlf_tracker.feather"
 ELI_CURTAILMENT_CACHE = "data/eli_curtailment.feather"
 REZ_FORECAST_CACHE = "data/rez_forecasts.feather"
-NEMOSIS_CACHE_DIR = "data/nemosis_cache"
 CURTAILMENT_CACHE = "data/actual_curtailment.feather"
 
 # ─── Network ────────────────────────────────────────────────────────────────
