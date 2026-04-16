@@ -12,8 +12,6 @@ data/*.csv
 data/*.xls
 data/*.xlsx
 
-data/*.feather
-!data/actual_curtailment.feather
 data/nemosis_cache
 
 # OS
