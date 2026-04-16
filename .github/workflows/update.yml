@@ -2,18 +2,13 @@ name: Monthly Curtailment Update
 
 on:
   schedule:
-    # 3rd of each month — refresh SCADA curtailment + MLF data
-    - cron: '0 0 3 * *'
-    # August 1 — post-ELI/MLF publication (~July)
-    - cron: '0 0 1 8 *'
+    # 20th of each month — credit dashboard publishes curtailment_by_fy.csv
+    # on the 18th, so we fetch the fresh rollup two days later.
+    - cron: '0 0 20 * *'
   workflow_dispatch:
     inputs:
       full_refresh:
-        description: 'Re-download all data from scratch'
-        required: false
-        default: 'false'
-      skip_scada:
-        description: 'Skip SCADA/UIGF curtailment calculation'
+        description: 'Re-fetch all data (ignore feather caches)'
         required: false
         default: 'false'
 
@@ -23,7 +18,7 @@ permissions:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -39,14 +34,7 @@ jobs:
         run: |
           ARGS=""
           if [ "${{ github.event.inputs.full_refresh }}" = "true" ]; then
-            ARGS="$ARGS --full-refresh"
-          fi
-          # August 1 annual run: FY window has shifted, must recompute curtailment
-          if [ "${{ github.event.schedule }}" = "0 0 1 8 *" ]; then
-            ARGS="$ARGS --full-refresh"
-          fi
-          if [ "${{ github.event.inputs.skip_scada }}" = "true" ]; then
-            ARGS="$ARGS --skip-scada"
+            ARGS="--full-refresh"
           fi
           python -m src.main $ARGS
 
