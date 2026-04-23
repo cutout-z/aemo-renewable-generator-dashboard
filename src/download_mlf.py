@@ -45,7 +45,7 @@ def fetch_mlf_data(cache_dir: str, generator_duids: set[str] | None = None) -> p
     df = pd.read_csv(csv_path)
 
     # Find all FY columns (both final and draft)
-    fy_cols = sorted([c for c in df.columns if c.startswith("FY")])
+    fy_cols = sorted([c for c in df.columns if c.startswith("FY") and "Import" not in c])
     final_cols = [c for c in fy_cols if "Draft" not in c]
     draft_cols = [c for c in fy_cols if "Draft" in c]
 
