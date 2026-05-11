@@ -1,8 +1,8 @@
-# VPS Monthly Updates
+# VPS Data Monitoring
 
 Production model:
 
-- Hetzner VPS runs the monthly renewable generator dashboard refresh after the upstream Credit Dashboard and MLF Tracker outputs are available.
+- Hetzner VPS checks daily for renewable dashboard source updates after the upstream Credit Dashboard and MLF Tracker outputs are available.
 - GitHub stores code, small source snapshots in `data/*.feather`, and publishable `outputs/`.
 - GitHub Pages deploys after the VPS pushes updated files.
 - GitHub Actions remains available for manual verification, but should not be the primary scheduled data runner.
@@ -18,7 +18,7 @@ The source footprint is small, so the VPS lane uses `--full-refresh` to avoid st
 
 | Lane | Timer | Pipeline args | Purpose |
 | --- | --- | --- | --- |
-| Monthly renewable generator dashboard | `aemo-renewable-generator-dashboard.timer` | `--full-refresh` | Refresh generator listing, MLF feed, ELI/REZ data, actual curtailment rollup, and workbooks. |
+| Renewable generator source monitor | `aemo-renewable-generator-dashboard.timer` | `--full-refresh` | Check daily for updated generator listing, MLF feed, ELI/REZ data, or actual curtailment rollup, and publish only when canonical summary data changes. |
 
 Recommended layout:
 
