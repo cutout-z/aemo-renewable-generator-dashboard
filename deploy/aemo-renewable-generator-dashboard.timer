@@ -1,10 +1,10 @@
 [Unit]
-Description=Run monthly AEMO Renewable Generator Dashboard refresh
+Description=Monitor AEMO Renewable Generator Dashboard source data
 Documentation=https://github.com/cutout-z/aemo-renewable-generator-dashboard
 
 [Timer]
-# Run after the credit dashboard's monthly market data and MLF/reference lanes.
-OnCalendar=*-*-21 01:10:00
+# Check daily after upstream AEMO credit/MLF/reference lanes have had a chance to publish.
+OnCalendar=*-*-* 01:10:00
 RandomizedDelaySec=30m
 Persistent=true
 Unit=aemo-renewable-generator-dashboard.service

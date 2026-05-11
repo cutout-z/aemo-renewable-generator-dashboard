@@ -13,6 +13,8 @@ cd "${APP_DIR}"
 git fetch origin main
 git checkout main
 git pull --ff-only origin main
+before_summary="$(mktemp)"
+cp outputs/summary.csv "${before_summary}" 2>/dev/null || true
 
 "${PYTHON}" -m src.main ${PIPELINE_ARGS}
 
@@ -21,6 +23,14 @@ if [[ "${RUN_TESTS}" == "1" ]]; then
 fi
 
 git add outputs/ data/*.feather
+
+if [[ -s "${before_summary}" ]] && cmp -s "${before_summary}" outputs/summary.csv; then
+  git restore --staged --worktree -- outputs/ data/*.feather
+  rm -f "${before_summary}"
+  echo "No canonical summary.csv changes; skipping workbook/cache-only publish noise."
+  exit 0
+fi
+rm -f "${before_summary}"
 
 if git diff --cached --quiet; then
   echo "No publishable output changes."
