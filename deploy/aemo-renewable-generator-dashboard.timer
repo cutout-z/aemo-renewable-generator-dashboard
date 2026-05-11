@@ -1,0 +1,13 @@
+[Unit]
+Description=Run monthly AEMO Renewable Generator Dashboard refresh
+Documentation=https://github.com/cutout-z/aemo-renewable-generator-dashboard
+
+[Timer]
+# Run after the credit dashboard's monthly market data and MLF/reference lanes.
+OnCalendar=*-*-21 01:10:00
+RandomizedDelaySec=30m
+Persistent=true
+Unit=aemo-renewable-generator-dashboard.service
+
+[Install]
+WantedBy=timers.target
