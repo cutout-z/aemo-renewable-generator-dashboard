@@ -95,9 +95,13 @@ python -m src.main --full-refresh
 
 ### Automation
 
-GitHub Actions runs on:
-- **20th of each month**: refresh generator listing, MLFs, ELI, and fetch the credit dashboard's latest FY curtailment rollup (credit dashboard itself runs on the 18th).
-- **Manual trigger**: `workflow_dispatch` with optional `full_refresh` flag.
+Production updates are monitored by the Hetzner VPS systemd lane documented in [`deploy/README.md`](deploy/README.md):
+
+- `aemo-renewable-generator-dashboard.timer` runs daily after the upstream Credit Dashboard and MLF Tracker lanes have had time to publish.
+- The VPS refreshes generator listing, MLF feed, ELI/REZ source data, and the Credit Dashboard curtailment rollup.
+- If AEMO ELI/REZ workbook URLs fail, the pipeline falls back to cached source snapshots rather than dropping projected-curtailment or REZ forecast columns.
+- The VPS publishes only when canonical `outputs/summary.csv` changes, so daily workbook/cache regeneration does not create noisy commits.
+- GitHub Actions is kept as a manual verification/fallback runner with optional `full_refresh`.
 
 ## Output Validation
 
@@ -112,7 +116,7 @@ After the pipeline runs and before committing, an automated validation step (`te
 - Curtailment values in [0, 1]
 - All 5 regional Excel workbooks exist
 
-If any check fails, the workflow exits before committing — preventing bad data from reaching the dashboard.
+If any check fails, the VPS runner or manual fallback workflow exits before committing — preventing bad data from reaching the dashboard.
 
 ## Outputs
 
