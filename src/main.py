@@ -70,7 +70,11 @@ def run(full_refresh: bool = False):
                 eli_data.reset_index(drop=True).to_feather(eli_cache)
         except Exception as e:
             logger.warning(f"ELI curtailment download failed: {e}")
-            eli_data = pd.DataFrame()
+            if eli_cache.exists():
+                logger.warning("Using cached ELI curtailment data after refresh failure")
+                eli_data = pd.read_feather(eli_cache)
+            else:
+                eli_data = pd.DataFrame()
 
     # ── Step 4: REZ forecasts ────────────────────────────────────────────
     rez_cache = PROJECT_ROOT / config.REZ_FORECAST_CACHE
@@ -85,7 +89,11 @@ def run(full_refresh: bool = False):
                 rez_data.reset_index(drop=True).to_feather(rez_cache)
         except Exception as e:
             logger.warning(f"REZ forecast download failed: {e}")
-            rez_data = pd.DataFrame()
+            if rez_cache.exists():
+                logger.warning("Using cached REZ forecast data after refresh failure")
+                rez_data = pd.read_feather(rez_cache)
+            else:
+                rez_data = pd.DataFrame()
 
     # ── Step 5: Actual curtailment from credit dashboard ────────────────
     curt_cache = PROJECT_ROOT / config.CURTAILMENT_CACHE
@@ -93,10 +101,18 @@ def run(full_refresh: bool = False):
         logger.info("Loading cached actual curtailment data...")
         actual_curtailment = pd.read_feather(curt_cache)
     else:
-        actual_curtailment = fetch_curtailment_by_fy(all_duids)
-        if not actual_curtailment.empty:
-            curt_cache.parent.mkdir(parents=True, exist_ok=True)
-            actual_curtailment.reset_index(drop=True).to_feather(curt_cache)
+        try:
+            actual_curtailment = fetch_curtailment_by_fy(all_duids)
+            if not actual_curtailment.empty:
+                curt_cache.parent.mkdir(parents=True, exist_ok=True)
+                actual_curtailment.reset_index(drop=True).to_feather(curt_cache)
+        except Exception as e:
+            logger.warning(f"Actual curtailment refresh failed: {e}")
+            if curt_cache.exists():
+                logger.warning("Using cached actual curtailment data after refresh failure")
+                actual_curtailment = pd.read_feather(curt_cache)
+            else:
+                actual_curtailment = pd.DataFrame()
 
     # ── Step 6: Build merged summary ─────────────────────────────────────
     summary = build_summary(
