@@ -1,10 +1,8 @@
 name: Monthly Curtailment Update
 
 on:
-  schedule:
-    # 20th of each month — credit dashboard publishes curtailment_by_fy.csv
-    # on the 18th, so we fetch the fresh rollup two days later.
-    - cron: '0 0 20 * *'
+  # Scheduled production updates run on the Hetzner VPS via systemd.
+  # Keep this workflow as a manual verification/fallback runner.
   workflow_dispatch:
     inputs:
       full_refresh:
