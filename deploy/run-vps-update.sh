@@ -12,7 +12,10 @@ cd "${APP_DIR}"
 
 git fetch origin main
 git checkout main
-git pull --ff-only origin main
+if ! git pull --ff-only origin main; then
+  echo "origin/main is not fast-forwardable (rewritten?) — resetting onto it."
+  git reset --hard origin/main
+fi
 before_summary="$(mktemp)"
 cp outputs/summary.csv "${before_summary}" 2>/dev/null || true
 
