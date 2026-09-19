@@ -95,13 +95,16 @@ python -m src.main --full-refresh
 
 ### Automation
 
-Production updates are monitored by the Hetzner VPS systemd lane documented in [`deploy/README.md`](deploy/README.md):
+Production updates run on the **NAS runner** (QNAP `ai-wif-runner` container) via the `nas-job aemo-renewable-generator-dashboard` lane documented in [`deploy/README.md`](deploy/README.md):
 
-- `aemo-renewable-generator-dashboard.timer` runs daily after the upstream Credit Dashboard and MLF Tracker lanes have had time to publish.
-- The VPS refreshes generator listing, MLF feed, ELI/REZ source data, and the Credit Dashboard curtailment rollup.
+- A QNAP scheduled task fires the lane daily after the upstream Credit Dashboard and MLF Tracker lanes have had time to publish.
+- The lane refreshes generator listing, MLF feed, ELI/REZ source data, and the Credit Dashboard curtailment rollup.
 - If AEMO ELI/REZ workbook URLs fail, the pipeline falls back to cached source snapshots rather than dropping projected-curtailment or REZ forecast columns.
-- The VPS publishes only when canonical `outputs/summary.csv` changes, so daily workbook/cache regeneration does not create noisy commits.
+- The lane commits as `aemo-nas-bot` and publishes only when canonical `outputs/summary.csv` changes, so daily workbook/cache regeneration does not create noisy commits.
 - GitHub Actions is kept as a manual verification/fallback runner with optional `full_refresh`.
+- GitHub Pages deploys on those pushes.
+
+*Historical:* this lane ran on a Hetzner VPS under the `aemo-renewable-generator-dashboard.timer` systemd timer before the 2026-09 NAS migration. That setup is retired and its unit files were deleted in the same cleanup.
 
 ## Output Validation
 
@@ -116,7 +119,7 @@ After the pipeline runs and before committing, an automated validation step (`te
 - Curtailment values in [0, 1]
 - All 5 regional Excel workbooks exist
 
-If any check fails, the VPS runner or manual fallback workflow exits before committing — preventing bad data from reaching the dashboard.
+If any check fails, the NAS lane or manual fallback workflow exits before committing — preventing bad data from reaching the dashboard.
 
 ## Outputs
 
