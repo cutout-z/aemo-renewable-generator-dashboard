@@ -1,7 +1,7 @@
 name: Monthly Curtailment Update
 
 on:
-  # Scheduled production updates run on the Hetzner VPS via systemd.
+  # Scheduled production updates run on the NAS runner (nas-job; see deploy/README.md).
   # Keep this workflow as a manual verification/fallback runner.
   workflow_dispatch:
     inputs:

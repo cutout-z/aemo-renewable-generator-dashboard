@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/opt/aemo-renewable-generator-dashboard}"
+APP_DIR="${APP_DIR:-/workspace/repos/aemo-renewable-generator-dashboard}"
 PYTHON="${PYTHON:-${APP_DIR}/.venv/bin/python}"
 PIPELINE_ARGS="${PIPELINE_ARGS:---full-refresh}"
 RUN_TESTS="${RUN_TESTS:-1}"
@@ -40,8 +40,8 @@ if git diff --cached --quiet; then
   exit 0
 fi
 
-git config user.name "${GIT_AUTHOR_NAME:-aemo-vps-bot}"
-git config user.email "${GIT_AUTHOR_EMAIL:-aemo-vps-bot@users.noreply.github.com}"
+git config user.name "${GIT_AUTHOR_NAME:-aemo-nas-bot}"
+git config user.email "${GIT_AUTHOR_EMAIL:-aemo-nas-bot@users.noreply.github.com}"
 git commit -m "${COMMIT_MESSAGE_PREFIX} $(date -u +%Y-%m)"
 
 if [[ "${PUSH_CHANGES}" == "1" ]]; then
