@@ -51,11 +51,15 @@
 <main class="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6">
 
 <header class="mb-5">
-  <h1 class="text-[22px] font-semibold leading-7">AEMO Renewable Generator Dashboard</h1>
-  <p class="card-sub">Projected curtailment, MLFs, ISP forecasts, and actual curtailment for NEM solar and wind generators</p>
+  <div class="eyebrow">National Electricity Market · solar and wind generators</div>
+  <h1 class="mt-1 text-[22px] font-semibold leading-7">AEMO Renewable Generator Dashboard</h1>
+  <p class="card-sub max-w-[72ch]">Curtailment, marginal loss factors (MLFs) and ISP forecasts for every NEM solar and wind farm: actual results alongside AEMO's projections.</p>
 </header>
 
-<div class="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5" id="stats"></div>
+<section class="card mb-4">
+  <div class="card-body grid grid-cols-2 gap-x-6 gap-y-5 pt-4 sm:grid-cols-3 lg:grid-cols-5" id="stats"></div>
+  <div class="card-foot" id="statsFoot"></div>
+</section>
 
 <div class="mb-3 flex flex-wrap items-center gap-2">
   <div class="seg" id="tabs"></div>
@@ -235,20 +239,28 @@ function renderStats() {
   const mlfCols = colDefs.filter(d => d.group === 'mlf');
   const latestMlf = mlfCols.length ? mlfCols[mlfCols.length - 1].key : null;
   const mlfVals = latestMlf ? rows.map(r => parseFloat(r[latestMlf])).filter(v => !isNaN(v)) : [];
-  const avgMlf = mlfVals.length ? (mlfVals.reduce((a,b) => a+b, 0) / mlfVals.length).toFixed(4) : '-';
+  const avgMlf = mlfVals.length ? (mlfVals.reduce((a,b) => a+b, 0) / mlfVals.length).toFixed(4) : 'N/A';
 
   // Average near-term curtailment
   const nearVals = rows.map(r => parseFloat(r.ELI_CURTAILMENT_NEAR)).filter(v => !isNaN(v));
-  const avgNear = nearVals.length ? (nearVals.reduce((a,b) => a+b, 0) / nearVals.length * 100).toFixed(1) + '%' : '-';
+  const avgNear = nearVals.length ? (nearVals.reduce((a,b) => a+b, 0) / nearVals.length * 100).toFixed(1) + '%' : 'N/A';
 
-  const tile = (value, label) =>
-    `<div class="card px-4 py-3"><div class="kpi-value">${value}</div><div class="kpi-label">${label}</div></div>`;
+  const scope = activeRegion === 'ALL' ? 'NEM' : STATES[activeRegion];
+  const tile = (value, label, sub, cls) =>
+    `<div class="${cls || ''}"><div class="kpi-value">${value}</div><div class="kpi-label">${label}</div><div class="mt-0.5 text-[12px] text-faint">${sub}</div></div>`;
+  const nOf = (n) => `${n} of ${rows.length} with a value`;
   document.getElementById('stats').innerHTML =
-    tile(solarCount, 'Solar farms') +
-    tile(windCount, 'Wind farms') +
-    tile(rezCount, 'In REZ') +
-    tile(avgMlf, 'Avg MLF' + (latestMlf ? ' (' + latestMlf.replace('MLF_','') + ')' : '')) +
-    tile(avgNear, 'Avg ELI near curtailment');
+    tile(rows.length, 'Generators', scope) +
+    tile(`${solarCount} · ${windCount}`, 'Solar · wind farms', 'split of ' + rows.length) +
+    tile(rezCount, 'In a REZ', `${rows.length - rezCount} outside a zone`) +
+    tile(avgMlf, latestMlf ? 'Avg MLF, ' + latestMlf.replace('MLF_','') : 'Avg MLF', mlfVals.length ? nOf(mlfVals.length) : 'none with a value') +
+    tile(avgNear, 'Avg ELI near-term curtailment, 2026-28', nearVals.length ? nOf(nearVals.length) : 'none with a value', 'col-span-2 sm:col-span-1');
+  document.getElementById('statsFoot').innerHTML = '<span>' + [
+    'Source: outputs/summary.csv',
+    `${scope}; unweighted mean across generators with a value; filters do not apply`,
+    'Rhythms differ: actual curtailment is monthly, ELI and ISP forecasts annual (July), MLFs annual (July/Oct)',
+    'The CSV carries no publish date; it is refreshed daily and republished only when values change'
+  ].join(' \u00B7 ') + '</span>';
 }
 
 // ── Tabs ─────────────────────────────────────────────────────────────────
