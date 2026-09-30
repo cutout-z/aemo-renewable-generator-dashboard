@@ -1,112 +1,145 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AEMO Renewable Generator Dashboard</title>
+<link rel="stylesheet" href="assets/css/app.css">
+<script>
+  // Theme before first paint: ?theme=light|dark forces one (and is not remembered); otherwise the viewer's
+  // last choice; otherwise the dark default that is already on <html>.
+  (function () {
+    var t = null;
+    try {
+      var q = new URLSearchParams(location.search).get('theme');
+      t = (q === 'light' || q === 'dark') ? q : localStorage.getItem('theme');
+    } catch (e) {}
+    if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
-  :root { --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3a; --text: #e0e0e0; --muted: #888; --accent: #4472C4; --green: #63BE7B; --red: #F8696B; --yellow: #FFEB84; --solar: #f39c12; --wind: #3498db; }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 24px; }
-  h1 { font-size: 1.5rem; margin-bottom: 4px; }
-  .subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 20px; }
+  /* The dense table. Every colour is a token; the only page-specific decision is which token a metric
+     family uses (the family convention: entities take the status tokens, minus --bad, which stays a status). */
+  .fam-actual { --fam: var(--info); }
+  .fam-eli    { --fam: var(--accent); }
+  .fam-mlf    { --fam: var(--good); }
+  .fam-isp-c  { --fam: var(--warn); }
+  .fam-isp-o  { --fam: var(--neutral); }
+  .fam-dot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 9999px; background: var(--fam); vertical-align: 0; }
 
-  .controls { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
-  .tabs { display: flex; gap: 4px; flex-wrap: wrap; }
-  .tab { padding: 8px 18px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); border-radius: 6px 6px 0 0; cursor: pointer; font-size: 0.9rem; transition: all 0.15s; }
-  .tab:hover { color: var(--text); border-color: var(--accent); }
-  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .table-wrap { overflow: auto; max-height: 75vh; }
+  .dt { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 13px; line-height: 20px; }
 
-  .filters { display: flex; gap: 8px; align-items: center; margin-left: auto; }
-  select, input[type="text"] { padding: 6px 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 4px; font-size: 0.85rem; }
-  input[type="text"] { width: 200px; }
+  .dt thead th { position: sticky; z-index: 3; height: 32px; padding: 0 12px; background: var(--surface); color: var(--muted); font-size: 12px; font-weight: 500; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--line); }
+  .dt thead tr:first-child th { top: 0; }
+  .dt th.r { text-align: right; }
+  .dt th.gh { color: var(--text); font-weight: 600; background: color-mix(in srgb, var(--fam) 16%, var(--surface)); border-top: 3px solid var(--fam); border-bottom: 1px solid var(--line-soft); }
+  .dt th.ch { background: color-mix(in srgb, var(--fam) 9%, var(--surface)); border-bottom: 2px solid var(--fam); }
+  .dt th[data-col] { cursor: pointer; user-select: none; }
+  .dt th[data-col]:hover { color: var(--text); }
+  .dt th[data-col]:hover::after { content: "\2195"; margin-left: 4px; opacity: .6; }
+  .dt th[aria-sort="ascending"]::after,  .dt th[aria-sort="ascending"]:hover::after  { content: "\2191"; margin-left: 4px; color: var(--accent); opacity: 1; }
+  .dt th[aria-sort="descending"]::after, .dt th[aria-sort="descending"]:hover::after { content: "\2193"; margin-left: 4px; color: var(--accent); opacity: 1; }
 
-  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; max-height: 75vh; }
-  table { border-collapse: collapse; width: 100%; font-size: 0.82rem; }
-  th { background: var(--accent); color: #fff; padding: 8px 10px; text-align: center; position: sticky; white-space: nowrap; z-index: 1; cursor: pointer; }
-  th.group-header { top: 0; z-index: 2; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--bg); cursor: default; }
-  th.group-header:hover { background: inherit; }
-  th.col-header { top: 32px; }
-  th:first-child { text-align: center; width: 40px; cursor: default; }
-  th:nth-child(2) { text-align: left; }
-  th:hover { background: #3a62a4; }
-  th:first-child:hover { background: var(--accent); }
-  th.sorted-asc::after { content: " ▲"; }
-  th.sorted-desc::after { content: " ▼"; }
-  td { padding: 6px 10px; text-align: center; border-bottom: 1px solid var(--border); white-space: nowrap; }
-  td:first-child { text-align: center; width: 40px; }
-  td:nth-child(2) { text-align: left; font-weight: 500; }
-  td:nth-child(3) { text-align: left; }
-  tr:hover td { background: rgba(68,114,196,0.08); }
-  tr.selected td { background: rgba(68,114,196,0.18); }
+  .dt tbody td { height: 36px; padding: 0 12px; border-bottom: 1px solid var(--line-soft); white-space: nowrap; }
+  .dt tbody td:not([class*="seq-"]) { background: var(--surface); }   /* a heat cell keeps its own step */
+  .dt tbody tr:hover td:not([class*="seq-"]) { background: var(--surface-2); }
+  .dt tbody tr.selected td:not([class*="seq-"]) { background: var(--accent-wash); }
+  .dt tbody tr.selected td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
+  .dt td.r { text-align: right; }
+  .dt td.h, .dt th.ch.r { min-width: 76px; }
+  .na { color: var(--faint); }              /* .seq-none makes text transparent; a stated N/A must be readable */
 
-  .cb { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
-  .val-cell { font-variant-numeric: tabular-nums; }
-  .na-cell { color: var(--muted); font-style: italic; }
+  /* The generator (checkbox + DUID) stays in view when the table scrolls sideways. */
+  .dt .p0, .dt .p1 { position: sticky; z-index: 2; }
+  .dt thead .p0, .dt thead .p1 { z-index: 5; }
+  .dt .p0 { left: 0; width: 44px; min-width: 44px; max-width: 44px; padding: 0; }
+  .dt .p1 { left: 44px; min-width: 104px; box-shadow: 1px 0 0 var(--line); }
+  .cbl { display: flex; align-items: center; justify-content: center; width: 44px; height: 100%; min-height: 32px; cursor: pointer; }
+  .cb { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
 
-  .stats { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 18px; min-width: 140px; }
-  .stat-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; }
-  .stat-value { font-size: 1.3rem; font-weight: 600; margin-top: 2px; }
+  /* A state panel lives inside the sideways-scrolling box; pin it so it is never scrolled out of view. */
+  #noMatch, #loadError { position: sticky; left: 0; }
 
-  .actions { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
-  .action-btn { padding: 8px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--accent); font-size: 0.85rem; cursor: pointer; transition: all 0.15s; }
-  .action-btn:hover { background: var(--accent); color: #fff; }
-  .action-btn:disabled { opacity: 0.4; cursor: default; }
-  .action-btn:disabled:hover { background: var(--surface); color: var(--accent); }
-  .sel-count { color: var(--muted); font-size: 0.85rem; }
-
-  .downloads { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
-  .dl-btn { display: inline-block; padding: 8px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--accent); text-decoration: none; font-size: 0.85rem; transition: all 0.15s; }
-  .dl-btn:hover { background: var(--accent); color: #fff; }
-  .footer { margin-top: 24px; color: var(--muted); font-size: 0.78rem; }
-  .loading { text-align: center; padding: 40px; color: var(--muted); }
-
-  /* Column group headers */
-  .col-group-eli { background: #5a4a8a !important; }
-  .col-group-eli:hover { background: #4a3a7a !important; }
-  .col-group-mlf { background: #2e7d32 !important; }
-  .col-group-mlf:hover { background: #1b5e20 !important; }
-  .col-group-isp-c { background: #c62828 !important; }
-  .col-group-isp-c:hover { background: #b71c1c !important; }
-  .col-group-isp-o { background: #e65100 !important; }
-  .col-group-isp-o:hover { background: #bf360c !important; }
-  .col-group-actual { background: #00695c !important; }
-  .col-group-actual:hover { background: #004d40 !important; }
+  /* The legend swatches reuse the ramp classes themselves, so a swatch can never disagree with a cell. */
+  .lg { display: inline-flex; height: 24px; min-width: 54px; align-items: center; justify-content: center; padding: 0 6px; border-radius: 4px; font-size: 12px; font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
+<main class="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6">
 
-<h1>AEMO Renewable Generator Dashboard</h1>
-<p class="subtitle">Projected curtailment, MLFs, ISP forecasts, and actual curtailment for NEM solar and wind generators</p>
+<header class="mb-5 flex items-start justify-between gap-4">
+  <div>
+    <div class="eyebrow">National Electricity Market · solar and wind generators</div>
+    <h1 class="mt-1 text-[22px] font-semibold leading-7">AEMO Renewable Generator Dashboard</h1>
+    <p class="card-sub max-w-[72ch]">Curtailment, marginal loss factors (MLFs) and ISP forecasts for every NEM solar and wind farm: actual results alongside AEMO's projections.</p>
+  </div>
+  <button class="btn btn-ghost shrink-0" id="themeToggle" type="button">Light mode</button>
+</header>
 
-<div class="stats" id="stats"></div>
+<section class="card mb-4">
+  <div class="card-body grid grid-cols-2 gap-x-6 gap-y-5 pt-4 sm:grid-cols-3 lg:grid-cols-5" id="stats"></div>
+  <div class="card-foot" id="statsFoot"></div>
+</section>
 
-<div class="controls">
-  <div class="tabs" id="tabs"></div>
-  <div class="filters">
-    <select id="fuelFilter"><option value="">All Types</option><option value="Solar">Solar</option><option value="Wind">Wind</option></select>
-    <select id="rezFilter"><option value="">All REZ</option><option value="Y">REZ Only</option><option value="N">Non-REZ Only</option></select>
-    <input type="text" id="search" placeholder="Search DUID, project, REZ...">
+<div class="z-30 -mt-1 mb-3 bg-bg pb-2 pt-1 sm:sticky sm:top-0" id="controls">
+  <div class="card flex flex-wrap items-center gap-2 p-2">
+    <div class="seg" id="tabs" role="group" aria-label="Region"></div>
+    <select id="fuelFilter" class="input w-auto" aria-label="Fuel type"><option value="">All Types</option><option value="Solar">Solar</option><option value="Wind">Wind</option></select>
+    <select id="rezFilter" class="input w-auto" aria-label="Renewable Energy Zone"><option value="">All REZ</option><option value="Y">REZ Only</option><option value="N">Non-REZ Only</option></select>
+    <input type="text" id="search" class="input w-full min-w-[12rem] sm:w-auto sm:flex-1" placeholder="Search DUID, project, REZ..." aria-label="Search DUID, project, REZ">
+    <div class="flex flex-wrap items-center gap-2 sm:ml-auto" id="actions">
+      <span class="badge empty:hidden" id="rowCount" aria-live="polite"></span>
+      <span class="badge empty:hidden" id="selCount" aria-live="polite"></span>
+      <button class="btn btn-ghost" id="clearSelection" style="display:none">Clear</button>
+      <button class="btn btn-primary disabled:cursor-default disabled:opacity-40" id="exportSelected" disabled>Export selected to Excel</button>
+    </div>
   </div>
 </div>
 
-<div class="actions" id="actions">
-  <button class="action-btn" id="exportSelected" disabled>Export Selected to Excel</button>
-  <button class="action-btn" id="clearSelection" style="display:none">Clear Selection</button>
-  <span class="sel-count" id="selCount"></span>
-</div>
+<section class="card overflow-hidden">
+  <div class="card-head">
+    <div>
+      <h2 class="card-title">Generators</h2>
+      <p class="card-sub max-w-[90ch]">One row per generator. <strong class="font-medium text-ink">Actual</strong> is curtailment achieved in the last completed financial years; <strong class="font-medium text-ink">ELI</strong> and <strong class="font-medium text-ink">ISP</strong> are projections (ISP is forecast per REZ); <strong class="font-medium text-ink">MLF</strong> is the share of the regional price a generator receives. Click a column to sort.</p>
+    </div>
+  </div>
+  <div class="flex flex-wrap gap-x-8 gap-y-3 px-5 pb-3 pt-3" id="legends"></div>
 
-<div class="table-wrap"><div class="loading" id="loading">Loading data...</div><table id="table" style="display:none"><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+  <div class="table-wrap">
+    <div class="space-y-2 px-5 py-4" id="loading" aria-busy="true" aria-label="Loading data">
+      <div class="skeleton h-6 w-full"></div><div class="skeleton h-6 w-full"></div><div class="skeleton h-6 w-full"></div><div class="skeleton h-6 w-full"></div>
+      <div class="skeleton h-6 w-full"></div><div class="skeleton h-6 w-full"></div><div class="skeleton h-6 w-full"></div><div class="skeleton h-6 w-full"></div>
+    </div>
+    <table class="dt" id="table" style="display:none"><thead id="thead"></thead><tbody id="tbody"></tbody></table>
+    <div class="state px-5" id="noMatch" style="display:none">
+      <div>
+        <div class="state-title">No generators match</div>
+        <div class="state-body" id="noMatchBody"></div>
+        <button class="btn mt-3" id="resetFilters" type="button">Clear filters</button>
+      </div>
+    </div>
+    <div class="state px-5" id="loadError" style="display:none">
+      <div>
+        <div class="state-title">Couldn't load outputs/summary.csv</div>
+        <div class="state-body">The file this table is built from wasn't found or couldn't be read, so no generators are shown and nothing can be exported. It is published next to this page; the workbook downloads below may still work.</div>
+        <button class="btn mt-3" type="button" onclick="location.reload()">Try again</button>
+      </div>
+    </div>
+  </div>
 
-<div class="downloads" id="downloads"></div>
-<div class="footer" id="footer"></div>
+  <div class="flex flex-wrap items-center gap-2 border-t border-line-soft px-5 py-3" id="downloads"></div>
+  <div class="card-foot" id="footer"></div>
+</section>
+
+</main>
 
 <script>
 const STATES = {NSW1:'NSW',QLD1:'QLD',VIC1:'VIC',SA1:'SA',TAS1:'TAS'};
 const EXCEL_FILES = {NSW1:'NSW_curtailment.xlsx',QLD1:'QLD_curtailment.xlsx',VIC1:'VIC_curtailment.xlsx',SA1:'SA_curtailment.xlsx',TAS1:'TAS_curtailment.xlsx'};
+const GROUP_LABELS = {actual:'Actual curtailment', eli:'ELI projected', mlf:'Marginal loss factor', 'isp-c':'ISP curtailment forecast', 'isp-o':'ISP offloading forecast'};
 
 let allData = [];
 let colDefs = [];  // [{key, label, group}]
@@ -115,50 +148,25 @@ let sortCol = null;
 let sortDir = 'asc';
 let selected = new Set();
 
-// ── Colour functions ─────────────────────────────────────────────────────
+// ── Heat scale ───────────────────────────────────────────────────────────
+// One ramp (.seq-0 … .seq-7), two stated scales. On both, a stronger fill means MORE LOST:
+//   share of energy   — actual curtailment, ELI, ISP curtailment, ISP offloading (fractions of output)
+//   share of price    — MLF, read as loss = 1 − MLF (MLF 0.90 = 10% of the regional price lost)
+// The JS only picks a step; the colours live in the token file. The legend is built from these same arrays.
+const LOSS_EDGES = [0.01, 0.025, 0.05, 0.10, 0.20, 0.40, 0.70];                 // step = number of edges ≤ value
+const LOSS_LABELS = ['<1%', '1–2.5%', '2.5–5%', '5–10%', '10–20%', '20–40%', '40–70%', '70–100%'];
+const MLF_EDGES = [1.00, 0.98, 0.96, 0.94, 0.92, 0.90, 0.85];                   // step = first edge the value reaches
+const MLF_LABELS = ['≥1.00', '0.98–1.00', '0.96–0.98', '0.94–0.96', '0.92–0.94', '0.90–0.92', '0.85–0.90', '<0.85'];
 
-function mlfColor(val) {
-  if (val === '' || val === null || isNaN(val)) return '';
-  const lo = 0.80, mid = 0.95, hi = 1.05;
-  const v = Math.max(lo, Math.min(hi, val));
-  let r, g, b;
-  if (v <= mid) {
-    const t = (v - lo) / (mid - lo);
-    r = Math.round(248 + (255 - 248) * t);
-    g = Math.round(105 + (235 - 105) * t);
-    b = Math.round(107 + (132 - 107) * t);
-  } else {
-    const t = (v - mid) / (hi - mid);
-    r = Math.round(255 + (99 - 255) * t);
-    g = Math.round(235 + (190 - 235) * t);
-    b = Math.round(132 + (123 - 132) * t);
-  }
-  return `rgb(${r},${g},${b})`;
-}
+function lossStep(v) { return LOSS_EDGES.filter(e => v >= e).length; }
+function mlfStep(v) { const i = MLF_EDGES.findIndex(e => v >= e); return i < 0 ? 7 : i; }
 
-function curtailmentColor(val) {
-  // 0% = green, 5% = yellow, 15%+ = red (inverted from MLF)
-  if (val === '' || val === null || isNaN(val)) return '';
-  const v = Math.max(0, Math.min(0.20, val));
-  let r, g, b;
-  if (v <= 0.05) {
-    const t = v / 0.05;
-    r = Math.round(99 + (255 - 99) * t);
-    g = Math.round(190 + (235 - 190) * t);
-    b = Math.round(123 + (132 - 123) * t);
-  } else {
-    const t = (v - 0.05) / 0.15;
-    r = Math.round(255 + (248 - 255) * t);
-    g = Math.round(235 + (105 - 235) * t);
-    b = Math.round(132 + (107 - 132) * t);
-  }
-  return `rgb(${r},${g},${b})`;
-}
-
-function textColorForBg(val, isMlf) {
-  if (val === '' || val === null || isNaN(val)) return '';
-  if (isMlf) return val >= 0.85 && val <= 1.02 ? '#1a1a1a' : '#e0e0e0';
-  return val >= 0.02 && val <= 0.12 ? '#1a1a1a' : '#e0e0e0';
+function renderLegends() {
+  const swatches = (labels) => labels.map((l, i) => `<span class="lg seq-${i}">${l}</span>`).join('');
+  document.getElementById('legends').innerHTML =
+    `<div data-heat-legend="loss"><div class="mb-1.5 text-[12px] font-medium text-muted">Share of energy lost: actual, ELI and ISP columns. Stronger fill = more lost</div><div class="flex flex-wrap gap-0.5">${swatches(LOSS_LABELS)}</div></div>` +
+    `<div data-heat-legend="mlf"><div class="mb-1.5 text-[12px] font-medium text-muted">MLF, by price lost (1 − MLF). Stronger fill = lower MLF</div><div class="flex flex-wrap gap-0.5">${swatches(MLF_LABELS)}</div></div>` +
+    `<div data-heat-legend="na"><div class="mb-1.5 text-[12px] font-medium text-muted">Not available</div><div class="flex items-center gap-2"><span class="lg seq-none na">N/A</span><span class="max-w-[46ch] text-[12px] leading-4 text-faint">No value in the data file. ISP forecasts are made per REZ, so every generator outside a REZ is N/A there.</span></div></div>`;
 }
 
 // ── Column detection ─────────────────────────────────────────────────────
@@ -251,6 +259,9 @@ function getFiltered() {
 
 // ── Stats ────────────────────────────────────────────────────────────────
 
+const tile = (value, label, sub, cls) =>
+  `<div class="${cls || ''}"><div class="kpi-value">${value}</div><div class="kpi-label">${label}</div><div class="mt-0.5 text-[12px] text-faint">${sub}</div></div>`;
+
 function renderStats() {
   const rows = getBaseRows();
   const solarCount = rows.filter(r => r.FUEL_TYPE === 'Solar').length;
@@ -261,19 +272,34 @@ function renderStats() {
   const mlfCols = colDefs.filter(d => d.group === 'mlf');
   const latestMlf = mlfCols.length ? mlfCols[mlfCols.length - 1].key : null;
   const mlfVals = latestMlf ? rows.map(r => parseFloat(r[latestMlf])).filter(v => !isNaN(v)) : [];
-  const avgMlf = mlfVals.length ? (mlfVals.reduce((a,b) => a+b, 0) / mlfVals.length).toFixed(4) : '-';
+  const avgMlf = mlfVals.length ? (mlfVals.reduce((a,b) => a+b, 0) / mlfVals.length).toFixed(4) : 'N/A';
 
   // Average near-term curtailment
   const nearVals = rows.map(r => parseFloat(r.ELI_CURTAILMENT_NEAR)).filter(v => !isNaN(v));
-  const avgNear = nearVals.length ? (nearVals.reduce((a,b) => a+b, 0) / nearVals.length * 100).toFixed(1) + '%' : '-';
+  const avgNear = nearVals.length ? (nearVals.reduce((a,b) => a+b, 0) / nearVals.length * 100).toFixed(1) + '%' : 'N/A';
 
-  document.getElementById('stats').innerHTML = `
-    <div class="stat-card"><div class="stat-label">Solar Farms</div><div class="stat-value" style="color:var(--solar)">${solarCount}</div></div>
-    <div class="stat-card"><div class="stat-label">Wind Farms</div><div class="stat-value" style="color:var(--wind)">${windCount}</div></div>
-    <div class="stat-card"><div class="stat-label">In REZ</div><div class="stat-value">${rezCount}</div></div>
-    <div class="stat-card"><div class="stat-label">Avg MLF${latestMlf ? ' (' + latestMlf.replace('MLF_','') + ')' : ''}</div><div class="stat-value">${avgMlf}</div></div>
-    <div class="stat-card"><div class="stat-label">Avg ELI Near Curtailment</div><div class="stat-value" style="color:${nearVals.length && parseFloat(avgNear) > 30 ? 'var(--red)' : 'var(--green)'}">${avgNear}</div></div>
-  `;
+  const scope = activeRegion === 'ALL' ? 'NEM' : STATES[activeRegion];
+  const nOf = (n) => `${n} of ${rows.length} with a value`;
+  document.getElementById('stats').innerHTML =
+    tile(rows.length, 'Generators', scope) +
+    tile(`${solarCount} · ${windCount}`, 'Solar · wind farms', 'split of ' + rows.length) +
+    tile(rezCount, 'In a REZ', `${rows.length - rezCount} outside a zone`) +
+    tile(avgMlf, latestMlf ? 'Avg MLF, ' + latestMlf.replace('MLF_','') : 'Avg MLF', mlfVals.length ? nOf(mlfVals.length) : 'none with a value') +
+    tile(avgNear, 'Avg ELI near-term curtailment, 2026-28', nearVals.length ? nOf(nearVals.length) : 'none with a value', 'col-span-2 sm:col-span-1');
+  document.getElementById('statsFoot').innerHTML = '<span>' + [
+    'Source: outputs/summary.csv',
+    `${scope}; unweighted mean across generators with a value; filters do not apply`,
+    'Rhythms differ: actual curtailment is monthly, ELI and ISP forecasts annual (July), MLFs annual (July/Oct)',
+    'The CSV carries no publish date; it is refreshed daily and republished only when values change'
+  ].join(' · ') + '</span>';
+}
+
+function renderStatsUnavailable() {
+  const why = 'data file unavailable';
+  document.getElementById('stats').innerHTML =
+    tile('N/A', 'Generators', why) + tile('N/A', 'Solar · wind farms', why) + tile('N/A', 'In a REZ', why) +
+    tile('N/A', 'Avg MLF', why) + tile('N/A', 'Avg ELI near-term curtailment, 2026-28', why, 'col-span-2 sm:col-span-1');
+  document.getElementById('statsFoot').innerHTML = '<span>Source: outputs/summary.csv could not be loaded</span>';
 }
 
 // ── Tabs ─────────────────────────────────────────────────────────────────
@@ -281,29 +307,28 @@ function renderStats() {
 function renderTabs() {
   const container = document.getElementById('tabs');
   container.innerHTML = '';
-
-  const allBtn = document.createElement('button');
-  allBtn.className = 'tab' + (activeRegion === 'ALL' ? ' active' : '');
-  allBtn.textContent = 'All';
-  allBtn.onclick = () => { activeRegion = 'ALL'; renderAll(); };
-  container.appendChild(allBtn);
-
-  for (const [id, name] of Object.entries(STATES)) {
+  const add = (id, name) => {
     const btn = document.createElement('button');
-    btn.className = 'tab' + (id === activeRegion ? ' active' : '');
+    btn.type = 'button';
+    btn.className = 'seg-item h-8 sm:h-7' + (id === activeRegion ? ' seg-item-active' : '');
     btn.textContent = name;
+    btn.setAttribute('aria-pressed', id === activeRegion);
     btn.onclick = () => { activeRegion = id; renderAll(); };
     container.appendChild(btn);
-  }
+  };
+  add('ALL', 'All');
+  for (const [id, name] of Object.entries(STATES)) add(id, name);
 }
 
 // ── Selection ────────────────────────────────────────────────────────────
 
 function updateSelectionUI() {
   const n = selected.size;
-  document.getElementById('exportSelected').disabled = n === 0;
+  const btn = document.getElementById('exportSelected');
+  btn.disabled = n === 0;
+  btn.title = n === 0 ? (allData.length ? 'Tick one or more generators to export them' : 'No data loaded') : '';
   document.getElementById('clearSelection').style.display = n > 0 ? '' : 'none';
-  document.getElementById('selCount').textContent = n > 0 ? `${n} asset${n > 1 ? 's' : ''} selected` : '';
+  document.getElementById('selCount').textContent = allData.length ? `${n} selected` : '';
 }
 
 function toggleSelect(duid) {
@@ -328,6 +353,23 @@ function toggleSelectAll() {
 
 // ── Table ────────────────────────────────────────────────────────────────
 
+function naReason(row, d) {
+  if (d.group === 'isp-c' || d.group === 'isp-o')
+    return row.REZ === 'N' ? 'N/A: ISP forecasts are made per Renewable Energy Zone and this generator is outside a REZ'
+                           : 'N/A: no ISP forecast in outputs/summary.csv for this generator';
+  if (d.group === 'eli') return 'N/A: no ELI projection in outputs/summary.csv for this generator';
+  if (d.group === 'mlf') return 'N/A: no MLF in outputs/summary.csv for this generator';
+  return 'N/A: no completed-year actual in outputs/summary.csv for this generator';
+}
+
+// The header's second row sticks under the first; measure rather than guess the first row's height.
+function syncStickyOffsets() {
+  const first = document.querySelector('#thead tr');
+  if (!first) return;
+  const h = first.offsetHeight;
+  document.querySelectorAll('#thead tr:nth-child(2) th').forEach(th => { th.style.top = h + 'px'; });
+}
+
 function renderTable() {
   const thead = document.getElementById('thead');
   const tbody = document.getElementById('tbody');
@@ -344,11 +386,14 @@ function renderTable() {
     });
   }
 
+  const RIGHT = new Set(['NAMEPLATE_MW']);
+  const sortAttr = (d) => d.key === sortCol ? ` aria-sort="${sortDir === 'asc' ? 'ascending' : 'descending'}"` : '';
+
   // Group header row + column header row
-  const groupLabels = {actual:'Actual Curtailment', eli:'ELI Projected', mlf:'Marginal Loss Factor', 'isp-c':'ISP Curtailment Forecast', 'isp-o':'ISP Offloading Forecast'};
-  let groupRow = '<tr><th class="group-header" rowspan="2"><input type="checkbox" class="cb" id="selectAll" ' + (allChecked ? 'checked' : '') + '></th>';
+  let groupRow = `<tr><th class="p0" rowspan="2" scope="col"><label class="cbl"><input type="checkbox" class="cb" id="selectAll" aria-label="Select all shown generators" ${allChecked ? 'checked' : ''}></label></th>`;
   let colRow = '<tr>';
   let i = 0;
+  let metaSeen = 0;
   while (i < colDefs.length) {
     const g = colDefs[i].group;
     let span = 0;
@@ -357,16 +402,15 @@ function renderTable() {
       // Meta columns span both rows — no group label needed
       for (let j = i; j < i + span; j++) {
         const d = colDefs[j];
-        const sortCls = d.key === sortCol ? (sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc') : '';
-        groupRow += `<th class="group-header ${sortCls}" rowspan="2" data-col="${d.key}" style="cursor:pointer">${d.label}</th>`;
+        const cls = (metaSeen === 0 ? 'p1 ' : '') + (RIGHT.has(d.key) ? 'r' : '');
+        groupRow += `<th class="${cls}" rowspan="2" scope="col" data-col="${d.key}" tabindex="0"${sortAttr(d)}>${d.label}</th>`;
+        metaSeen++;
       }
     } else {
-      const groupCls = ` col-group-${g}`;
-      groupRow += `<th class="group-header${groupCls}" colspan="${span}">${groupLabels[g] || g}</th>`;
+      groupRow += `<th class="gh fam-${g}" colspan="${span}" scope="colgroup"><span class="fam-dot"></span>${GROUP_LABELS[g] || g}</th>`;
       for (let j = i; j < i + span; j++) {
         const d = colDefs[j];
-        const sortCls = d.key === sortCol ? (sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc') : '';
-        colRow += `<th class="col-header ${sortCls}${groupCls}" data-col="${d.key}">${d.label}</th>`;
+        colRow += `<th class="ch r fam-${g}" scope="col" data-col="${d.key}" tabindex="0"${sortAttr(d)}>${d.label}</th>`;
       }
     }
     i += span;
@@ -378,49 +422,41 @@ function renderTable() {
 
   document.getElementById('selectAll').onchange = toggleSelectAll;
   thead.querySelectorAll('th[data-col]').forEach(th => {
-    th.onclick = () => {
+    const sort = () => {
       const col = th.dataset.col;
       if (sortCol === col) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
       else { sortCol = col; sortDir = 'asc'; }
       renderTable();
+      const again = document.querySelector(`#thead th[data-col="${col}"]`);
+      if (again) again.focus({preventScroll: true});
     };
+    th.onclick = sort;
+    th.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sort(); } };
   });
 
   // Body
   tbody.innerHTML = rows.map(row => {
     const duid = row.DUID || '';
     const isSelected = selected.has(duid);
-    const cells = [`<td><input type="checkbox" class="cb" ${isSelected ? 'checked' : ''} data-duid="${duid}"></td>`];
+    const cells = [`<td class="p0"><label class="cbl"><input type="checkbox" class="cb" ${isSelected ? 'checked' : ''} data-duid="${duid}" aria-label="Select ${duid}"></label></td>`];
+    let metaIdx = 0;
 
     colDefs.forEach(d => {
       const raw = row[d.key];
       const val = parseFloat(raw);
       const isNum = !isNaN(val);
 
-      if (d.group === 'mlf' && isNum) {
-        const bg = mlfColor(val);
-        const fg = textColorForBg(val, true);
-        cells.push(`<td class="val-cell" style="background:${bg};color:${fg}">${val.toFixed(4)}</td>`);
-      } else if ((d.group === 'actual' || d.group === 'eli') && isNum) {
-        const bg = curtailmentColor(val);
-        const fg = textColorForBg(val, false);
-        cells.push(`<td class="val-cell" style="background:${bg};color:${fg}">${(val * 100).toFixed(1)}%</td>`);
-      } else if ((d.group === 'isp-c' || d.group === 'isp-o') && isNum) {
-        const bg = curtailmentColor(val);
-        const fg = textColorForBg(val, false);
-        cells.push(`<td class="val-cell" style="background:${bg};color:${fg}">${(val * 100).toFixed(1)}%</td>`);
-      } else if (raw === 'N/A' || (d.group !== 'meta' && !isNum && (raw === '' || raw === undefined || raw === null))) {
-        const isNonRezIsp = row.REZ === 'N' && (d.group === 'isp-c' || d.group === 'isp-o');
-        const display = isNonRezIsp ? 'N/A' : '-';
-        const tip = isNonRezIsp ? ' title="ISP forecasts are only available for generators within a Renewable Energy Zone (REZ)"' : '';
-        cells.push(`<td class="na-cell"${tip}>${display}</td>`);
-      } else if (d.key === 'NAMEPLATE_MW' && isNum) {
-        cells.push(`<td>${val.toFixed(0)}</td>`);
-      } else if (d.key === 'FUEL_TYPE') {
-        const color = raw === 'Solar' ? 'var(--solar)' : raw === 'Wind' ? 'var(--wind)' : '';
-        cells.push(`<td style="color:${color};font-weight:500">${raw || ''}</td>`);
+      if (d.group === 'meta') {
+        const pin = metaIdx++ === 0 ? 'p1 font-medium ' : '';
+        if (d.key === 'NAMEPLATE_MW' && isNum) cells.push(`<td class="${pin}r num">${val.toFixed(0)}</td>`);
+        else cells.push(`<td class="${pin}">${raw || ''}</td>`);
+      } else if (isNum) {
+        const step = d.group === 'mlf' ? mlfStep(val) : lossStep(val);
+        const text = d.group === 'mlf' ? val.toFixed(4) : (val * 100).toFixed(1) + '%';
+        cells.push(`<td class="h r num seq-${step}">${text}</td>`);
       } else {
-        cells.push(`<td>${raw || ''}</td>`);
+        const why = naReason(row, d);
+        cells.push(`<td class="h r na seq-none" title="${why}">N/A</td>`);
       }
     });
 
@@ -433,7 +469,22 @@ function renderTable() {
 
   document.getElementById('table').style.display = '';
   document.getElementById('loading').style.display = 'none';
+  document.getElementById('rowCount').textContent = `${rows.length} of ${allData.length} shown`;
+
+  // A filter that matches nothing says so, in the table area — the header stays, so the columns are still legible.
+  const none = rows.length === 0;
+  document.getElementById('noMatch').style.display = none ? '' : 'none';
+  if (none) {
+    const parts = [];
+    if (activeRegion !== 'ALL') parts.push(STATES[activeRegion]);
+    const fuel = document.getElementById('fuelFilter').value; if (fuel) parts.push(fuel);
+    const rez = document.getElementById('rezFilter').value; if (rez) parts.push(rez === 'Y' ? 'in a REZ' : 'outside a REZ');
+    const q = document.getElementById('search').value.trim(); if (q) parts.push(`matching “${q}”`);
+    document.getElementById('noMatchBody').textContent =
+      `None of the ${allData.length} generators is ${parts.join(', ') || 'shown'}. Loosen a filter or clear the search.`;
+  }
   updateSelectionUI();
+  syncStickyOffsets();
 }
 
 // ── Export ────────────────────────────────────────────────────────────────
@@ -463,12 +514,26 @@ function exportSelectedToExcel() {
 
 function renderDownloads() {
   const container = document.getElementById('downloads');
-  container.innerHTML = '<strong style="width:100%;margin-bottom:4px">Download Excel:&nbsp;</strong>' +
+  container.innerHTML = '<span class="eyebrow mr-1">Download</span>' +
     Object.entries(STATES).map(([id, name]) =>
-      `<a class="dl-btn" href="outputs/${EXCEL_FILES[id]}" download>${name}</a>`
+      `<a class="btn" href="outputs/${EXCEL_FILES[id]}" download>${name}</a>`
     ).join('') +
-    `<a class="dl-btn" href="outputs/summary.csv" download>CSV (All)</a>`;
+    `<a class="btn" href="outputs/summary.csv" download>CSV (All)</a>`;
 }
+
+// ── Theme ────────────────────────────────────────────────────────────────
+
+function syncThemeButton() {
+  const light = document.documentElement.getAttribute('data-theme') === 'light';
+  document.getElementById('themeToggle').textContent = light ? 'Dark mode' : 'Light mode';
+}
+document.getElementById('themeToggle').onclick = () => {
+  const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('theme', next); } catch (e) {}
+  syncThemeButton();
+};
+syncThemeButton();
 
 // ── Init ─────────────────────────────────────────────────────────────────
 
@@ -480,28 +545,55 @@ function renderAll() {
   renderTable();
 }
 
+function showLoadError() {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('table').style.display = 'none';
+  document.getElementById('legends').style.display = 'none';
+  document.getElementById('loadError').style.display = '';
+  document.getElementById('rowCount').textContent = 'No data';
+  renderTabs();
+  renderStatsUnavailable();
+  renderDownloads();
+  updateSelectionUI();
+  document.getElementById('footer').textContent = 'Source: outputs/summary.csv could not be loaded.';
+}
+
 document.getElementById('search').oninput = () => renderTable();
 document.getElementById('fuelFilter').onchange = () => { renderStats(); renderTable(); };
 document.getElementById('rezFilter').onchange = () => { renderStats(); renderTable(); };
 document.getElementById('exportSelected').onclick = exportSelectedToExcel;
 document.getElementById('clearSelection').onclick = () => { selected.clear(); updateSelectionUI(); renderTable(); };
+document.getElementById('resetFilters').onclick = () => {
+  document.getElementById('fuelFilter').value = '';
+  document.getElementById('rezFilter').value = '';
+  document.getElementById('search').value = '';
+  activeRegion = 'ALL';
+  renderAll();
+};
+window.addEventListener('resize', syncStickyOffsets);
+
+renderLegends();
 
 Papa.parse('outputs/summary.csv', {
   download: true,
   header: true,
   skipEmptyLines: true,
   complete: function(results) {
+    // A 404 page or an empty file parses "successfully"; only a table with a DUID column is data.
+    if (!results.data.length || !('DUID' in results.data[0])) return showLoadError();
     allData = results.data;
     sortCol = 'ELI_CURTAILMENT_NEAR';
     sortDir = 'desc';
     renderAll();
     renderDownloads();
-    document.getElementById('footer').textContent =
-      `${allData.length} generators tracked \u00B7 Source: AEMO ELI Report, NEM Generation Information, MMSDM Archive \u00B7 Dashboard auto-updates monthly`;
+    document.getElementById('footer').innerHTML = '<span>' + [
+      `${allData.length} generators tracked`,
+      'Source: AEMO ELI Report (projections), NEM Generation Information, MMSDM Archive (MLFs); actual curtailment from the Generator Credit Dashboard rollup',
+      'Two rhythms: actuals monthly (last two completed FYs), ELI and ISP annual (July), MLFs annual (July/Oct)',
+      'The CSV carries no publish date; the dashboard refreshes daily and republishes only when values change'
+    ].join(' · ') + '</span>';
   },
-  error: function() {
-    document.getElementById('loading').textContent = 'Failed to load data. Check that outputs/summary.csv exists.';
-  }
+  error: showLoadError
 });
 </script>
 </body>
