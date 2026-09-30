@@ -58,15 +58,24 @@ def rgb(value: str):
 
 
 def token_sets() -> tuple[dict[str, str], dict[str, str]]:
-    """Read the two theme blocks out of the token source.
+    """Read both theme roots out of the token source.
 
-    Comments are stripped before scanning: the token source explains itself in `/* … */` comments and
-    one of them names a token (the `--faint` line's "4.9:1 on --surface"), which a naive scan reads as a
-    declaration and then compares the page against. Fix the scan, never the prose."""
+    Two hazards, both already paid for in this family: the source explains itself in `/* … */` comments
+    and one of them names a token (the `--faint` line's "4.9:1 on --surface"), and the heat ramp lives in
+    a SECOND `:root` block further down the file — so a single split on the first `[data-theme="light"]`
+    leaves `seq-*` unread. Strip comments, then take every declaration block whose selector is a theme
+    root (`:root` = dark, `[data-theme="light"]` = light), later blocks overriding earlier ones."""
     css = re.sub(r"/\*.*?\*/", " ", TOKEN_SRC.read_text(), flags=re.S)
-    dark_part, _, light_part = css.partition('[data-theme="light"]')
     grab = lambda s: dict(re.findall(r"--([a-z0-9-]+)\s*:\s*([^;]+);", s))
-    return grab(dark_part), grab(light_part)
+    dark: dict[str, str] = {}
+    light: dict[str, str] = {}
+    for m in re.finditer(r"([^{}]+)\{([^{}]*)\}", css):
+        sel, body = m.group(1), m.group(2)
+        if "data-theme" in sel:
+            light.update(grab(body))
+        elif ":root" in sel:
+            dark.update(grab(body))
+    return dark, light
 
 
 def main() -> int:
@@ -136,6 +145,13 @@ def main() -> int:
               f"{len(heat) - len(seq)} cells not on the ramp")
         check(not [c for c in heat if "rgb" in (c["bg"] or "") and not re.search(on_ramp, c["cls"] or "")],
               "no heat cell carries an inline rgb() colour")
+        # A class can be present and still lose the cascade (a page rule out-ranking `.seq-*`), which
+        # leaves the cell unfilled while every name-based check passes. Compare the pixels to the tokens.
+        ramp_rgb = {rgb(dark[f"seq-{i}"]) for i in range(8) if f"seq-{i}" in dark}
+        numeric = [c for c in heat if c["txt"].endswith("%")]
+        unfilled = [c for c in numeric if rgb(c["bg"]) not in ramp_rgb]
+        check(not unfilled, "every numeric heat cell is actually filled from the ramp",
+              f"{len(unfilled)} of {len(numeric)} unfilled, e.g. {unfilled[:2]}")
         steps = {int(re.search(r"\bseq-(\d)\b", c["cls"]).group(1)) for c in seq if re.search(r"\bseq-(\d)\b", c["cls"])}
         check(len(steps) >= 4, "the ramp is graded, not one flat step", f"steps used: {sorted(steps)}")
         na = [c for c in heat if c["txt"] == "N/A"]
@@ -164,8 +180,11 @@ def main() -> int:
         state.route("**/outputs/summary.csv", lambda r: r.abort())
         state.goto(URL, wait_until="domcontentloaded", timeout=60000)
         state.wait_for_timeout(1500)
-        check(bool(state.eval_on_selector_all(".state", "e => e.map(x => x.innerText)")),
-              "a missing data file renders a .state panel, not a bare error string")
+        state_rows = state.eval_on_selector_all(
+            ".state", "e => e.map(x => ({txt: x.innerText, h: x.getBoundingClientRect().height}))")
+        check(bool(state_rows) and max(s["h"] for s in state_rows) > 0,
+              "a missing data file renders a VISIBLE .state panel, not a bare error string",
+              f"{len(state_rows)} .state element(s), tallest {max([s['h'] for s in state_rows], default=0):.0f}px")
         check(not errors, "no JS errors on load", "; ".join(errors[:3]))
 
         if args.screens:
