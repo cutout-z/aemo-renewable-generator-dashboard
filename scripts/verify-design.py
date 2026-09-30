@@ -58,7 +58,12 @@ def rgb(value: str):
 
 
 def token_sets() -> tuple[dict[str, str], dict[str, str]]:
-    css = TOKEN_SRC.read_text()
+    """Read the two theme blocks out of the token source.
+
+    Comments are stripped before scanning: the token source explains itself in `/* … */` comments and
+    one of them names a token (the `--faint` line's "4.9:1 on --surface"), which a naive scan reads as a
+    declaration and then compares the page against. Fix the scan, never the prose."""
+    css = re.sub(r"/\*.*?\*/", " ", TOKEN_SRC.read_text(), flags=re.S)
     dark_part, _, light_part = css.partition('[data-theme="light"]')
     grab = lambda s: dict(re.findall(r"--([a-z0-9-]+)\s*:\s*([^;]+);", s))
     return grab(dark_part), grab(light_part)
