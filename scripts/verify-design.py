@@ -129,10 +129,12 @@ def main() -> int:
             "td", "e => e.filter(x => /%/.test(x.innerText) || x.innerText.trim() === 'N/A')"
                   ".map(x => ({cls: x.className, txt: x.innerText.trim(), bg: getComputedStyle(x).backgroundColor}))")
         check(len(heat) >= 500, "the heat cells render", f"{len(heat)} cells")
-        seq = [c for c in heat if re.search(r"\bseq-\d\b", c["cls"] or "")]
+        # `.seq-none` is the token file's own step for "no value"; a stated N/A is on the ramp system, not off it.
+        on_ramp = r"\bseq-(\d|none)\b"
+        seq = [c for c in heat if re.search(on_ramp, c["cls"] or "")]
         check(len(seq) == len(heat), "every heat cell uses the .seq-* ramp",
               f"{len(heat) - len(seq)} cells not on the ramp")
-        check(not [c for c in heat if "rgb" in (c["bg"] or "") and not re.search(r"\bseq-\d\b", c["cls"] or "")],
+        check(not [c for c in heat if "rgb" in (c["bg"] or "") and not re.search(on_ramp, c["cls"] or "")],
               "no heat cell carries an inline rgb() colour")
         steps = {int(re.search(r"\bseq-(\d)\b", c["cls"]).group(1)) for c in seq if re.search(r"\bseq-(\d)\b", c["cls"])}
         check(len(steps) >= 4, "the ramp is graded, not one flat step", f"steps used: {sorted(steps)}")
