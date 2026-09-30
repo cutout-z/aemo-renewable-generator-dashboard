@@ -1,108 +1,82 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AEMO Renewable Generator Dashboard</title>
+<link rel="stylesheet" href="assets/css/app.css">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
-  :root { --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3a; --text: #e0e0e0; --muted: #888; --accent: #4472C4; --green: #63BE7B; --red: #F8696B; --yellow: #FFEB84; --solar: #f39c12; --wind: #3498db; }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 24px; }
-  h1 { font-size: 1.5rem; margin-bottom: 4px; }
-  .subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 20px; }
-
-  .controls { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
-  .tabs { display: flex; gap: 4px; flex-wrap: wrap; }
-  .tab { padding: 8px 18px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); border-radius: 6px 6px 0 0; cursor: pointer; font-size: 0.9rem; transition: all 0.15s; }
-  .tab:hover { color: var(--text); border-color: var(--accent); }
-  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-
-  .filters { display: flex; gap: 8px; align-items: center; margin-left: auto; }
-  select, input[type="text"] { padding: 6px 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 4px; font-size: 0.85rem; }
-  input[type="text"] { width: 200px; }
-
-  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; max-height: 75vh; }
-  table { border-collapse: collapse; width: 100%; font-size: 0.82rem; }
-  th { background: var(--accent); color: #fff; padding: 8px 10px; text-align: center; position: sticky; white-space: nowrap; z-index: 1; cursor: pointer; }
+  /* Table only. Shell, controls, tiles, footer and the reset now come from assets/css/app.css.
+     The table is restyled in BRIEF step 4; until then it keeps its own rules, re-pointed at the tokens
+     so the token layer's --accent (orange) does not leak into the header row. */
+  .table-wrap { overflow-x: auto; max-height: 75vh; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.82rem; line-height: normal; }
+  th { background: var(--surface-2); color: var(--text); padding: 8px 10px; text-align: center; position: sticky; white-space: nowrap; z-index: 1; cursor: pointer; }
   th.group-header { top: 0; z-index: 2; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--bg); cursor: default; }
   th.group-header:hover { background: inherit; }
   th.col-header { top: 32px; }
   th:first-child { text-align: center; width: 40px; cursor: default; }
   th:nth-child(2) { text-align: left; }
-  th:hover { background: #3a62a4; }
-  th:first-child:hover { background: var(--accent); }
+  th:hover { background: var(--surface-3); }
+  th:first-child:hover { background: var(--surface-2); }
   th.sorted-asc::after { content: " ▲"; }
   th.sorted-desc::after { content: " ▼"; }
-  td { padding: 6px 10px; text-align: center; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 6px 10px; text-align: center; border-bottom: 1px solid var(--line); white-space: nowrap; }
   td:first-child { text-align: center; width: 40px; }
   td:nth-child(2) { text-align: left; font-weight: 500; }
   td:nth-child(3) { text-align: left; }
-  tr:hover td { background: rgba(68,114,196,0.08); }
-  tr.selected td { background: rgba(68,114,196,0.18); }
+  tr:hover td { background: var(--surface-2); }
+  tr.selected td { background: var(--accent-wash); }
 
   .cb { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
   .val-cell { font-variant-numeric: tabular-nums; }
   .na-cell { color: var(--muted); font-style: italic; }
 
-  .stats { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 18px; min-width: 140px; }
-  .stat-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; }
-  .stat-value { font-size: 1.3rem; font-weight: 600; margin-top: 2px; }
-
-  .actions { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
-  .action-btn { padding: 8px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--accent); font-size: 0.85rem; cursor: pointer; transition: all 0.15s; }
-  .action-btn:hover { background: var(--accent); color: #fff; }
-  .action-btn:disabled { opacity: 0.4; cursor: default; }
-  .action-btn:disabled:hover { background: var(--surface); color: var(--accent); }
-  .sel-count { color: var(--muted); font-size: 0.85rem; }
-
-  .downloads { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
-  .dl-btn { display: inline-block; padding: 8px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--accent); text-decoration: none; font-size: 0.85rem; transition: all 0.15s; }
-  .dl-btn:hover { background: var(--accent); color: #fff; }
-  .footer { margin-top: 24px; color: var(--muted); font-size: 0.78rem; }
-  .loading { text-align: center; padding: 40px; color: var(--muted); }
-
   /* Column group headers */
-  .col-group-eli { background: #5a4a8a !important; }
+  .col-group-eli { background: #5a4a8a !important; color: white; }
   .col-group-eli:hover { background: #4a3a7a !important; }
-  .col-group-mlf { background: #2e7d32 !important; }
+  .col-group-mlf { background: #2e7d32 !important; color: white; }
   .col-group-mlf:hover { background: #1b5e20 !important; }
-  .col-group-isp-c { background: #c62828 !important; }
+  .col-group-isp-c { background: #c62828 !important; color: white; }
   .col-group-isp-c:hover { background: #b71c1c !important; }
-  .col-group-isp-o { background: #e65100 !important; }
+  .col-group-isp-o { background: #e65100 !important; color: white; }
   .col-group-isp-o:hover { background: #bf360c !important; }
-  .col-group-actual { background: #00695c !important; }
+  .col-group-actual { background: #00695c !important; color: white; }
   .col-group-actual:hover { background: #004d40 !important; }
 </style>
 </head>
 <body>
+<main class="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6">
 
-<h1>AEMO Renewable Generator Dashboard</h1>
-<p class="subtitle">Projected curtailment, MLFs, ISP forecasts, and actual curtailment for NEM solar and wind generators</p>
+<header class="mb-5">
+  <h1 class="text-[22px] font-semibold leading-7">AEMO Renewable Generator Dashboard</h1>
+  <p class="card-sub">Projected curtailment, MLFs, ISP forecasts, and actual curtailment for NEM solar and wind generators</p>
+</header>
 
-<div class="stats" id="stats"></div>
+<div class="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5" id="stats"></div>
 
-<div class="controls">
-  <div class="tabs" id="tabs"></div>
-  <div class="filters">
-    <select id="fuelFilter"><option value="">All Types</option><option value="Solar">Solar</option><option value="Wind">Wind</option></select>
-    <select id="rezFilter"><option value="">All REZ</option><option value="Y">REZ Only</option><option value="N">Non-REZ Only</option></select>
-    <input type="text" id="search" placeholder="Search DUID, project, REZ...">
-  </div>
+<div class="mb-3 flex flex-wrap items-center gap-2">
+  <div class="seg" id="tabs"></div>
+  <select id="fuelFilter" class="input w-auto" aria-label="Fuel type"><option value="">All Types</option><option value="Solar">Solar</option><option value="Wind">Wind</option></select>
+  <select id="rezFilter" class="input w-auto" aria-label="Renewable Energy Zone"><option value="">All REZ</option><option value="Y">REZ Only</option><option value="N">Non-REZ Only</option></select>
+  <input type="text" id="search" class="input w-full sm:w-64" placeholder="Search DUID, project, REZ..." aria-label="Search DUID, project, REZ">
 </div>
 
-<div class="actions" id="actions">
-  <button class="action-btn" id="exportSelected" disabled>Export Selected to Excel</button>
-  <button class="action-btn" id="clearSelection" style="display:none">Clear Selection</button>
-  <span class="sel-count" id="selCount"></span>
+<div class="mb-4 flex flex-wrap items-center gap-2" id="actions">
+  <button class="btn btn-primary disabled:cursor-default disabled:opacity-40" id="exportSelected" disabled>Export Selected to Excel</button>
+  <button class="btn btn-ghost" id="clearSelection" style="display:none">Clear Selection</button>
+  <span class="text-[13px] text-muted" id="selCount"></span>
 </div>
 
-<div class="table-wrap"><div class="loading" id="loading">Loading data...</div><table id="table" style="display:none"><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+<section class="card overflow-hidden">
+  <div class="table-wrap"><p class="px-5 py-10 text-center text-muted" id="loading">Loading data...</p><table id="table" style="display:none"><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+  <div class="flex flex-wrap items-center gap-2 border-t border-line-soft px-5 py-3" id="downloads"></div>
+  <div class="card-foot" id="footer"></div>
+</section>
 
-<div class="downloads" id="downloads"></div>
-<div class="footer" id="footer"></div>
+</main>
 
 <script>
 const STATES = {NSW1:'NSW',QLD1:'QLD',VIC1:'VIC',SA1:'SA',TAS1:'TAS'};
@@ -267,13 +241,14 @@ function renderStats() {
   const nearVals = rows.map(r => parseFloat(r.ELI_CURTAILMENT_NEAR)).filter(v => !isNaN(v));
   const avgNear = nearVals.length ? (nearVals.reduce((a,b) => a+b, 0) / nearVals.length * 100).toFixed(1) + '%' : '-';
 
-  document.getElementById('stats').innerHTML = `
-    <div class="stat-card"><div class="stat-label">Solar Farms</div><div class="stat-value" style="color:var(--solar)">${solarCount}</div></div>
-    <div class="stat-card"><div class="stat-label">Wind Farms</div><div class="stat-value" style="color:var(--wind)">${windCount}</div></div>
-    <div class="stat-card"><div class="stat-label">In REZ</div><div class="stat-value">${rezCount}</div></div>
-    <div class="stat-card"><div class="stat-label">Avg MLF${latestMlf ? ' (' + latestMlf.replace('MLF_','') + ')' : ''}</div><div class="stat-value">${avgMlf}</div></div>
-    <div class="stat-card"><div class="stat-label">Avg ELI Near Curtailment</div><div class="stat-value" style="color:${nearVals.length && parseFloat(avgNear) > 30 ? 'var(--red)' : 'var(--green)'}">${avgNear}</div></div>
-  `;
+  const tile = (value, label) =>
+    `<div class="card px-4 py-3"><div class="kpi-value">${value}</div><div class="kpi-label">${label}</div></div>`;
+  document.getElementById('stats').innerHTML =
+    tile(solarCount, 'Solar farms') +
+    tile(windCount, 'Wind farms') +
+    tile(rezCount, 'In REZ') +
+    tile(avgMlf, 'Avg MLF' + (latestMlf ? ' (' + latestMlf.replace('MLF_','') + ')' : '')) +
+    tile(avgNear, 'Avg ELI near curtailment');
 }
 
 // ── Tabs ─────────────────────────────────────────────────────────────────
@@ -283,14 +258,14 @@ function renderTabs() {
   container.innerHTML = '';
 
   const allBtn = document.createElement('button');
-  allBtn.className = 'tab' + (activeRegion === 'ALL' ? ' active' : '');
+  allBtn.className = 'seg-item' + (activeRegion === 'ALL' ? ' seg-item-active' : '');
   allBtn.textContent = 'All';
   allBtn.onclick = () => { activeRegion = 'ALL'; renderAll(); };
   container.appendChild(allBtn);
 
   for (const [id, name] of Object.entries(STATES)) {
     const btn = document.createElement('button');
-    btn.className = 'tab' + (id === activeRegion ? ' active' : '');
+    btn.className = 'seg-item' + (id === activeRegion ? ' seg-item-active' : '');
     btn.textContent = name;
     btn.onclick = () => { activeRegion = id; renderAll(); };
     container.appendChild(btn);
@@ -416,9 +391,6 @@ function renderTable() {
         cells.push(`<td class="na-cell"${tip}>${display}</td>`);
       } else if (d.key === 'NAMEPLATE_MW' && isNum) {
         cells.push(`<td>${val.toFixed(0)}</td>`);
-      } else if (d.key === 'FUEL_TYPE') {
-        const color = raw === 'Solar' ? 'var(--solar)' : raw === 'Wind' ? 'var(--wind)' : '';
-        cells.push(`<td style="color:${color};font-weight:500">${raw || ''}</td>`);
       } else {
         cells.push(`<td>${raw || ''}</td>`);
       }
@@ -463,11 +435,11 @@ function exportSelectedToExcel() {
 
 function renderDownloads() {
   const container = document.getElementById('downloads');
-  container.innerHTML = '<strong style="width:100%;margin-bottom:4px">Download Excel:&nbsp;</strong>' +
+  container.innerHTML = '<span class="eyebrow mr-1">Download</span>' +
     Object.entries(STATES).map(([id, name]) =>
-      `<a class="dl-btn" href="outputs/${EXCEL_FILES[id]}" download>${name}</a>`
+      `<a class="btn" href="outputs/${EXCEL_FILES[id]}" download>${name}</a>`
     ).join('') +
-    `<a class="dl-btn" href="outputs/summary.csv" download>CSV (All)</a>`;
+    `<a class="btn" href="outputs/summary.csv" download>CSV (All)</a>`;
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────
