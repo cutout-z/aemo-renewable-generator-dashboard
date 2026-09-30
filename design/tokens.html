@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design tokens — proof page</title>
+<!-- Not part of the published site: design/ is evidence, never something the dashboard links to. -->
+<link rel="stylesheet" href="../assets/css/app.css">
+<style>
+  /* Page chrome for the proof page only — not part of the design language. */
+  body { max-width: 1100px; margin: 0 auto; padding: 28px 20px 80px; }
+  section { margin: 34px 0; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .swatchbox { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .swatchbox i { display: block; height: 44px; }
+  .swatchbox small { display: block; padding: 6px 8px; color: var(--muted); font-family: var(--mono, monospace); font-size: 11px; }
+  .seqgrid { display: grid; grid-template-columns: repeat(8, 1fr); }
+  .seqgrid div { height: 46px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div class="card-head" style="padding-left:0">
+  <div>
+    <div class="card-title">Design tokens — proof page</div>
+    <div class="card-sub">the palette, the type scale, the heat ramp and every component class, rendered from the compiled asset</div>
+  </div>
+  <button class="btn btn-ghost" onclick="flip()">Flip theme</button>
+</div>
+<p class="card-sub">If this page looks unstyled, run <code>./scripts/build-css.sh</code> — the compiled CSS is committed and Tailwind only emits component classes it finds in the sources.</p>
+
+<section>
+  <h2 class="card-title">Surfaces, text, status</h2>
+  <div class="swatches" id="palette"></div>
+  <p class="foot">Text floor: <code>--faint</code> is the lightest colour allowed for 12px text (4.9:1 on a card). Colour never carries meaning alone — status pairs a dot with a word.</p>
+</section>
+
+<section>
+  <h2 class="card-title">Type scale</h2>
+  <div class="card"><div class="card-body">
+    <div class="kpi-value">88.3%</div><div class="kpi-label">KPI value — 26px semibold, tabular figures</div>
+    <hr style="border:0;border-top:1px solid var(--line-soft);margin:18px 0">
+    <div class="card-title">Card title — 14px semibold</div>
+    <div class="card-sub">Card subtitle — 13px muted, the one-line explanation</div>
+    <div class="eyebrow" style="margin-top:12px">EYEBROW — 12px faint, for provenance and units</div>
+    <div class="mono" style="margin-top:8px">VIC1 · 2026-02 · 2,976 intervals</div>
+  </div></div>
+</section>
+
+<section>
+  <h2 class="card-title">Controls</h2>
+  <div class="grid3">
+    <div class="card"><div class="card-body">
+      <div class="field-label">Search</div>
+      <input class="input" placeholder="Search DUID, project, REZ…">
+      <div class="row" style="margin-top:12px">
+        <span class="seg"><span class="seg-item seg-item-active">All</span><span class="seg-item">NSW</span><span class="seg-item">VIC</span></span>
+      </div>
+    </div></div>
+    <div class="card"><div class="card-body">
+      <div class="field-label">Status and tags</div>
+      <div class="row">
+        <span class="pill pill-good"><span class="badge-dot"></span>current</span>
+        <span class="pill pill-warn"><span class="badge-dot"></span>lagging 1 month</span>
+        <span class="pill pill-bad"><span class="badge-dot"></span>stale</span>
+        <span class="pill pill-neutral">draft</span>
+      </div>
+      <div class="row" style="margin-top:12px"><span class="badge">SOLAR</span><span class="badge">WIND</span><span class="badge">VIC1</span></div>
+    </div></div>
+    <div class="card"><div class="card-body">
+      <div class="field-label">Actions</div>
+      <div class="row">
+        <button class="btn btn-primary">Export</button>
+        <button class="btn">CSV</button>
+        <button class="btn btn-ghost">Reset</button>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <label class="chip"><input type="checkbox" checked>Solar<span class="chip-count">181</span></label>
+        <label class="chip"><input type="checkbox">Wind<span class="chip-count">59</span></label>
+      </div>
+    </div></div>
+  </div>
+</section>
+
+<section>
+  <h2 class="card-title">The card unit and a dense table</h2>
+  <div class="card">
+    <div class="card-head">
+      <div><div class="card-title">Negative price frequency — daylight hours</div><div class="card-sub">Percentage of 5-minute intervals below each threshold</div></div>
+      <span class="pill pill-neutral">%</span>
+    </div>
+    <div class="card-body">
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr><th class="th">Month</th><th class="th" style="text-align:right">&lt; $0</th><th class="th" style="text-align:right">&lt; −$50</th><th class="th" style="text-align:right">&lt; −$80</th></tr></thead>
+        <tbody>
+          <tr><td class="td">Feb 2026</td><td class="td td-num seq-6">88.3%</td><td class="td td-num seq-4">41.2%</td><td class="td td-num seq-1">4.0%</td></tr>
+          <tr><td class="td">Jan 2026</td><td class="td td-num seq-5">71.5%</td><td class="td td-num seq-3">28.9%</td><td class="td td-num seq-0">1.1%</td></tr>
+          <tr><td class="td">Dec 2025</td><td class="td td-num seq-4">52.0%</td><td class="td td-num seq-2">14.4%</td><td class="td td-num seq-none">0.0%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card-foot"><span>Source: AEMO DISPATCHPRICE via NEMOSIS</span><span>·</span><span>as of Jul 2026</span></div>
+  </div>
+  <p class="foot">Numbers right-aligned in tabular figures; headers sticky; hairline rows. A long-text table gets <code>dt-stack</code> to become blocks on phones — a numeric table keeps its sideways scroll, inside the card.</p>
+</section>
+
+<section>
+  <h2 class="card-title">Sequential ramp (heat) and its legend</h2>
+  <div class="seqgrid">
+    <div class="seq-0">0</div><div class="seq-1">1</div><div class="seq-2">2</div><div class="seq-3">3</div>
+    <div class="seq-4">4</div><div class="seq-5">5</div><div class="seq-6">6</div><div class="seq-7">7</div>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <span class="eyebrow">0%</span><span class="seq-1" style="width:34px;height:10px"></span><span class="seq-3" style="width:34px;height:10px"></span>
+    <span class="seq-5" style="width:34px;height:10px"></span><span class="seq-7" style="width:34px;height:10px"></span><span class="eyebrow">100% of intervals</span>
+  </div>
+  <p class="foot">One hue, eight steps, higher = more. The legend states the stops <em>and</em> the direction — that is what makes a heat cell readable without a tooltip.</p>
+</section>
+
+<section>
+  <h2 class="card-title">States — absence, stated plainly</h2>
+  <div class="card"><div class="card-body">
+    <div class="state"><span class="state-icon">○</span><div><div class="state-title">No data for this window</div><div class="state-body">The dashboard reads <code>outputs/summary.csv</code>; nothing was published for the months you asked for. That is an answer, not an error.</div></div></div>
+    <div class="state"><span class="state-icon">○</span><div><div class="state-title">ISP forecasts are REZ-only</div><div class="state-body">A generator outside a Renewable Energy Zone has no ISP forecast to show — the cell says so instead of showing a blank.</div></div></div>
+    <div class="row"><span class="skeleton" style="height:12px;width:220px"></span><span class="skeleton" style="height:12px;width:140px"></span></div>
+  </div></div>
+</section>
+
+<script>
+// Palette proof: swatch + token name + the light-theme value, read from the CSS itself.
+var TOKENS = ["bg","canvas","surface","surface-2","surface-3","line","line-strong","text","muted","faint",
+              "accent","good","warn","bad","info","neutral","good-wash","warn-wash","bad-wash","accent-wash"];
+var root = document.documentElement;
+var wasLight = root.getAttribute("data-theme") === "light";
+function read(theme) {
+  root.setAttribute("data-theme", theme);
+  var cs = getComputedStyle(root);
+  return TOKENS.map(function (t) { return cs.getPropertyValue("--" + t).trim(); });
+}
+var dark = read("dark"), light = read("light");
+root.setAttribute("data-theme", wasLight ? "light" : "dark");
+document.getElementById("palette").innerHTML = TOKENS.map(function (t, i) {
+  return '<div class="swatchbox"><i style="background:' + dark[i] + '"></i>' +
+         '<small>--' + t + '<br>' + dark[i] + ' / ' + light[i] + '</small></div>';
+}).join("");
+
+function flip() {
+  root.setAttribute("data-theme", root.getAttribute("data-theme") === "light" ? "dark" : "light");
+}
+</script>
+</body>
+</html>
