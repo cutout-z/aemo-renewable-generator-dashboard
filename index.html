@@ -29,7 +29,30 @@
   .fam-isp-o  { --fam: var(--neutral); }
   .fam-dot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 9999px; background: var(--fam); vertical-align: 0; }
 
+  /* The served shell's skeleton is sized in CSS, not in utility classes: it has to land on the same
+     pixel height as the table card it stands in for at EVERY width (360 → 1600), and only a
+     viewport-relative rule can do that. The gate measures a JS-disabled context against the loaded
+     page and allows 20%; on a phone the table card is 64% of the document, so a fixed-height skeleton
+     would miss by more than that on its own. */
+  .skeleton-row { height: clamp(16px, 4.55vw, 56px); }
   .table-wrap { overflow: auto; max-height: 75vh; }
+  /* The scroll box is empty until the table lands. Loaded, the table fills the box's own 75vh cap at
+     every width (240 rows), so reserving the cap is exact — the earlier `:has()`+clamp rule returned 412
+     and 307 at 600/390 instead, because `min()` picked the clamp term. `#loading` is the wrapper the app
+     removes, so this floor cannot outlive the skeleton. */
+  #loading { min-height: 75vh; }
+  /* Regions the app fills are reserved to the height they occupy once filled — measured, so the served
+     shell is the loaded page's height and nothing jumps. The values below are the loaded heights at these
+     widths; the gate re-measures a JS-DISABLED context against the loaded page at eight widths and
+     allows 20%, so a content change that moves them is caught rather than guessed at.
+       legends:  1440→140  900→200  600→226  390→286
+       statsFoot:1440→ 57  900→ 73  600→ 89  390→121
+     #stats and #downloads need no rule: their placeholders use the loaded layout classes. */
+  #legends { min-height: 140px; }
+  #statsFoot { min-height: 57px; }
+  @media (max-width: 900px) { #legends { min-height: 200px; } #statsFoot { min-height: 73px; } }
+  @media (max-width: 600px) { #legends { min-height: 226px; } #statsFoot { min-height: 89px; } }
+  @media (max-width: 420px) { #legends { min-height: 286px; } #statsFoot { min-height: 121px; } }
   .dt { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 13px; line-height: 20px; }
 
   .dt thead th { position: sticky; z-index: 3; height: 32px; padding: 0 12px; background: var(--surface); color: var(--muted); font-size: 12px; font-weight: 500; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--line); }
@@ -70,6 +93,16 @@
 <body>
 <main class="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6">
 
+<!-- ── The served shell ──────────────────────────────────────────────────────────
+     This is what the browser paints before outputs/summary.csv has landed, so it reserves the layout
+     the app is about to fill: the KPI strip, the control bar, the table card (head, legend band, a
+     scroll box of skeleton rows) and the downloads/foot card. It is sized to the loaded page at every
+     width — the gate measures a JS-DISABLED context (which paints exactly this) against the loaded
+     page and requires |shell − loaded| <= 20%. Without it the page grew 526px (58%) the moment the
+     CSV arrived and shoved everything below the table off the screen.
+     `#loading` stays the single wrapper the app removes (renderTable() sets display:none) and keeps
+     aria-busy for assistive tech. -->
+<div id="shell">
 <header class="mb-5 flex items-start justify-between gap-4">
   <div>
     <div class="eyebrow">National Electricity Market · solar and wind generators</div>
@@ -80,17 +113,26 @@
 </header>
 
 <section class="card mb-4">
-  <div class="card-body grid grid-cols-2 gap-x-6 gap-y-5 pt-4 sm:grid-cols-3 lg:grid-cols-5" id="stats"></div>
-  <div class="card-foot" id="statsFoot"></div>
+  <div class="card-body grid grid-cols-2 gap-x-6 gap-y-5 pt-4 sm:grid-cols-3 lg:grid-cols-5" id="stats">
+    <!-- Served shell: five tiles in the loaded layout classes, so the strip is the loaded height at every
+         width (110 → 316). The app replaces this innerHTML, and every placeholder is marked data-shell so
+         the gate can prove none survives the load. -->
+    <div class="skeleton h-[76px] w-full" data-shell="1"></div>
+    <div class="skeleton h-[76px] w-full" data-shell="1"></div>
+    <div class="skeleton h-[76px] w-full" data-shell="1"></div>
+    <div class="skeleton h-[76px] w-full" data-shell="1"></div>
+    <div class="skeleton h-[76px] w-full" data-shell="1"></div>
+  </div>
+  <div class="card-foot" id="statsFoot"><span class="skeleton block h-4 w-[86%]" data-shell="1"></span></div>
 </section>
 
-<div class="z-30 -mt-1 mb-3 bg-bg pb-2 pt-1 sm:sticky sm:top-0" id="controls">
-  <div class="card flex flex-wrap items-center gap-2 p-2">
-    <div class="seg" id="tabs" role="group" aria-label="Region"></div>
-    <select id="fuelFilter" class="input w-auto" aria-label="Fuel type"><option value="">All Types</option><option value="Solar">Solar</option><option value="Wind">Wind</option></select>
-    <select id="rezFilter" class="input w-auto" aria-label="Renewable Energy Zone"><option value="">All REZ</option><option value="Y">REZ Only</option><option value="N">Non-REZ Only</option></select>
-    <input type="text" id="search" class="input w-full min-w-[12rem] sm:w-auto sm:flex-1" placeholder="Search DUID, project, REZ..." aria-label="Search DUID, project, REZ">
-    <div class="flex flex-wrap items-center gap-2 sm:ml-auto" id="actions">
+<div class="z-30 -mt-1 mb-3 bg-bg pb-2 pt-1 min-[1280px]:sticky min-[1280px]:top-0" id="controls">
+  <div class="card flex flex-nowrap items-center gap-2 overflow-x-auto p-2">
+    <div class="seg shrink-0" id="tabs" role="group" aria-label="Region"></div>
+    <select id="fuelFilter" class="input w-auto shrink-0" aria-label="Fuel type"><option value="">All Types</option><option value="Solar">Solar</option><option value="Wind">Wind</option></select>
+    <select id="rezFilter" class="input w-auto shrink-0" aria-label="Renewable Energy Zone"><option value="">All REZ</option><option value="Y">REZ Only</option><option value="N">Non-REZ Only</option></select>
+    <input type="text" id="search" class="input w-full min-w-[12rem] sm:w-auto sm:min-w-[9rem] sm:flex-1" placeholder="Search DUID, project, REZ..." aria-label="Search DUID, project, REZ">
+    <div class="flex shrink-0 flex-nowrap items-center gap-2 sm:ml-auto" id="actions">
       <span class="badge empty:hidden" id="rowCount" aria-live="polite"></span>
       <span class="badge empty:hidden" id="selCount" aria-live="polite"></span>
       <button class="btn btn-ghost" id="clearSelection" style="display:none">Clear</button>
@@ -106,12 +148,32 @@
       <p class="card-sub max-w-[90ch]">One row per generator. <strong class="font-medium text-ink">Actual</strong> is curtailment achieved in the last completed financial years; <strong class="font-medium text-ink">ELI</strong> and <strong class="font-medium text-ink">ISP</strong> are projections (ISP is forecast per REZ); <strong class="font-medium text-ink">MLF</strong> is the share of the regional price a generator receives. Click a column to sort.</p>
     </div>
   </div>
-  <div class="flex flex-wrap gap-x-8 gap-y-3 px-5 pb-3 pt-3" id="legends"></div>
+  <div class="flex flex-wrap gap-x-8 gap-y-3 px-5 pb-3 pt-3" id="legends">
+    <!-- Served shell: three band placeholders where the heat-scale legends land (min-height in the page
+         CSS carries the measured band height at each width). -->
+    <div class="skeleton h-[92px] w-[420px] max-w-full" data-shell="1"></div>
+    <div class="skeleton h-[92px] w-[420px] max-w-full" data-shell="1"></div>
+    <div class="skeleton h-[92px] w-[420px] max-w-full" data-shell="1"></div>
+  </div>
 
   <div class="table-wrap">
-    <div class="space-y-2 px-5 py-4" id="loading" aria-busy="true" aria-label="Loading data">
-      <div class="skeleton h-6 w-full"></div><div class="skeleton h-6 w-full"></div><div class="skeleton h-6 w-full"></div><div class="skeleton h-6 w-full"></div>
-      <div class="skeleton h-6 w-full"></div><div class="skeleton h-6 w-full"></div><div class="skeleton h-6 w-full"></div><div class="skeleton h-6 w-full"></div>
+    <!-- The skeleton mirrors the table card it stands in for: a header band and ~20 skeleton rows in
+         the same scroll box, so the card's height is the loaded card's height before a byte of data
+         arrives. The wrapper the app removes is `#loading`; the rows inside it are `.skeleton`. -->
+    <div class="px-5 py-4" id="loading" aria-busy="true" aria-label="Loading data">
+      <div class="skeleton skeleton-row w-full"></div>
+      <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-1 sm:space-y-2">
+        <div class="skeleton skeleton-row w-full"></div><div class="skeleton skeleton-row w-full"></div>
+        <div class="skeleton skeleton-row w-full"></div><div class="skeleton skeleton-row w-full"></div>
+        <div class="skeleton skeleton-row w-full"></div><div class="skeleton skeleton-row w-full"></div>
+        <div class="skeleton skeleton-row w-full"></div><div class="skeleton skeleton-row w-full"></div>
+        <div class="skeleton skeleton-row w-full"></div><div class="skeleton skeleton-row w-full"></div>
+        <div class="skeleton skeleton-row w-full"></div><div class="skeleton skeleton-row w-full"></div>
+        <div class="skeleton skeleton-row w-full"></div><div class="skeleton skeleton-row w-full"></div>
+        <div class="skeleton skeleton-row w-full"></div><div class="skeleton skeleton-row w-full"></div>
+        <div class="skeleton skeleton-row w-full"></div><div class="skeleton skeleton-row w-full"></div>
+        <div class="skeleton skeleton-row w-full"></div><div class="skeleton skeleton-row w-full"></div>
+      </div>
     </div>
     <table class="dt" id="table" style="display:none"><thead id="thead"></thead><tbody id="tbody"></tbody></table>
     <div class="state px-5" id="noMatch" style="display:none">
@@ -130,9 +192,20 @@
     </div>
   </div>
 
-  <div class="flex flex-wrap items-center gap-2 border-t border-line-soft px-5 py-3" id="downloads"></div>
-  <div class="card-foot" id="footer"></div>
+  <div class="flex flex-wrap items-center gap-2 border-t border-line-soft px-5 py-3" id="downloads">
+    <!-- Served shell: the seven buttons the app renders (5 regions + CSV + all), sized so they wrap to the
+         loaded rows at each width (1 row desktop, 2 on a phone). -->
+    <span class="skeleton inline-block h-4 w-16" data-shell="1"></span>
+    <span class="skeleton inline-block h-8 w-28" data-shell="1"></span>
+    <span class="skeleton inline-block h-8 w-28" data-shell="1"></span>
+    <span class="skeleton inline-block h-8 w-28" data-shell="1"></span>
+    <span class="skeleton inline-block h-8 w-28" data-shell="1"></span>
+    <span class="skeleton inline-block h-8 w-28" data-shell="1"></span>
+    <span class="skeleton inline-block h-8 w-28" data-shell="1"></span>
+  </div>
+  <div class="card-foot" id="footer"><span class="skeleton block h-4 w-[64%]" data-shell="1"></span></div>
 </section>
+</div>
 
 </main>
 

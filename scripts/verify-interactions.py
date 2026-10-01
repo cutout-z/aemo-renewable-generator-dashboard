@@ -3,7 +3,7 @@
 NOT lose: region tabs, fuel/REZ filters, search, column sorting, select-all, the XLSX export of the
 selection, the sticky two-row header and the Excel/CSV downloads.
 
-    cd ~/Design/"AEMO Renewable Generator Dashboard" && python3 -m http.server 9370 --bind 127.0.0.1 &
+    cd ~/Design/"AEMO Renewable Generator Dashboard" && python3 -m http.server 9381 --bind 127.0.0.1 &
     /opt/anaconda3/bin/python3 scripts/verify-interactions.py
 
 Green TODAY, on the unstyled page, and it must still be green at handback. Numbers come from
@@ -19,7 +19,7 @@ import sys
 from playwright.sync_api import sync_playwright
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-URL = "http://127.0.0.1:9370/index.html"
+URL = "http://127.0.0.1:9381/index.html"
 CSV = ROOT / "outputs" / "summary.csv"
 
 fails: list[str] = []

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Render + token check for the AEMO Renewable Generator Dashboard — the gate this pass must leave green.
 
-    cd ~/Design/"AEMO Renewable Generator Dashboard" && python3 -m http.server 9370 --bind 127.0.0.1 &
+    cd ~/Design/"AEMO Renewable Generator Dashboard" && python3 -m http.server 9381 --bind 127.0.0.1 &
     /opt/anaconda3/bin/python3 scripts/verify-design.py            # checks only
     /opt/anaconda3/bin/python3 scripts/verify-design.py --screens  # + design/screens/after-*.png
 
@@ -22,7 +22,7 @@ import sys
 from playwright.sync_api import sync_playwright
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-URL = "http://127.0.0.1:9370/index.html"
+URL = "http://127.0.0.1:9381/index.html"
 SCREENS = ROOT / "design" / "screens"
 TOKEN_SRC = ROOT / "assets" / "css" / "tailwind.src.css"
 PAGE = ROOT / "index.html"
@@ -160,6 +160,55 @@ def main() -> int:
         check("0%" in legend and "100%" in legend, "the heat scale is stated on screen (0% … 100%)")
         sticky = pg.eval_on_selector_all("#thead th", "e => e.map(x => getComputedStyle(x).position)")
         check(all(s == "sticky" for s in sticky), "header cells stay sticky", f"{set(sticky)}")
+
+        print("open items")
+        # The served shell must be the loaded page's height. Read with JS off: that is literally what the
+        # browser paints first, so the comparison is deterministic rather than a race. This page used to
+        # grow 526 px (58 %) the moment the CSV landed, shoving everything below the skeleton off screen.
+        shapes = {}
+        for w in (1440, 900, 390):
+            c0 = br.new_context(viewport={"width": w, "height": 900}, java_script_enabled=False)
+            s0 = c0.new_page(); s0.goto(URL, wait_until="load", timeout=60000); s0.wait_for_timeout(400)
+            shell = s0.evaluate("() => ({doc: document.documentElement.scrollHeight,"
+                                " bars: document.querySelectorAll('.skeleton').length})")
+            c0.close()
+            c1 = br.new_context(viewport={"width": w, "height": 900})
+            l1 = c1.new_page(); l1.goto(URL, wait_until="networkidle", timeout=60000); l1.wait_for_timeout(1200)
+            loaded = l1.evaluate("() => document.documentElement.scrollHeight")
+            left = l1.evaluate("() => document.querySelectorAll('[data-shell]').length")
+            c1.close()
+            shapes[w] = {"shell": shell["doc"], "bars": shell["bars"], "loaded": loaded, "left": left}
+        for w, s in shapes.items():
+            gap = abs(s["loaded"] - s["shell"])
+            check(gap <= 0.2 * max(s["loaded"], 1),
+                  f"the served shell reserves the page height at {w}px (loading does not jump the layout)",
+                  f"shell {s['shell']} px vs loaded {s['loaded']} px ({gap / max(s['loaded'], 1):.0%})")
+        check(min(s["bars"] for s in shapes.values()) >= 15,
+              "the served shell renders real skeleton content, not a blank page",
+              f"{ {w: s['bars'] for w, s in shapes.items()} }")
+        check(all(s["left"] == 0 for s in shapes.values()),
+              "every shell placeholder is replaced once the data lands (none lingers)",
+              f"{ {w: s['left'] for w, s in shapes.items()} }")
+
+        # Sticky chrome must stay ONE row: a wrapped bar pins ~104 px of two-row chrome over the table it
+        # exists to help you read. This page's bar is `#controls`; below the wrap width it stacks and is not
+        # sticky, which is allowed — the invariant is only that a sticky bar is one row.
+        bar = {}
+        for w in (1440, 1280, 1100, 900, 768, 390):
+            pg.set_viewport_size({"width": w, "height": 900})
+            pg.wait_for_timeout(400)
+            bar[w] = pg.evaluate("""(() => { const el = document.getElementById('controls');
+                if (!el) return null; const r = el.getBoundingClientRect();
+                return {h: Math.round(r.height), pos: getComputedStyle(el).position}; })()""")
+        tall = {w: b for w, b in bar.items() if b and b["pos"] == "sticky" and b["h"] > 72}
+        check(not tall, "wherever the control bar is sticky it is one row", f"{tall}")
+        check(all(b is None or b["h"] <= 72 or b["pos"] != "sticky" for b in bar.values()),
+              "no width pins a two-row control bar", f"{ {w: (b['pos'], b['h']) for w, b in bar.items()} }")
+        pg.set_viewport_size({"width": 1440, "height": 900})
+        pg.wait_for_timeout(300)
+        check(pg.evaluate("() => { const el = document.getElementById('loading');"
+                          " return !!el && getComputedStyle(el).display === 'none'; }"),
+              "#loading is still the element the app removes once the table lands")
 
         print("themes and phone")
         flip = pg.evaluate("""(() => { const r = document.documentElement;
