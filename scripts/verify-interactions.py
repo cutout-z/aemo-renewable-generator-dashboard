@@ -91,8 +91,10 @@ def cell(r: dict[str, str], key: str, group: str) -> tuple[str, str | None]:
     if group == "meta":
         if key == "NAMEPLATE_MW" and v is not None:      # whole MW; under 1 MW to 2 dp, never "0"
             return str(HALF_UP(v, "0.01" if abs(v) < 1 else "1")), None
-        if key == "REZ_NAME" and raw == "Non-REZ":      # the data's "no match", not a location
-            return "No REZ match", None
+        if key == "REZ_NAME" and raw == "Non-REZ":      # a source states the unit is outside a zone
+            return "Outside a REZ", None
+        if key in ("REZ", "REZ_NAME") and r["REZ"] not in ("Y", "N"):   # blank = unknown
+            return "Unknown", None
         return raw.strip(), None
     if v is None:
         return "N/A", "seq-none"
@@ -112,6 +114,7 @@ def expected_tiles(scope: str) -> list[list[str]]:
     solar = sum(r["FUEL_TYPE"] == "Solar" for r in base)
     wind = sum(r["FUEL_TYPE"] == "Wind" for r in base)
     rez = sum(r["REZ"] == "Y" for r in base)
+    out = sum(r["REZ"] == "N" for r in base)
     mlf_key = [k for k, g in columns(scope) if g == "mlf"][-1]
     mlf = [v for r in base if (v := num(r[mlf_key])) is not None]
     near_rows = [r for r in base if num(r["ELI_CURTAILMENT_NEAR"]) is not None]
@@ -123,7 +126,7 @@ def expected_tiles(scope: str) -> list[list[str]]:
     return [
         [str(n), "Generators", where],
         [f"{solar} · {wind}", "Solar · wind farms", f"split of {n}"],
-        [str(rez), "In a REZ", f"{n - rez} not matched to a REZ"],
+        [str(rez), "In a REZ", f"{out} outside · {n - rez - out} unknown"],
         [str(HALF_UP(sum(mlf) / len(mlf), "0.0001")) if mlf else "N/A",
          f"Avg MLF, {mlf_key.replace('MLF_', '')}", n_of(len(mlf))],
         [f"{HALF_UP(sum(near) / len(near) * 100, '0.1')}%" if near else "N/A",
@@ -172,12 +175,20 @@ with sync_playwright() as pw:
               f"missing {missing[:2]}, extra {extra[:2]}, {len(bad)} wrong, e.g. {bad[:3]}")
         count = pg.inner_text("#rowCount").strip()
         check(count == f"{len(want)} of {n_all} shown", f"{tab}: the row count is stated", count)
-    # REZ = N means the seeded workbook did not match the unit (all 108 wind farms), so nothing on the
-    # page — text, tooltip or filter label — may claim a generator is outside a zone.
-    claims = pg.evaluate("""() => [document.body.innerText, ...[...document.querySelectorAll('[title]')].map(x => x.title),
-        ...[...document.querySelectorAll('option')].map(o => o.textContent)].filter(t => /outside a (REZ|zone)|Non-REZ/i.test(t))""")
-    check(not claims, "no text claims a generator is outside a REZ (the data only knows 'not matched')",
-          f"{len(claims)} found, e.g. {[c[:60] for c in claims[:2]]}")
+    # REZ is Y / N / blank. A generator may be called "outside" a REZ only where the data says N; a
+    # blank is unknown, and its ISP N/A tooltips must say so (all 108 wind farms are blank today).
+    tips = pg.evaluate("""() => [...document.querySelectorAll('#tbody tr')].map(tr => [tr.dataset.duid,
+        [...tr.querySelectorAll('td.na[title]')].map(td => td.title).filter(t => /ISP/.test(t))])""")
+    wrong = [(d, t[:70]) for d, ts in tips for t in ts
+             if ("outside" in t) != (by_duid[d]["REZ"] == "N")
+             or (by_duid[d]["REZ"] not in ("Y", "N")) != ("no REZ is known" in t)]
+    check(tips and not wrong, "ISP N/A tooltips say outside only where REZ = N, and unknown where REZ is blank",
+          f"{len(wrong)} wrong, e.g. {wrong[:2]}")
+    # ISP year headers come from the first row that carries a label (blank-REZ rows carry none)
+    labels = {k: next((r[k] for r in rows if r[k].strip()), "") for k in KEYS if k.endswith("_LABEL")}
+    heads = dict(pg.eval_on_selector_all("#thead th[data-col]", "e => e.map(x => [x.dataset.col, x.innerText.trim()])"))
+    bad_heads = {k[:-6]: (heads.get(k[:-6]), v) for k, v in labels.items() if v and heads.get(k[:-6]) != v}
+    check(labels and not bad_heads, "the ISP year headers read the data's FY labels", f"{bad_heads}")
 
     print("tabs")
     for state in ("NSW", "VIC", "TAS"):
@@ -197,6 +208,10 @@ with sync_playwright() as pw:
     pg.select_option("#rezFilter", "Y")
     pg.wait_for_timeout(400)
     check(nrows() == n_rez, f"REZ-only filters to {n_rez}", f"{nrows()} rows")
+    n_unknown = sum(1 for r in rows if r["REZ"] not in ("Y", "N"))
+    pg.select_option("#rezFilter", "?")
+    pg.wait_for_timeout(400)
+    check(nrows() == n_unknown, f"REZ-unknown filters to {n_unknown}", f"{nrows()} rows")
     pg.select_option("#rezFilter", "")
     pg.fill("#search", top["PROJECT_NAME"][:8])
     pg.wait_for_timeout(400)

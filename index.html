@@ -130,7 +130,7 @@
   <div class="card flex flex-nowrap items-center gap-2 overflow-x-auto p-2">
     <div class="seg shrink-0" id="tabs" role="group" aria-label="Region"></div>
     <select id="fuelFilter" class="input w-auto shrink-0" aria-label="Fuel type"><option value="">All Types</option><option value="Solar">Solar</option><option value="Wind">Wind</option></select>
-    <select id="rezFilter" class="input w-auto shrink-0" aria-label="Renewable Energy Zone"><option value="">All REZ</option><option value="Y">REZ Only</option><option value="N">No REZ match</option></select>
+    <select id="rezFilter" class="input w-auto shrink-0" aria-label="Renewable Energy Zone"><option value="">All REZ</option><option value="Y">In a REZ</option><option value="N">Outside a REZ</option><option value="?">REZ unknown</option></select>
     <input type="text" id="search" class="input w-full min-w-[12rem] sm:w-auto sm:min-w-[9rem] sm:flex-1" placeholder="Search DUID, project, REZ..." aria-label="Search DUID, project, REZ">
     <div class="flex shrink-0 flex-nowrap items-center gap-2 sm:ml-auto" id="actions">
       <span class="badge empty:hidden" id="rowCount" aria-live="polite"></span>
@@ -279,7 +279,7 @@ function renderLegends() {
   document.getElementById('legends').innerHTML =
     `<div data-heat-legend="loss"><div class="mb-1.5 text-[12px] font-medium text-muted">Share of energy lost: actual, ELI and ISP columns. Stronger fill = more lost</div><div class="flex flex-wrap gap-0.5">${swatches(LOSS_LABELS)}</div></div>` +
     `<div data-heat-legend="mlf"><div class="mb-1.5 text-[12px] font-medium text-muted">MLF, by price lost (1 − MLF). Stronger fill = lower MLF</div><div class="flex flex-wrap gap-0.5">${swatches(MLF_LABELS)}</div></div>` +
-    `<div data-heat-legend="na"><div class="mb-1.5 text-[12px] font-medium text-muted">Not available</div><div class="flex items-center gap-2"><span class="lg seq-none na">N/A</span><span class="max-w-[46ch] text-[12px] leading-4 text-faint">No value in the data file. ISP forecasts are made per REZ, so a generator not matched to a REZ in the data is N/A there.</span></div></div>`;
+    `<div data-heat-legend="na"><div class="mb-1.5 text-[12px] font-medium text-muted">Not available</div><div class="flex items-center gap-2"><span class="lg seq-none na">N/A</span><span class="max-w-[46ch] text-[12px] leading-4 text-faint">No value in the data file. ISP forecasts are made per REZ, so a generator outside a REZ, or whose REZ is unknown, is N/A there.</span></div></div>`;
 }
 
 // ── Column detection ─────────────────────────────────────────────────────
@@ -331,6 +331,10 @@ function detectColumns(keys, showRegion = activeRegion === 'ALL') {
   return defs.filter(d => keys.includes(d.key));
 }
 
+// REZ is Y (in a zone), N (a source states it is outside) or blank (unknown).
+const isKnownRez = r => r.REZ === 'Y' || r.REZ === 'N';
+const firstLabel = key => (allData.find(r => r[key]) || {})[key] || '';
+
 // ── Filtering ────────────────────────────────────────────────────────────
 
 function getBaseRows() {
@@ -348,7 +352,7 @@ function getFiltered() {
   const search = document.getElementById('search').value.toLowerCase();
   let rows = getBaseRows();
   if (fuel) rows = rows.filter(r => r.FUEL_TYPE === fuel);
-  if (rez) rows = rows.filter(r => r.REZ === rez);
+  if (rez) rows = rows.filter(r => rez === '?' ? !isKnownRez(r) : r.REZ === rez);
   if (search) rows = rows.filter(r =>
     (r.DUID || '').toLowerCase().includes(search) ||
     (r.PROJECT_NAME || '').toLowerCase().includes(search) ||
@@ -382,6 +386,7 @@ function renderStats() {
   const solarCount = rows.filter(r => r.FUEL_TYPE === 'Solar').length;
   const windCount = rows.filter(r => r.FUEL_TYPE === 'Wind').length;
   const rezCount = rows.filter(r => r.REZ === 'Y').length;
+  const outCount = rows.filter(r => r.REZ === 'N').length;
 
   // Find MLF columns and get average of latest
   const mlfCols = colDefs.filter(d => d.group === 'mlf');
@@ -403,7 +408,7 @@ function renderStats() {
   document.getElementById('stats').innerHTML =
     tile(rows.length, 'Generators', scope) +
     tile(`${solarCount} · ${windCount}`, 'Solar · wind farms', 'split of ' + rows.length) +
-    tile(rezCount, 'In a REZ', `${rows.length - rezCount} not matched to a REZ`) +
+    tile(rezCount, 'In a REZ', `${outCount} outside · ${rows.length - rezCount - outCount} unknown`) +
     tile(avgMlf, latestMlf ? 'Avg MLF, ' + latestMlf.replace('MLF_','') : 'Avg MLF', mlfVals.length ? nOf(mlfVals.length) : 'none with a value') +
     tile(avgNear, 'Avg ELI near-term curtailment, 2026-28', nearVals.length ? nOf(nearVals.length) + nearScope : 'none with a value', 'col-span-2 sm:col-span-1');
   document.getElementById('statsFoot').innerHTML = '<span>' + [
@@ -475,8 +480,9 @@ function toggleSelectAll() {
 
 function naReason(row, d) {
   if (d.group === 'isp-c' || d.group === 'isp-o')
-    return row.REZ === 'N' ? 'N/A: ISP forecasts are made per Renewable Energy Zone and this generator is not matched to one in the data'
-                           : 'N/A: no ISP forecast in outputs/summary.csv for this generator';
+    return row.REZ === 'N' ? 'N/A: ISP forecasts are made per Renewable Energy Zone and this generator is outside one'
+         : !isKnownRez(row) ? 'N/A: ISP forecasts are made per Renewable Energy Zone and no REZ is known for this generator in the data'
+                            : 'N/A: no ISP forecast in outputs/summary.csv for this generator';
   if (d.group === 'eli') return 'N/A: no ELI projection in outputs/summary.csv for this generator';
   if (d.group === 'mlf') return 'N/A: no MLF in outputs/summary.csv for this generator';
   return 'N/A: no completed-year actual in outputs/summary.csv for this generator';
@@ -499,12 +505,9 @@ function renderTable() {
   const rows = getFiltered();
   const allChecked = rows.length > 0 && rows.every(r => selected.has(r.DUID));
 
-  // Resolve ISP FY labels from first data row
-  if (rows.length > 0) {
-    colDefs.forEach(d => {
-      if (d.labelKey && rows[0][d.labelKey]) d.label = rows[0][d.labelKey];
-    });
-  }
+  // Resolve ISP FY labels from the first row that carries one: units whose REZ is unknown have no
+  // ISP forecast and no label, so the first row alone could leave the header reading "FY1".
+  colDefs.forEach(d => { const l = d.labelKey && firstLabel(d.labelKey); if (l) d.label = l; });
 
   const RIGHT = new Set(['NAMEPLATE_MW']);
   const sortAttr = (d) => d.key === sortCol ? ` aria-sort="${sortDir === 'asc' ? 'ascending' : 'descending'}"` : '';
@@ -569,9 +572,11 @@ function renderTable() {
       if (d.group === 'meta') {
         const pin = metaIdx++ === 0 ? 'p1 font-medium ' : '';
         if (d.key === 'NAMEPLATE_MW' && isNum) cells.push(`<td class="${pin}r num">${mwText(raw)}</td>`);
-        // "Non-REZ" in the data means the seeded REZ workbook did not match the unit (every wind farm
-        // included), not that it sits outside a zone, so the page does not repeat the claim.
-        else if (d.key === 'REZ_NAME' && raw === 'Non-REZ') cells.push(`<td class="${pin}text-faint" title="Not matched to a REZ in the data">No REZ match</td>`);
+        // REZ has three states (Y / N / blank). "Non-REZ" appears only where a source states the unit
+        // is outside a zone; a blank is unknown (no source places the unit, every wind farm included)
+        // and says so rather than reading as "outside".
+        else if (d.key === 'REZ_NAME' && raw === 'Non-REZ') cells.push(`<td class="${pin}">Outside a REZ</td>`);
+        else if ((d.key === 'REZ_NAME' || d.key === 'REZ') && !isKnownRez(row)) cells.push(`<td class="${pin}text-faint" title="No REZ in the data for this generator">Unknown</td>`);
         else cells.push(`<td class="${pin}">${raw || ''}</td>`);
       } else if (isNum) {
         const step = d.group === 'mlf' ? mlfStep(val) : lossStep(val);
@@ -601,7 +606,7 @@ function renderTable() {
     const parts = [];
     if (activeRegion !== 'ALL') parts.push(STATES[activeRegion]);
     const fuel = document.getElementById('fuelFilter').value; if (fuel) parts.push(fuel);
-    const rez = document.getElementById('rezFilter').value; if (rez) parts.push(rez === 'Y' ? 'in a REZ' : 'not matched to a REZ');
+    const rez = document.getElementById('rezFilter').value; if (rez) parts.push(rez === 'Y' ? 'in a REZ' : rez === 'N' ? 'outside a REZ' : 'of unknown REZ');
     const q = document.getElementById('search').value.trim(); if (q) parts.push(`matching “${q}”`);
     document.getElementById('noMatchBody').textContent =
       `None of the ${allData.length} generators is ${parts.join(', ') || 'shown'}. Loosen a filter or clear the search.`;
@@ -637,11 +642,10 @@ function exportSelectedToExcel() {
 }
 
 function exportHeaders(defs) {
-  const first = allData[0] || {};
-  const META = {NAMEPLATE_MW: 'Nameplate (MW)', REZ: 'In a REZ (Y/N)'};
+  const META = {NAMEPLATE_MW: 'Nameplate (MW)', REZ: 'In a REZ (Y = yes, N = no, blank = unknown)'};
   return defs.map(d => {
     if (d.group === 'meta') return META[d.key] || d.label;
-    let label = d.labelKey && first[d.labelKey] ? `FY${first[d.labelKey]}` : d.label;
+    let label = d.labelKey && firstLabel(d.labelKey) ? `FY${firstLabel(d.labelKey)}` : d.label;
     if (label === 'Avg') label = 'average of the forecast years';
     const unit = d.group === 'mlf' ? '' : ' (share of energy)';
     return `${GROUP_LABELS[d.group]} ${label}${unit}`;
