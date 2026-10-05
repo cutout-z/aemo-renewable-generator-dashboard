@@ -1,5 +1,7 @@
 """Merge all data sources into a single per-farm summary DataFrame."""
 
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 
@@ -16,13 +18,16 @@ def build_summary(
     eli_curtailment: pd.DataFrame,
     rez_forecasts: pd.DataFrame,
     actual_curtailment: pd.DataFrame,
+    cache_dir: str | None = None,
 ) -> pd.DataFrame:
     """Join all data sources into the master summary.
 
     Merge strategy:
     1. Generators (spine) LEFT JOIN MLF on DUID
     2. LEFT JOIN actual curtailment on DUID
-    3. LEFT JOIN ELI projected curtailment on LOCATION + VOLTAGE_KV + REGION
+    3. ELI projected curtailment: per-DUID values first; units without one are
+       filled from the location table (LOCATION + region, voltage when it
+       picks one row), fuel-matched. ELI_SOURCE records which.
     4. LEFT JOIN REZ forecasts on REZ_NAME
 
     Returns wide-format DataFrame sorted by FUEL_TYPE → STATE → PROJECT_NAME.
@@ -46,17 +51,17 @@ def build_summary(
         logger.warning("No actual curtailment data to merge")
 
     # 3. Merge ELI projected curtailment
-    # First try per-DUID data (from seeded workbook), then location-based
-    eli_duid_path = Path(__file__).resolve().parent.parent / config.DATA_DIR / "eli_per_duid.feather"
-    if eli_duid_path.exists():
-        eli_duid = pd.read_feather(eli_duid_path).drop_duplicates(subset="DUID")
-        summary = summary.merge(eli_duid, on="DUID", how="left")
-        matched = summary["ELI_CURTAILMENT_NEAR"].notna().sum() if "ELI_CURTAILMENT_NEAR" in summary.columns else 0
-        logger.info(f"Merged per-DUID ELI curtailment ({matched}/{len(summary)} matched)")
-    elif not eli_curtailment.empty:
-        summary = _merge_eli(summary, eli_curtailment)
+    # Per-DUID values (seeded workbook) first; the rest from the location table
+    if cache_dir is None:
+        cache_dir = str(Path(__file__).resolve().parent.parent / config.DATA_DIR)
+    eli_duid_path = Path(cache_dir) / "eli_per_duid.feather"
+    eli_duid = pd.read_feather(eli_duid_path) if eli_duid_path.exists() else pd.DataFrame()
+    summary = _merge_eli_per_duid(summary, eli_duid)
+    if not eli_curtailment.empty:
+        summary = _fill_eli_from_location(summary, eli_curtailment)
     else:
-        logger.warning("No ELI curtailment data to merge")
+        logger.warning("No location-based ELI curtailment data")
+    _log_eli_coverage(summary)
 
     # 4. Merge REZ forecasts on REZ_NAME
     if not rez_forecasts.empty:
@@ -79,71 +84,95 @@ def build_summary(
     return summary
 
 
-def _merge_eli(summary: pd.DataFrame, eli: pd.DataFrame) -> pd.DataFrame:
-    """Merge ELI projected curtailment into summary.
+ELI_TERMS = ("NEAR", "MED")
+ELI_COLS = [f"ELI_CURTAILMENT_{t}" for t in ELI_TERMS]
 
-    ELI data is keyed by (LOCATION, VOLTAGE_KV, REGION).
-    Generators have LOCATION and VOLTAGE_KV. We need to fuzzy-match.
-    """
-    if "LOCATION" not in summary.columns or "LOCATION" not in eli.columns:
-        logger.warning("Cannot merge ELI data — no LOCATION column")
-        return summary
 
-    # Normalise location names for matching
-    summary["_loc_key"] = summary["LOCATION"].astype(str).str.strip().str.lower()
-    eli["_loc_key"] = eli["LOCATION"].astype(str).str.strip().str.lower()
-
-    # Build join key: location + voltage (where available)
-    if "VOLTAGE_KV" in summary.columns and "VOLTAGE_KV" in eli.columns:
-        summary["_volt_key"] = summary["VOLTAGE_KV"].fillna(0).astype(int)
-        eli["_volt_key"] = eli["VOLTAGE_KV"].fillna(0).astype(int)
-        merge_on = ["_loc_key", "_volt_key"]
-    else:
-        merge_on = ["_loc_key"]
-
-    # Also match on region if available
-    if "REGION" in eli.columns and "STATE" in summary.columns:
-        eli["_region_key"] = eli["REGION"].astype(str).str.strip().str.upper()
-        summary["_region_key"] = summary["STATE"].astype(str).str.strip().str.upper()
-        merge_on.append("_region_key")
-
-    # Identify ELI value columns to bring in
-    eli_value_cols = [c for c in eli.columns if c.startswith(("SOLAR_CURTAILMENT_", "WIND_CURTAILMENT_"))]
-
-    if not eli_value_cols:
-        logger.warning("No curtailment value columns in ELI data")
-        return summary
-
-    eli_merge = eli[merge_on + eli_value_cols].drop_duplicates(subset=merge_on, keep="first")
-
-    result = summary.merge(eli_merge, on=merge_on, how="left")
-
-    # For each generator, pick the right curtailment column based on fuel type
-    # Solar farms get SOLAR_CURTAILMENT_*, Wind farms get WIND_CURTAILMENT_*
-    for term in ["NEAR", "MED"]:
-        solar_col = f"SOLAR_CURTAILMENT_{term}"
-        wind_col = f"WIND_CURTAILMENT_{term}"
-        target_col = f"ELI_CURTAILMENT_{term}"
-
-        if solar_col in result.columns or wind_col in result.columns:
-            result[target_col] = result.apply(
-                lambda row: (
-                    row.get(solar_col)
-                    if row.get("FUEL_TYPE") == "Solar"
-                    else row.get(wind_col)
-                ),
-                axis=1,
-            )
-
-    # Clean up temp columns
-    drop_cols = [c for c in result.columns if c.startswith("_")]
-    drop_cols += [c for c in result.columns if c.startswith(("SOLAR_CURTAILMENT_", "WIND_CURTAILMENT_"))]
-    result = result.drop(columns=drop_cols, errors="ignore")
-
-    matched = result["ELI_CURTAILMENT_NEAR"].notna().sum() if "ELI_CURTAILMENT_NEAR" in result.columns else 0
-    logger.info(f"Merged ELI curtailment ({matched}/{len(result)} matched)")
-
+def _merge_eli_per_duid(summary: pd.DataFrame, eli_duid: pd.DataFrame) -> pd.DataFrame:
+    """Join the seeded per-DUID ELI values; ELI_SOURCE = "per-DUID" where present."""
+    result = summary.copy()
+    if not eli_duid.empty:
+        cols = ["DUID"] + [c for c in ELI_COLS if c in eli_duid.columns]
+        result = result.merge(eli_duid[cols].drop_duplicates(subset="DUID"), on="DUID", how="left")
+    for col in ELI_COLS:
+        if col not in result.columns:
+            result[col] = float("nan")
+    result["ELI_SOURCE"] = result[ELI_COLS].notna().any(axis=1).map({True: "per-DUID", False: ""})
     return result
+
+
+def _norm_region(value) -> str:
+    """'NSW', 'NSW1', ' nsw ' → 'NSW' (ELI tables use state names, the spine REGIONID)."""
+    text = str(value or "").strip().upper()
+    return text[:-1] if text.endswith("1") else text
+
+
+def _norm_volt(value):
+    """Voltage as a 1-dp float key (3.3 kV stays 3.3; the old int cast made it 3)."""
+    v = pd.to_numeric(value, errors="coerce")
+    return None if pd.isna(v) else round(float(v), 1)
+
+
+def _fill_eli_from_location(summary: pd.DataFrame, eli: pd.DataFrame) -> pd.DataFrame:
+    """Fill ELI for units without a per-DUID value from the location-based table.
+
+    A unit matches ELI rows with the same LOCATION (case-insensitive) in its own
+    region. If its connection voltage equals one of those rows' voltage, that row
+    is used; otherwise the location must have a single row (several voltages and
+    no exact voltage = ambiguous, left empty). Wind farms take the WIND columns,
+    solar farms the SOLAR columns. ELI_SOURCE = "location" where filled.
+    """
+    result = summary.copy()
+    if "LOCATION" not in result.columns or "LOCATION" not in eli.columns:
+        logger.info("Location-based ELI fill skipped: no LOCATION column")
+        return result
+
+    table = eli.copy()
+    table["_loc"] = table["LOCATION"].astype(str).str.strip().str.lower()
+    table["_reg"] = table["REGION"].map(_norm_region) if "REGION" in table.columns else ""
+    table["_volt"] = table["VOLTAGE_KV"].map(_norm_volt) if "VOLTAGE_KV" in table.columns else None
+    table = table.drop_duplicates(subset=["_loc", "_reg", "_volt"], keep="first")
+    by_place = {k: g for k, g in table.groupby(["_loc", "_reg"])}
+
+    region_col = "STATE" if "STATE" in result.columns else "REGIONID"
+    filled = ambiguous = 0
+    for idx, row in result.iterrows():
+        if row["ELI_SOURCE"] or pd.isna(row.get("LOCATION")) or not str(row["LOCATION"]).strip():
+            continue
+        fuel = str(row.get("FUEL_TYPE", "")).upper()
+        if fuel not in ("SOLAR", "WIND"):
+            continue
+        rows = by_place.get((str(row["LOCATION"]).strip().lower(), _norm_region(row.get(region_col))))
+        if rows is None:
+            continue
+        volt = _norm_volt(row.get("VOLTAGE_KV"))
+        exact = rows[rows["_volt"] == volt] if volt is not None else rows.iloc[0:0]
+        if len(exact) >= 1:
+            match = exact.iloc[0]
+        elif len(rows) == 1:
+            match = rows.iloc[0]
+        else:
+            ambiguous += 1
+            continue
+        values = {f"ELI_CURTAILMENT_{t}": match.get(f"{fuel}_CURTAILMENT_{t}") for t in ELI_TERMS}
+        if all(pd.isna(v) for v in values.values()):
+            continue
+        for col, v in values.items():
+            result.at[idx, col] = v
+        result.at[idx, "ELI_SOURCE"] = "location"
+        filled += 1
+
+    logger.info(f"Location-based ELI filled {filled} unit(s)"
+                + (f"; {ambiguous} ambiguous (several voltages, none matching)" if ambiguous else ""))
+    return result
+
+
+def _log_eli_coverage(summary: pd.DataFrame) -> None:
+    if "FUEL_TYPE" not in summary.columns:
+        return
+    counts = summary.groupby(["FUEL_TYPE", "ELI_SOURCE"]).size().to_dict()
+    logger.info("ELI coverage (fuel, source): "
+                + ", ".join(f"{f} {src or 'none'}: {n}" for (f, src), n in sorted(counts.items())))
 
 
 def _merge_rez(summary: pd.DataFrame, rez: pd.DataFrame) -> pd.DataFrame:
@@ -153,7 +182,7 @@ def _merge_rez(summary: pd.DataFrame, rez: pd.DataFrame) -> pd.DataFrame:
         return summary
 
     # Normalise REZ names
-    summary["_rez_key"] = summary["REZ_NAME"].astype(str).str.strip().str.lower()
+    summary["_rez_key"] = summary["REZ_NAME"].fillna("").astype(str).str.strip().str.lower()
     rez["_rez_key"] = rez["REZ_NAME"].astype(str).str.strip().str.lower()
 
     # REZ value columns
@@ -179,12 +208,9 @@ def _merge_rez(summary: pd.DataFrame, rez: pd.DataFrame) -> pd.DataFrame:
 
     result = summary.merge(rez_merge, on="_rez_key", how="left")
 
-    # Non-REZ farms: set ISP columns to N/A (not null — these are genuinely not applicable)
-    non_rez_mask = result["REZ"] == "N"
+    # Units outside a REZ ("Non-REZ") or with REZ unknown ("") match no forecast
+    # row, so their ISP columns stay empty.
     isp_cols = [c for c in result.columns if c.startswith("ISP_")]
-    for col in isp_cols:
-        # Keep NaN for non-REZ (will display as N/A in dashboard)
-        pass
 
     # Clean up
     result = result.drop(columns=["_rez_key"], errors="ignore")

@@ -20,7 +20,7 @@ For every utility-scale solar and wind farm in the NEM:
 
 | Data | Source | URL |
 |------|--------|-----|
-| Generator listing | AEMO NEM Generation Information | [aemo.com.au/energy-systems/electricity/.../generation-information](https://aemo.com.au/energy-systems/electricity/national-electricity-market-nem/nem-forecasting-and-planning/forecasting-and-planning-data/generation-information) |
+| Generator listing | AEMO NEM Registration and Exemption List (re-downloaded every run), cross-checked against MMSDM DUDETAILSUMMARY | [NEM-Registration-and-Exemption-List.xls](https://www.aemo.com.au/-/media/Files/Electricity/NEM/Participant_Information/NEM-Registration-and-Exemption-List.xls), [nemweb MMSDM](https://nemweb.com.au/Data_Archive/Wholesale_Electricity/MMSDM/) |
 | Projected curtailment | AEMO Enhanced Locational Information (ELI) Report | [aemo.com.au/.../inputs-assumptions-methodologies](https://aemo.com.au/energy-systems/electricity/national-electricity-market-nem/nem-forecasting-and-planning/forecasting-and-planning-data/inputs-assumptions-and-methodologies) |
 | REZ forecasts | Appendices to AEMO ELI Report | Same as above |
 | MLFs | AEMO MLF Tracker (via [cutout-z/aemo-mlf-tracker](https://github.com/cutout-z/aemo-mlf-tracker)) | [cutout-z.github.io/aemo-mlf-tracker](https://cutout-z.github.io/aemo-mlf-tracker/) |
@@ -49,6 +49,17 @@ Per the AEMO ELI report, curtailment projections are based on the introduction o
 
 These are projections, not actuals. They indicate the *risk* of curtailment at each connection point.
 
+Each unit takes its seeded per-DUID value where there is one (`ELI_SOURCE` =
+`per-DUID`). Otherwise it is filled from the location table (`ELI_SOURCE` =
+`location`): same `LOCATION` in the unit's own region, the row at the unit's
+connection voltage if there is one, else the location's only row (several voltages
+and none matching = left empty); wind farms take the Wind columns, solar farms the
+Solar columns. `ELI_SOURCE` is empty where there is no value. On the seeded solar
+farms this rule reproduces the per-DUID values for 101/104 (near) and 102/104
+(medium). Units with no `LOCATION` (today: every wind farm and the unseeded solar
+farms, since no AEMO table available to the pipeline maps a DUID to an ELI
+location) cannot be filled.
+
 ### ISP curtailment & economic offloading forecasts
 
 From the ISP appendices, published with the ELI report:
@@ -56,7 +67,47 @@ From the ISP appendices, published with the ELI report:
 - **Curtailment**: Proportion of energy curtailed due to network thermal limits, voltage stability, or system strength constraints
 - **Economic offloading**: Proportion of energy where the generator would choose not to dispatch due to negative prices (economic decision, not physical constraint)
 
-These are forecast at the REZ level and mapped to individual farms by REZ membership. Non-REZ farms show N/A.
+These are forecast at the REZ level and mapped to individual farms by REZ membership
+(joined on `REZ_NAME`). Units outside a REZ, or whose REZ is unknown, show N/A.
+
+### REZ membership
+
+`summary.csv` carries three REZ columns:
+
+| Column | Values |
+|--------|--------|
+| `REZ` | `Y` in a REZ · `N` a source says it is outside every REZ · empty = unknown |
+| `REZ_NAME` | the zone name · `Non-REZ` only when `REZ` is `N` · empty = unknown |
+| `REZ_SOURCE` | `geninfo` · `seed` · empty — where the `Y`/`N` came from |
+
+Precedence: NEM Generation Information where it states a REZ (no edition has a REZ
+column today), then the seeded workbook (`generator_enrichment.feather`, from the
+databook's Summary tab: `REZ (Y/N)` and `REZ`), otherwise unknown. **`N` is
+established only by the seed's explicit `REZ (Y/N)` = `N`** (or a Generation
+Information cell reading "Non-REZ"); a blank or missing value is never read as
+"outside". The seed covers 104 solar DUIDs and no wind farms, so every wind farm is
+unknown until a source covers it.
+
+### Generator listing
+
+The Registration and Exemption List is downloaded on every run. A download only
+replaces the cached copy if it is a real workbook with the `PU and Scheduled Loads`
+sheet; a failed fetch or a Cloudflare challenge page keeps the last good copy and
+logs `REGISTRATION LIST REFRESH FAILED` with that copy's age. The newest MMSDM
+DUDETAILSUMMARY on nemweb is then checked: every GENERATOR DUID whose registration
+took effect in the last 24 months but is absent from the list is logged as a warning
+(DUDETAILSUMMARY has no fuel type, so such units are reported, never added).
+Each run records what it fetched in `data/source_status.json` (not committed).
+
+NEM Generation Information is republished about quarterly under a new file name, so
+it is not pinned: each run reads the edition links off AEMO's Generation Information
+page when it can, otherwise probes `nem-generation-information-<month>-<year>.xlsx`
+newest month first down to the cached edition, keeps the last good copy on failure,
+and warns when the cached edition is more than ~4 months old. The July 2026 edition
+has site, owner, region, technology, DUID, capacity and commitment status but **no
+REZ, location or connection-voltage column**, so it currently enriches nothing; it is
+used to name the technology of unlisted units in the DUDETAILSUMMARY warning, and
+its REZ/location/voltage columns are picked up automatically if an edition adds them.
 
 ### MLFs
 
@@ -69,7 +120,8 @@ Data sourced from the [AEMO MLF Tracker](https://github.com/cutout-z/aemo-mlf-tr
 ### Pipeline
 
 ```
-NEM Generation Info   → download_generators.py → generator listing (spine)
+Registration List     → download_generators.py → generator listing (spine)
+DUDETAILSUMMARY       → dudetail.py            → warns about registered units the list lacks
 MLF Tracker CSV       → download_mlf.py        → MLF columns
 ELI Chart Data        → download_eli.py        → projected curtailment
 ELI Appendices        → download_rez.py        → REZ forecasts
@@ -89,6 +141,13 @@ python -m src.main
 
 # Ignore feather caches and re-fetch everything
 python -m src.main --full-refresh
+
+# Run against a copy of the caches, writing outputs elsewhere (data/ and outputs/ untouched)
+python -m src.main --cache-dir /tmp/ren-cache --output-dir /tmp/ren-out
+python tests/validate_outputs.py --outputs-dir /tmp/ren-out
+
+# Offline unit tests
+python -m pytest -q tests
 
 # Then open index.html in a browser
 ```
@@ -118,6 +177,10 @@ After the pipeline runs and before committing, an automated validation step (`te
 - MLF values in [0.5, 1.5]
 - Curtailment values in [0, 1]
 - All 5 regional Excel workbooks exist
+- REZ contract: `REZ` in {`Y`, `N`, empty}; `Non-REZ` only with `REZ` = `N`; every `Y`/`N` has a `REZ_SOURCE`; `Y` has a zone name
+- `ELI_SOURCE` in {`per-DUID`, `location`, empty}, empty exactly when there is no ELI value
+- `TECHNOLOGY` is not "Renewable" for every row
+- Source freshness (`data/source_status.json`, written by the run): the Registration List's last good fetch is at most 30 days old, and at most 3 GENERATOR DUIDs registered in the last 24 months (per DUDETAILSUMMARY) are missing from it; a stale Generation Information edition is reported as a warning
 
 If any check fails, the NAS lane or manual fallback workflow exits before committing — preventing bad data from reaching the dashboard.
 

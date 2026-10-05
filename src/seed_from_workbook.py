@@ -80,9 +80,8 @@ def _parse_eli_sheets(xls: pd.ExcelFile) -> pd.DataFrame:
     if near.empty and med.empty:
         return pd.DataFrame()
 
-    if not near.empty and not med.empty:
-        return pd.merge(near, med, on=["LOCATION", "VOLTAGE_KV", "REGION"], how="outer")
-    return near if not near.empty else med
+    from .download_eli import combine_terms
+    return combine_terms(near, med)
 
 
 def _parse_curtailment_tab(xls: pd.ExcelFile, sheet_name: str, term: str) -> pd.DataFrame:
