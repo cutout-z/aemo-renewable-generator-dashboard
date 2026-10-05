@@ -42,15 +42,19 @@ def run(full_refresh: bool = False, cache_dir: str | None = None,
     summary_path = output_root / Path(config.SUMMARY_CSV).name
 
     # ── Step 1: Generator listing (the spine) ────────────────────────────
+    # Rebuilt every run: the Registration List is re-downloaded each time so
+    # new units appear (a failed download falls back to the last good copy).
     gen_cache = cache_root / Path(config.GENERATOR_CACHE).name
-    if not full_refresh and gen_cache.exists():
-        logger.info("Loading cached generator listing...")
-        generators = pd.read_feather(gen_cache)
-    else:
+    try:
         generators = fetch_generators(cache_dir)
         gen_cache.parent.mkdir(parents=True, exist_ok=True)
         generators.reset_index(drop=True).to_feather(gen_cache)
         logger.info(f"Cached generator listing ({len(generators)} farms)")
+    except Exception as e:
+        if not gen_cache.exists():
+            raise
+        logger.error(f"Generator listing rebuild failed ({e}); using cached listing")
+        generators = pd.read_feather(gen_cache)
 
     all_duids = set(generators["DUID"].unique())
     logger.info(f"Tracking {len(all_duids)} solar/wind generators")

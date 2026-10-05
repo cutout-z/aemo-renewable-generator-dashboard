@@ -21,3 +21,8 @@ Thumbs.db
 
 # the Tailwind standalone CLI — scripts/build-css.sh fetches it if absent (never commit the 48 MB binary)
 tools/
+
+# Upstream snapshots and run status written next to the feather caches
+data/*.zip
+data/*.json
+data/*.part

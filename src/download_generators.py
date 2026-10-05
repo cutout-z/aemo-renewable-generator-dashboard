@@ -6,14 +6,16 @@ Enrichment: NEM Generation Information workbook (when downloadable) for REZ/loca
 
 from __future__ import annotations
 
+import io
 import logging
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
 import requests
 
-from . import config
+from . import config, dudetail, source_status
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +25,11 @@ REGISTRATION_URL = (
     "Participant_Information/NEM-Registration-and-Exemption-List.xls"
 )
 REGISTRATION_SHEET = "PU and Scheduled Loads"
+REGISTRATION_FILE = "NEM-Registration-and-Exemption-List.xls"
+
+# Leading bytes of a real workbook: xlsx is a zip, legacy xls an OLE2 compound file
+_XLSX_MAGIC = b"PK\x03\x04"
+_XLS_MAGIC = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
 
 # NEM Generation Information — has REZ/location/voltage but URL changes quarterly
 NEM_GEN_INFO_SHEETS = [
@@ -42,13 +49,15 @@ def fetch_generators(cache_dir: str) -> pd.DataFrame:
     cache_path = Path(cache_dir)
     cache_path.mkdir(parents=True, exist_ok=True)
 
-    # ── Primary: NEM Registration List (always works) ───────────────
-    reg_path = cache_path / "NEM-Registration-and-Exemption-List.xls"
-    if not reg_path.exists():
-        logger.info("Downloading NEM Registration List from AEMO...")
-        _download_with_retry(REGISTRATION_URL, reg_path)
+    # ── Primary: NEM Registration List (refreshed every run) ────────
+    reg_path = refresh_registration_list(cache_path)
 
     generators = _parse_registration_list(reg_path)
+    if generators.empty:
+        raise RuntimeError(f"No solar/wind generators parsed from {reg_path}")
+
+    # ── Cross-check: units AEMO has registered that the list lacks ──
+    _cross_check_dudetailsummary(cache_path, _registered_duids(reg_path))
 
     # ── Enrichment: NEM Generation Information (may fail) ───────────
     gen_info = _try_download_gen_info(cache_path)
@@ -98,6 +107,113 @@ def fetch_generators(cache_dir: str) -> pd.DataFrame:
     logger.info(f"Loaded {len(generators)} solar/wind generators "
                 f"({solar_count} solar, {wind_count} wind)")
     return generators
+
+
+def refresh_registration_list(cache_path: Path) -> Path:
+    """Download the Registration List on every run, keeping the last good copy.
+
+    The download only replaces the cached file if it is a real workbook with
+    the expected sheet (AEMO's Cloudflare front sometimes answers scripted
+    requests with an HTML challenge page). On failure the previous copy is used
+    and the failure is logged at ERROR with its age; with no previous copy the
+    run cannot continue.
+    """
+    reg_path = cache_path / REGISTRATION_FILE
+    previous = source_status.load(cache_path).get("registration_list", {})
+    last_good = previous.get("fetched_at")
+    if last_good is None and reg_path.exists():
+        last_good = datetime.fromtimestamp(reg_path.stat().st_mtime, timezone.utc).isoformat()
+
+    record = {"url": REGISTRATION_URL, "file": REGISTRATION_FILE,
+              "fetched_at": last_good, "refreshed": False, "error": None,
+              "checked_at": source_status.now_iso()}
+    try:
+        logger.info("Downloading NEM Registration List from AEMO...")
+        content = _fetch_bytes(REGISTRATION_URL)
+        check_workbook_bytes(content, REGISTRATION_SHEET)
+        tmp = reg_path.with_name(reg_path.name + ".part")
+        tmp.write_bytes(content)
+        tmp.replace(reg_path)
+        record.update(fetched_at=source_status.now_iso(), refreshed=True)
+        logger.info(f"Registration List refreshed ({len(content) / 1024:.0f} KB)")
+    except Exception as e:
+        record["error"] = str(e)
+        if not reg_path.exists():
+            source_status.update(cache_path, "registration_list", record)
+            raise RuntimeError(f"Registration List download failed and no cached copy: {e}")
+        age = source_status.age_days(last_good)
+        age_txt = f"{age:.0f} days old" if age is not None else "age unknown"
+        logger.error("!" * 72)
+        logger.error(f"REGISTRATION LIST REFRESH FAILED: {e}")
+        logger.error(f"Using the last good copy (fetched {last_good}, {age_txt}); "
+                     "units registered since then are missing from the dashboard.")
+        logger.error("!" * 72)
+
+    source_status.update(cache_path, "registration_list", record)
+    return reg_path
+
+
+def check_workbook_bytes(content: bytes, required_sheet: str | None = None) -> None:
+    """Raise ValueError unless `content` is a workbook (with `required_sheet`)."""
+    if not (content.startswith(_XLSX_MAGIC) or content.startswith(_XLS_MAGIC)):
+        head = content[:2048].lower()
+        if b"<html" in head or b"<!doctype" in head:
+            kind = "Cloudflare challenge page" if b"just a moment" in head else "HTML page"
+            raise ValueError(f"got an {kind}, not a workbook")
+        raise ValueError("response is not an Excel workbook")
+    try:
+        sheets = pd.ExcelFile(io.BytesIO(content)).sheet_names
+    except Exception as e:
+        raise ValueError(f"workbook does not open: {e}")
+    if required_sheet and required_sheet not in sheets:
+        raise ValueError(f"workbook lacks sheet {required_sheet!r} (has {sheets})")
+
+
+def _registered_duids(xls_path: Path) -> set[str]:
+    """Every DUID on the Registration List's generator sheet, any fuel."""
+    try:
+        df = pd.read_excel(xls_path, sheet_name=REGISTRATION_SHEET)
+    except Exception as e:
+        logger.warning(f"Could not read DUIDs from Registration List: {e}")
+        return set()
+    duid_col = next((c for c in df.columns if str(c).strip().lower() == "duid"), None)
+    if duid_col is None:
+        return set()
+    duids = df[duid_col].dropna().astype(str).str.strip()
+    return set(duids[duids != "-"])
+
+
+def _cross_check_dudetailsummary(cache_path: Path, registered: set[str]) -> None:
+    """Warn about recently registered GENERATOR DUIDs the Registration List lacks."""
+    previous = source_status.load(cache_path).get("dudetailsummary", {})
+    record = {"months_window": dudetail.RECENT_MONTHS, "checked_at": source_status.now_iso(),
+              "month": previous.get("month"), "error": None}
+    try:
+        dud, month = dudetail.fetch_latest_dudetailsummary(
+            cache_path, cached_month=previous.get("month"))
+        if dud is None or not registered:
+            record["error"] = "DUDETAILSUMMARY or Registration List DUIDs unavailable"
+            logger.warning(f"Skipping DUDETAILSUMMARY cross-check: {record['error']}")
+        else:
+            recent = dudetail.recent_generators(dud)
+            missing = dudetail.missing_from_registration(dud, registered)
+            record.update(month=month, recent_generators=len(recent),
+                          missing_from_registration=[
+                              {"DUID": r.DUID, "REGIONID": r.REGIONID,
+                               "STATIONID": r.STATIONID,
+                               "first_start": r.FIRST_START.date().isoformat()}
+                              for r in missing.itertuples()])
+            logger.info(f"DUDETAILSUMMARY {month}: {len(recent)} GENERATOR DUIDs registered "
+                        f"in the last {dudetail.RECENT_MONTHS} months, "
+                        f"{len(missing)} missing from the Registration List")
+            for r in missing.itertuples():
+                logger.warning(f"Registration List lacks {r.DUID} ({r.STATIONID}, {r.REGIONID}), "
+                               f"in DUDETAILSUMMARY since {r.FIRST_START.date()}; "
+                               "fuel unknown, not added")
+    except Exception as e:
+        record["error"] = str(e)
+        logger.warning(f"DUDETAILSUMMARY cross-check failed: {e}")
+    source_status.update(cache_path, "dudetailsummary", record)
 
 
 def _parse_registration_list(xls_path: Path) -> pd.DataFrame:
@@ -284,6 +400,26 @@ def _classify_fuel(row) -> str:
         if "wind" in val:
             return "Wind"
     return "Unknown"
+
+
+def _fetch_bytes(url: str) -> bytes:
+    """GET a URL with retry logic and return the body."""
+    for attempt in range(config.MAX_RETRIES):
+        try:
+            resp = requests.get(
+                url,
+                timeout=config.REQUEST_TIMEOUT,
+                headers={"User-Agent": config.USER_AGENT},
+            )
+            resp.raise_for_status()
+            return resp.content
+        except requests.RequestException as e:
+            if attempt < config.MAX_RETRIES - 1:
+                wait = config.RETRY_BACKOFF * (attempt + 1)
+                logger.warning(f"Download failed (attempt {attempt + 1}): {e}. Retrying in {wait}s...")
+                time.sleep(wait)
+            else:
+                raise RuntimeError(f"Failed to download {url}: {e}")
 
 
 def _download_with_retry(url: str, dest: Path):

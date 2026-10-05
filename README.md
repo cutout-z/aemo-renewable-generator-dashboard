@@ -20,7 +20,7 @@ For every utility-scale solar and wind farm in the NEM:
 
 | Data | Source | URL |
 |------|--------|-----|
-| Generator listing | AEMO NEM Generation Information | [aemo.com.au/energy-systems/electricity/.../generation-information](https://aemo.com.au/energy-systems/electricity/national-electricity-market-nem/nem-forecasting-and-planning/forecasting-and-planning-data/generation-information) |
+| Generator listing | AEMO NEM Registration and Exemption List (re-downloaded every run), cross-checked against MMSDM DUDETAILSUMMARY | [NEM-Registration-and-Exemption-List.xls](https://www.aemo.com.au/-/media/Files/Electricity/NEM/Participant_Information/NEM-Registration-and-Exemption-List.xls), [nemweb MMSDM](https://nemweb.com.au/Data_Archive/Wholesale_Electricity/MMSDM/) |
 | Projected curtailment | AEMO Enhanced Locational Information (ELI) Report | [aemo.com.au/.../inputs-assumptions-methodologies](https://aemo.com.au/energy-systems/electricity/national-electricity-market-nem/nem-forecasting-and-planning/forecasting-and-planning-data/inputs-assumptions-and-methodologies) |
 | REZ forecasts | Appendices to AEMO ELI Report | Same as above |
 | MLFs | AEMO MLF Tracker (via [cutout-z/aemo-mlf-tracker](https://github.com/cutout-z/aemo-mlf-tracker)) | [cutout-z.github.io/aemo-mlf-tracker](https://cutout-z.github.io/aemo-mlf-tracker/) |
@@ -58,6 +58,17 @@ From the ISP appendices, published with the ELI report:
 
 These are forecast at the REZ level and mapped to individual farms by REZ membership. Non-REZ farms show N/A.
 
+### Generator listing
+
+The Registration and Exemption List is downloaded on every run. A download only
+replaces the cached copy if it is a real workbook with the `PU and Scheduled Loads`
+sheet; a failed fetch or a Cloudflare challenge page keeps the last good copy and
+logs `REGISTRATION LIST REFRESH FAILED` with that copy's age. The newest MMSDM
+DUDETAILSUMMARY on nemweb is then checked: every GENERATOR DUID whose registration
+took effect in the last 24 months but is absent from the list is logged as a warning
+(DUDETAILSUMMARY has no fuel type, so such units are reported, never added).
+Each run records what it fetched in `data/source_status.json` (not committed).
+
 ### MLFs
 
 Marginal Loss Factors represent the electrical losses between a generator's connection point and the regional reference node. An MLF of 0.90 means the generator receives 90% of the regional reference price.
@@ -69,7 +80,8 @@ Data sourced from the [AEMO MLF Tracker](https://github.com/cutout-z/aemo-mlf-tr
 ### Pipeline
 
 ```
-NEM Generation Info   → download_generators.py → generator listing (spine)
+Registration List     → download_generators.py → generator listing (spine)
+DUDETAILSUMMARY       → dudetail.py            → warns about registered units the list lacks
 MLF Tracker CSV       → download_mlf.py        → MLF columns
 ELI Chart Data        → download_eli.py        → projected curtailment
 ELI Appendices        → download_rez.py        → REZ forecasts
