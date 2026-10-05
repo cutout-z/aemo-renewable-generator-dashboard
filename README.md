@@ -177,6 +177,10 @@ After the pipeline runs and before committing, an automated validation step (`te
 - MLF values in [0.5, 1.5]
 - Curtailment values in [0, 1]
 - All 5 regional Excel workbooks exist
+- REZ contract: `REZ` in {`Y`, `N`, empty}; `Non-REZ` only with `REZ` = `N`; every `Y`/`N` has a `REZ_SOURCE`; `Y` has a zone name
+- `ELI_SOURCE` in {`per-DUID`, `location`, empty}, empty exactly when there is no ELI value
+- `TECHNOLOGY` is not "Renewable" for every row
+- Source freshness (`data/source_status.json`, written by the run): the Registration List's last good fetch is at most 30 days old, and at most 3 GENERATOR DUIDs registered in the last 24 months (per DUDETAILSUMMARY) are missing from it; a stale Generation Information edition is reported as a warning
 
 If any check fails, the NAS lane or manual fallback workflow exits before committing — preventing bad data from reaching the dashboard.
 
