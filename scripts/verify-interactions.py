@@ -111,7 +111,10 @@ def expected_tiles(scope: str) -> list[list[str]]:
     rez = sum(r["REZ"] == "Y" for r in base)
     mlf_key = [k for k, g in columns(scope) if g == "mlf"][-1]
     mlf = [v for r in base if (v := num(r[mlf_key])) is not None]
-    near = [v for r in base if (v := num(r["ELI_CURTAILMENT_NEAR"])) is not None]
+    near_rows = [r for r in base if num(r["ELI_CURTAILMENT_NEAR"]) is not None]
+    near = [num(r["ELI_CURTAILMENT_NEAR"]) for r in near_rows]
+    near_fuels = sorted({r["FUEL_TYPE"] for r in near_rows})
+    near_scope = f" · {near_fuels[0].lower()} farms only" if len(near_fuels) == 1 else ""
     n_of = lambda k: f"{k} of {n} with a value" if k else "none with a value"
     where = "NEM" if scope == "ALL" else STATES[scope]
     return [
@@ -121,7 +124,7 @@ def expected_tiles(scope: str) -> list[list[str]]:
         [str(HALF_UP(sum(mlf) / len(mlf), "0.0001")) if mlf else "N/A",
          f"Avg MLF, {mlf_key.replace('MLF_', '')}", n_of(len(mlf))],
         [f"{HALF_UP(sum(near) / len(near) * 100, '0.1')}%" if near else "N/A",
-         "Avg ELI near-term curtailment, 2026-28", n_of(len(near))],
+         "Avg ELI near-term curtailment, 2026-28", n_of(len(near)) + (near_scope if near else "")],
     ]
 
 with sync_playwright() as pw:

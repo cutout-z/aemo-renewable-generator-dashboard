@@ -388,8 +388,13 @@ function renderStats() {
   const avgMlf = decMean(mlfVals, 0, 4) ?? 'N/A';
 
   // Average near-term curtailment
-  const nearVals = rows.map(r => r.ELI_CURTAILMENT_NEAR).filter(v => parseDec(v));
+  const nearRows = rows.filter(r => parseDec(r.ELI_CURTAILMENT_NEAR));
+  const nearVals = nearRows.map(r => r.ELI_CURTAILMENT_NEAR);
   const avgNear = nearVals.length ? decMean(nearVals, 2, 1) + '%' : 'N/A';
+  // ELI figures exist for solar farms only today, so a NEM-wide label overstated what the mean covers.
+  // Say which fuels it does cover, from the rows themselves.
+  const nearFuels = [...new Set(nearRows.map(r => r.FUEL_TYPE))].sort();
+  const nearScope = nearFuels.length === 1 ? ` · ${nearFuels[0].toLowerCase()} farms only` : '';
 
   const scope = activeRegion === 'ALL' ? 'NEM' : STATES[activeRegion];
   const nOf = (n) => `${n} of ${rows.length} with a value`;
@@ -398,7 +403,7 @@ function renderStats() {
     tile(`${solarCount} · ${windCount}`, 'Solar · wind farms', 'split of ' + rows.length) +
     tile(rezCount, 'In a REZ', `${rows.length - rezCount} not matched to a REZ`) +
     tile(avgMlf, latestMlf ? 'Avg MLF, ' + latestMlf.replace('MLF_','') : 'Avg MLF', mlfVals.length ? nOf(mlfVals.length) : 'none with a value') +
-    tile(avgNear, 'Avg ELI near-term curtailment, 2026-28', nearVals.length ? nOf(nearVals.length) : 'none with a value', 'col-span-2 sm:col-span-1');
+    tile(avgNear, 'Avg ELI near-term curtailment, 2026-28', nearVals.length ? nOf(nearVals.length) + nearScope : 'none with a value', 'col-span-2 sm:col-span-1');
   document.getElementById('statsFoot').innerHTML = '<span>' + [
     'Source: outputs/summary.csv',
     `${scope}; unweighted mean across generators with a value; filters do not apply`,
