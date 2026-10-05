@@ -158,7 +158,7 @@ def _merge_rez(summary: pd.DataFrame, rez: pd.DataFrame) -> pd.DataFrame:
         return summary
 
     # Normalise REZ names
-    summary["_rez_key"] = summary["REZ_NAME"].astype(str).str.strip().str.lower()
+    summary["_rez_key"] = summary["REZ_NAME"].fillna("").astype(str).str.strip().str.lower()
     rez["_rez_key"] = rez["REZ_NAME"].astype(str).str.strip().str.lower()
 
     # REZ value columns
@@ -184,12 +184,9 @@ def _merge_rez(summary: pd.DataFrame, rez: pd.DataFrame) -> pd.DataFrame:
 
     result = summary.merge(rez_merge, on="_rez_key", how="left")
 
-    # Non-REZ farms: set ISP columns to N/A (not null — these are genuinely not applicable)
-    non_rez_mask = result["REZ"] == "N"
+    # Units outside a REZ ("Non-REZ") or with REZ unknown ("") match no forecast
+    # row, so their ISP columns stay empty.
     isp_cols = [c for c in result.columns if c.startswith("ISP_")]
-    for col in isp_cols:
-        # Keep NaN for non-REZ (will display as N/A in dashboard)
-        pass
 
     # Clean up
     result = result.drop(columns=["_rez_key"], errors="ignore")

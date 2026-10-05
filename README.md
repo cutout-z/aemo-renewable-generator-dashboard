@@ -56,7 +56,26 @@ From the ISP appendices, published with the ELI report:
 - **Curtailment**: Proportion of energy curtailed due to network thermal limits, voltage stability, or system strength constraints
 - **Economic offloading**: Proportion of energy where the generator would choose not to dispatch due to negative prices (economic decision, not physical constraint)
 
-These are forecast at the REZ level and mapped to individual farms by REZ membership. Non-REZ farms show N/A.
+These are forecast at the REZ level and mapped to individual farms by REZ membership
+(joined on `REZ_NAME`). Units outside a REZ, or whose REZ is unknown, show N/A.
+
+### REZ membership
+
+`summary.csv` carries three REZ columns:
+
+| Column | Values |
+|--------|--------|
+| `REZ` | `Y` in a REZ · `N` a source says it is outside every REZ · empty = unknown |
+| `REZ_NAME` | the zone name · `Non-REZ` only when `REZ` is `N` · empty = unknown |
+| `REZ_SOURCE` | `geninfo` · `seed` · empty — where the `Y`/`N` came from |
+
+Precedence: NEM Generation Information where it states a REZ (no edition has a REZ
+column today), then the seeded workbook (`generator_enrichment.feather`, from the
+databook's Summary tab: `REZ (Y/N)` and `REZ`), otherwise unknown. **`N` is
+established only by the seed's explicit `REZ (Y/N)` = `N`** (or a Generation
+Information cell reading "Non-REZ"); a blank or missing value is never read as
+"outside". The seed covers 104 solar DUIDs and no wind farms, so every wind farm is
+unknown until a source covers it.
 
 ### Generator listing
 

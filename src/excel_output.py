@@ -112,7 +112,7 @@ def _write_summary_table(wb: Workbook, data: pd.DataFrame, region_name: str,
     # Column widths
     widths = {
         "DUID": 14, "PROJECT_NAME": 30, "FUEL_TYPE": 8, "LOCATION": 16,
-        "REZ": 5, "REZ_NAME": 22, "STATE": 6, "NAMEPLATE_MW": 12,
+        "REZ": 5, "REZ_NAME": 22, "REZ_SOURCE": 10, "STATE": 6, "NAMEPLATE_MW": 12,
         "VOLTAGE_KV": 10,
     }
     for col_idx, key in enumerate(col_keys, 1):
@@ -196,6 +196,7 @@ def _get_column_spec(data: pd.DataFrame) -> list[tuple[str, str]]:
         ("LOCATION", "Location"),
         ("REZ", "REZ"),
         ("REZ_NAME", "REZ Name"),
+        ("REZ_SOURCE", "REZ Source"),
         ("STATE", "State"),
         ("NAMEPLATE_MW", "MW"),
         ("VOLTAGE_KV", "kV"),

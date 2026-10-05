@@ -35,16 +35,29 @@ _XLS_MAGIC = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
 
 # Columns taken from Generation Information when an edition carries them.
 # NAMEPLATE_MW is deliberately not taken: its capacities are per survey row
-# (stages, DC/AC) and would add a third MW source to the table.
-GEN_INFO_ENRICH_COLS = ["LOCATION", "REZ_NAME", "VOLTAGE_KV"]
+# (stages, DC/AC) and would add a third MW source to the table. REZ is handled
+# separately by assign_rez().
+GEN_INFO_ENRICH_COLS = ["LOCATION", "VOLTAGE_KV"]
+SEED_ENRICH_COLS = ["LOCATION", "VOLTAGE_KV", "UNIT_STATUS", "NAMEPLATE_MW"]
+
+# REZ output contract (summary.csv):
+#   REZ        "Y" in a REZ | "N" a source says outside every REZ | "" unknown
+#   REZ_NAME   zone name | "Non-REZ" (only with REZ "N") | "" unknown
+#   REZ_SOURCE "geninfo" | "seed" | "" — where the Y/N came from
+NON_REZ_NAME = "Non-REZ"
+_NON_REZ_VALUES = {"non-rez", "non rez", "nonrez", "not in a rez", "outside rez",
+                   "outside a rez", "no rez"}
+# Blank-ish cells say nothing: they are never read as "outside a REZ"
+_UNSTATED_VALUES = {"", "-", "n/a", "na", "nan", "none", "tbc", "tbd", "unknown"}
 
 
 def fetch_generators(cache_dir: str) -> pd.DataFrame:
     """Download generator data and extract solar + wind farms.
 
     Returns DataFrame with columns:
-        DUID, PROJECT_NAME, LOCATION, REZ, REZ_NAME, STATE, REGIONID,
+        DUID, PROJECT_NAME, LOCATION, REZ, REZ_NAME, REZ_SOURCE, STATE, REGIONID,
         NAMEPLATE_MW, VOLTAGE_KV, FUEL_TYPE, TECHNOLOGY, UNIT_STATUS
+    (REZ contract: see NON_REZ_NAME above / assign_rez)
     """
     cache_path = Path(cache_dir)
     cache_path.mkdir(parents=True, exist_ok=True)
@@ -68,10 +81,11 @@ def fetch_generators(cache_dir: str) -> pd.DataFrame:
 
     # ── Enrichment: Seeded data from workbook (if available) ────────
     enrich_path = Path(cache_dir) / "generator_enrichment.feather"
+    seed = None
     if enrich_path.exists():
         logger.info("Enriching from seeded workbook data...")
-        enrich = pd.read_feather(enrich_path)
-        generators = _enrich_with_gen_info(generators, enrich)
+        seed = pd.read_feather(enrich_path)
+        generators = _enrich_with_gen_info(generators, seed, columns=SEED_ENRICH_COLS)
 
     # Build REGIONID from STATE
     if "STATE" in generators.columns:
@@ -80,19 +94,12 @@ def fetch_generators(cache_dir: str) -> pd.DataFrame:
         reverse_map = {v: k for k, v in config.STATE_TO_REGION.items()}
         generators["STATE"] = generators["REGIONID"].map(config.REGION_NAMES)
 
-    # Determine REZ membership
-    if "REZ_NAME" in generators.columns:
-        generators["REZ"] = generators["REZ_NAME"].apply(
-            lambda x: "N" if pd.isna(x) or str(x).strip() in ("", "Non-REZ", "-", "N/A") else "Y"
-        )
-        generators["REZ_NAME"] = generators["REZ_NAME"].fillna("Non-REZ")
-    else:
-        generators["REZ"] = "N"
-        generators["REZ_NAME"] = "Non-REZ"
+    # Determine REZ membership: Y / N / unknown, with its source
+    generators = assign_rez(generators, gen_info=gen_info, seed=seed)
 
     # Select final columns
     keep_cols = [
-        "DUID", "PROJECT_NAME", "LOCATION", "REZ", "REZ_NAME",
+        "DUID", "PROJECT_NAME", "LOCATION", "REZ", "REZ_NAME", "REZ_SOURCE",
         "STATE", "REGIONID", "NAMEPLATE_MW", "VOLTAGE_KV",
         "FUEL_TYPE", "TECHNOLOGY", "UNIT_STATUS",
     ]
@@ -181,6 +188,67 @@ def _registered_duids(xls_path: Path) -> set[str]:
         return set()
     duids = df[duid_col].dropna().astype(str).str.strip()
     return set(duids[duids != "-"])
+
+
+def classify_rez_value(value) -> tuple[str, str] | None:
+    """Read one REZ cell: ("Y", zone) | ("N", "Non-REZ") | None if it says nothing."""
+    if value is None or (isinstance(value, float) and pd.isna(value)):
+        return None
+    text = str(value).strip()
+    low = text.lower()
+    if low in _UNSTATED_VALUES:
+        return None
+    if low in _NON_REZ_VALUES:
+        return "N", NON_REZ_NAME
+    return "Y", text
+
+
+def assign_rez(generators: pd.DataFrame, gen_info: pd.DataFrame | None = None,
+               seed: pd.DataFrame | None = None) -> pd.DataFrame:
+    """Set REZ / REZ_NAME / REZ_SOURCE for every unit, wind included.
+
+    Precedence: Generation Information where it states a REZ (no edition has a
+    REZ column today), then the seeded workbook's "REZ (Y/N)" + "REZ" columns,
+    otherwise unknown (""). "N"/"Non-REZ" is only ever written when a source
+    says so explicitly: the seed's REZ (Y/N) = "N", or a Gen Info cell reading
+    "Non-REZ". A blank or missing value is unknown, never "outside".
+    """
+    out = generators.copy()
+    gi = {}
+    if gen_info is not None and "REZ_NAME" in gen_info.columns:
+        gi = dict(zip(gen_info["DUID"].astype(str), gen_info["REZ_NAME"]))
+    sd = {}
+    if seed is not None and "DUID" in seed.columns:
+        for r in seed.drop_duplicates(subset="DUID").to_dict("records"):
+            sd[str(r["DUID"])] = r
+
+    rez, names, sources = [], [], []
+    for duid in out["DUID"].astype(str):
+        result, source = classify_rez_value(gi.get(duid)), "geninfo"
+        if result is None and duid in sd:
+            source = "seed"
+            row = sd[duid]
+            flag = str(row.get("REZ") or "").strip().upper()
+            named = classify_rez_value(row.get("REZ_NAME"))
+            if flag == "N":
+                result = ("N", NON_REZ_NAME)
+            elif flag == "Y" and named and named[0] == "Y":
+                result = named
+            elif flag not in ("Y", "N"):
+                result = named
+        if result is None:
+            rez.append(""); names.append(""); sources.append("")
+        else:
+            rez.append(result[0]); names.append(result[1]); sources.append(source)
+
+    out["REZ"] = rez
+    out["REZ_NAME"] = names
+    out["REZ_SOURCE"] = sources
+    if "FUEL_TYPE" in out.columns:
+        counts = out.groupby(["FUEL_TYPE", "REZ"]).size().to_dict()
+        logger.info("REZ membership (fuel, Y/N/''=unknown): "
+                    + ", ".join(f"{f} {r or 'unknown'}: {n}" for (f, r), n in sorted(counts.items())))
+    return out
 
 
 def _load_gen_info(cache_path: Path) -> pd.DataFrame | None:
