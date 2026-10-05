@@ -260,6 +260,11 @@ function decRound(raw, shift, dp) {
   const d = parseDec(raw);
   return d ? fmtFixed(divRound(d.n * 10n ** BigInt(shift + dp), 10n ** BigInt(d.scale)), dp) : null;
 }
+// Capacity: whole MW, except units under 1 MW (0.2 MW printed as "0" read as no capacity at all).
+function mwText(raw) {
+  const d = parseDec(raw);
+  return d && (d.n < 0n ? -d.n : d.n) < 10n ** BigInt(d.scale) ? decRound(raw, 0, 2) : decRound(raw, 0, 0);
+}
 // The unweighted mean of the values that parse, × 10^shift, to dp places; null when none do.
 function decMean(raws, shift, dp) {
   const ds = raws.map(parseDec).filter(Boolean);
@@ -556,7 +561,7 @@ function renderTable() {
 
       if (d.group === 'meta') {
         const pin = metaIdx++ === 0 ? 'p1 font-medium ' : '';
-        if (d.key === 'NAMEPLATE_MW' && isNum) cells.push(`<td class="${pin}r num">${decRound(raw, 0, 0)}</td>`);
+        if (d.key === 'NAMEPLATE_MW' && isNum) cells.push(`<td class="${pin}r num">${mwText(raw)}</td>`);
         // "Non-REZ" in the data means the seeded REZ workbook did not match the unit (every wind farm
         // included), not that it sits outside a zone, so the page does not repeat the claim.
         else if (d.key === 'REZ_NAME' && raw === 'Non-REZ') cells.push(`<td class="${pin}text-faint" title="Not matched to a REZ in the data">No REZ match</td>`);

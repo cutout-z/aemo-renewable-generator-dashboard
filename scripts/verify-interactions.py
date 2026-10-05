@@ -86,8 +86,8 @@ def cell(r: dict[str, str], key: str, group: str) -> tuple[str, str | None]:
     """(text, ramp class) the page should print for one cell."""
     raw, v = r[key], num(r[key])
     if group == "meta":
-        if key == "NAMEPLATE_MW" and v is not None:
-            return str(HALF_UP(v, "1")), None
+        if key == "NAMEPLATE_MW" and v is not None:      # whole MW; under 1 MW to 2 dp, never "0"
+            return str(HALF_UP(v, "0.01" if abs(v) < 1 else "1")), None
         if key == "REZ_NAME" and raw == "Non-REZ":      # the data's "no match", not a location
             return "No REZ match", None
         return raw.strip(), None
