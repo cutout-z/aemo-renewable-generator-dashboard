@@ -234,6 +234,41 @@ const MLF_LABELS = ['≥1.00', '0.98–1.00', '0.96–0.98', '0.94–0.96', '0.9
 function lossStep(v) { return LOSS_EDGES.filter(e => v >= e).length; }
 function mlfStep(v) { const i = MLF_EDGES.findIndex(e => v >= e); return i < 0 ? 7 : i; }
 
+// ── Exact decimals ───────────────────────────────────────────────────────
+// Printed figures round on the csv's own decimal text, half-up, never on a binary float:
+// (0.2905 * 100).toFixed(1) is "29.0" because the float is 29.0499…; the file says 29.1.
+// A value is held as a BigInt n over 10^scale.
+function parseDec(raw) {
+  const m = String(raw ?? '').trim().match(/^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d+))?$/);
+  if (!m || !(m[2] || m[3])) return null;
+  const frac = m[3] || '';
+  let n = BigInt((m[2] || '0') + frac), scale = frac.length - parseInt(m[4] || '0', 10);
+  if (scale < 0) { n *= 10n ** BigInt(-scale); scale = 0; }
+  return {n: m[1] === '-' ? -n : n, scale};
+}
+function divRound(num, den) {           // num / den, half-up (away from zero); den > 0
+  const neg = num < 0n, a = neg ? -num : num, q = (2n * a + den) / (2n * den);
+  return neg ? -q : q;
+}
+function fmtFixed(q, dp) {              // integer q read as q / 10^dp
+  const neg = q < 0n, s = (neg ? -q : q).toString().padStart(dp + 1, '0');
+  const out = dp ? s.slice(0, -dp) + '.' + s.slice(-dp) : s;
+  return (neg && /[1-9]/.test(out) ? '-' : '') + out;
+}
+// raw × 10^shift, to dp places (shift 2 turns a fraction into percent).
+function decRound(raw, shift, dp) {
+  const d = parseDec(raw);
+  return d ? fmtFixed(divRound(d.n * 10n ** BigInt(shift + dp), 10n ** BigInt(d.scale)), dp) : null;
+}
+// The unweighted mean of the values that parse, × 10^shift, to dp places; null when none do.
+function decMean(raws, shift, dp) {
+  const ds = raws.map(parseDec).filter(Boolean);
+  if (!ds.length) return null;
+  const S = Math.max(...ds.map(d => d.scale));
+  const sum = ds.reduce((a, d) => a + d.n * 10n ** BigInt(S - d.scale), 0n);
+  return fmtFixed(divRound(sum * 10n ** BigInt(shift + dp), BigInt(ds.length) * 10n ** BigInt(S)), dp);
+}
+
 function renderLegends() {
   const swatches = (labels) => labels.map((l, i) => `<span class="lg seq-${i}">${l}</span>`).join('');
   document.getElementById('legends').innerHTML =
@@ -344,12 +379,12 @@ function renderStats() {
   // Find MLF columns and get average of latest
   const mlfCols = colDefs.filter(d => d.group === 'mlf');
   const latestMlf = mlfCols.length ? mlfCols[mlfCols.length - 1].key : null;
-  const mlfVals = latestMlf ? rows.map(r => parseFloat(r[latestMlf])).filter(v => !isNaN(v)) : [];
-  const avgMlf = mlfVals.length ? (mlfVals.reduce((a,b) => a+b, 0) / mlfVals.length).toFixed(4) : 'N/A';
+  const mlfVals = latestMlf ? rows.map(r => r[latestMlf]).filter(v => parseDec(v)) : [];
+  const avgMlf = decMean(mlfVals, 0, 4) ?? 'N/A';
 
   // Average near-term curtailment
-  const nearVals = rows.map(r => parseFloat(r.ELI_CURTAILMENT_NEAR)).filter(v => !isNaN(v));
-  const avgNear = nearVals.length ? (nearVals.reduce((a,b) => a+b, 0) / nearVals.length * 100).toFixed(1) + '%' : 'N/A';
+  const nearVals = rows.map(r => r.ELI_CURTAILMENT_NEAR).filter(v => parseDec(v));
+  const avgNear = nearVals.length ? decMean(nearVals, 2, 1) + '%' : 'N/A';
 
   const scope = activeRegion === 'ALL' ? 'NEM' : STATES[activeRegion];
   const nOf = (n) => `${n} of ${rows.length} with a value`;
@@ -517,15 +552,15 @@ function renderTable() {
     colDefs.forEach(d => {
       const raw = row[d.key];
       const val = parseFloat(raw);
-      const isNum = !isNaN(val);
+      const isNum = parseDec(raw) !== null;   // the same test the printed text uses, so a number never prints as null
 
       if (d.group === 'meta') {
         const pin = metaIdx++ === 0 ? 'p1 font-medium ' : '';
-        if (d.key === 'NAMEPLATE_MW' && isNum) cells.push(`<td class="${pin}r num">${val.toFixed(0)}</td>`);
+        if (d.key === 'NAMEPLATE_MW' && isNum) cells.push(`<td class="${pin}r num">${decRound(raw, 0, 0)}</td>`);
         else cells.push(`<td class="${pin}">${raw || ''}</td>`);
       } else if (isNum) {
         const step = d.group === 'mlf' ? mlfStep(val) : lossStep(val);
-        const text = d.group === 'mlf' ? val.toFixed(4) : (val * 100).toFixed(1) + '%';
+        const text = d.group === 'mlf' ? decRound(raw, 0, 4) : decRound(raw, 2, 1) + '%';
         cells.push(`<td class="h r num seq-${step}">${text}</td>`);
       } else {
         const why = naReason(row, d);
