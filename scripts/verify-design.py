@@ -15,6 +15,7 @@ The DOM contract it checks is written down in AGENTS.md (section "DOM contract")
 from __future__ import annotations
 
 import argparse
+import csv
 import pathlib
 import re
 import sys
@@ -28,6 +29,16 @@ TOKEN_SRC = ROOT / "assets" / "css" / "tailwind.src.css"
 PAGE = ROOT / "index.html"
 GROUPS = ["Actual Curtailment", "ELI Projected", "Marginal Loss Factor",
           "ISP Curtailment Forecast", "ISP Offloading Forecast"]
+CSV = ROOT / "outputs" / "summary.csv"
+
+# The table's shape comes from the data file, not a count frozen on the day the gate was written.
+# Metric columns are every csv column the page groups (actual, ELI, MLF, ISP), labels excluded.
+with CSV.open() as _fh:
+    _reader = csv.DictReader(_fh)
+    N_GEN = sum(1 for _ in _reader)
+    METRIC_COLS = [k for k in _reader.fieldnames or []
+                   if k.startswith(("CURTAILMENT_ACTUAL_", "ELI_CURTAILMENT_", "MLF_", "ISP_CURTAILMENT_", "ISP_OFFLOADING_"))
+                   and not k.endswith("_LABEL")]
 
 fails: list[str] = []
 
@@ -124,7 +135,7 @@ def main() -> int:
 
         print("the dense table")
         rows = pg.eval_on_selector_all("#tbody tr", "e => e.length")
-        check(rows == 240, "240 generators render on load", f"{rows} rows")
+        check(rows == N_GEN, f"{N_GEN} generators render on load (every row of the csv)", f"{rows} rows")
         head_rows = pg.eval_on_selector_all("#thead tr", "e => e.length")
         check(head_rows == 2, "the grouped header keeps its two rows", f"{head_rows}")
         head_txt = " ".join(pg.eval_on_selector_all("#thead th", "e => e.map(x => x.innerText)")).lower()
@@ -134,10 +145,14 @@ def main() -> int:
             "#thead th", "e => [...new Set(e.map(x => getComputedStyle(x).backgroundColor))]")
         check(len(th_bgs) >= 5, "the metric groups stay distinguishable by colour",
               f"{len(th_bgs)} distinct header backgrounds")
+        # Every metric cell carries `.h` (percent, MLF or N/A); selecting on its text would miss the MLF
+        # cells, which print a bare 4-dp number.
         heat = pg.eval_on_selector_all(
-            "td", "e => e.filter(x => /%/.test(x.innerText) || x.innerText.trim() === 'N/A')"
-                  ".map(x => ({cls: x.className, txt: x.innerText.trim(), bg: getComputedStyle(x).backgroundColor}))")
-        check(len(heat) >= 500, "the heat cells render", f"{len(heat)} cells")
+            "#tbody td.h", "e => e.map(x => ({cls: x.className, txt: x.innerText.trim(), bg: getComputedStyle(x).backgroundColor}))")
+        want_heat = N_GEN * len(METRIC_COLS)
+        check(len(heat) == want_heat,
+              f"the heat cells render ({want_heat}: {N_GEN} generators x {len(METRIC_COLS)} metric columns)",
+              f"{len(heat)} cells")
         # `.seq-none` is the token file's own step for "no value"; a stated N/A is on the ramp system, not off it.
         on_ramp = r"\bseq-(\d|none)\b"
         seq = [c for c in heat if re.search(on_ramp, c["cls"] or "")]
@@ -148,7 +163,7 @@ def main() -> int:
         # A class can be present and still lose the cascade (a page rule out-ranking `.seq-*`), which
         # leaves the cell unfilled while every name-based check passes. Compare the pixels to the tokens.
         ramp_rgb = {rgb(dark[f"seq-{i}"]) for i in range(8) if f"seq-{i}" in dark}
-        numeric = [c for c in heat if c["txt"].endswith("%")]
+        numeric = [c for c in heat if c["txt"] != "N/A"]
         unfilled = [c for c in numeric if rgb(c["bg"]) not in ramp_rgb]
         check(not unfilled, "every numeric heat cell is actually filled from the ramp",
               f"{len(unfilled)} of {len(numeric)} unfilled, e.g. {unfilled[:2]}")

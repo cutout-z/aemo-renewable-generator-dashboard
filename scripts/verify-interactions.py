@@ -15,6 +15,7 @@ from __future__ import annotations
 import csv
 import pathlib
 import sys
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
 from playwright.sync_api import sync_playwright
 
@@ -47,6 +48,78 @@ duid_max = max(r["DUID"] for r in rows if r["DUID"].strip())
 print(f"csv: {n_all} generators · solar {n_solar} · wind {n_wind} · in REZ {n_rez} · "
       f"{len(with_eli)} with an ELI figure")
 
+# ── The page's numbers, recomputed from the csv alone ──────────────────────────────────────────
+# Mirrors detectColumns / renderTable / renderStats in index.html, but rounds on the exact decimals
+# in the file (Decimal, half-up) — a binary-float `toFixed` that lands on the other side of a .5 is
+# exactly the kind of wrong figure this is here to catch.
+STATES = {"NSW1": "NSW", "QLD1": "QLD", "VIC1": "VIC", "SA1": "SA", "TAS1": "TAS"}
+KEYS = list(rows[0].keys())
+LOSS_EDGES = [Decimal(e) for e in ("0.01", "0.025", "0.05", "0.10", "0.20", "0.40", "0.70")]
+MLF_EDGES = [Decimal(e) for e in ("1.00", "0.98", "0.96", "0.94", "0.92", "0.90", "0.85")]
+HALF_UP = lambda d, q: d.quantize(Decimal(q), ROUND_HALF_UP)
+
+
+def num(v: str | None) -> Decimal | None:
+    try:
+        d = Decimal((v or "").strip())
+    except InvalidOperation:
+        return None
+    return d if d.is_finite() else None
+
+
+def columns(scope: str) -> list[tuple[str, str]]:
+    """(key, group) in the page's column order for a tab ('ALL' adds the State column)."""
+    cols = [("DUID", "meta"), ("PROJECT_NAME", "meta"), ("FUEL_TYPE", "meta")]
+    if scope == "ALL":
+        cols.append(("STATE", "meta"))
+    cols += [("NAMEPLATE_MW", "meta"), ("REZ", "meta"), ("REZ_NAME", "meta")]
+    cols += [(k, "actual") for k in sorted(k for k in KEYS if k.startswith("CURTAILMENT_ACTUAL_"))]
+    cols += [(k, "eli") for k in ("ELI_CURTAILMENT_NEAR", "ELI_CURTAILMENT_MED")]
+    cols += [(k, "mlf") for k in sorted(k for k in KEYS if k.startswith("MLF_"))]
+    for pre, grp in (("ISP_CURTAILMENT_", "isp-c"), ("ISP_OFFLOADING_", "isp-o")):
+        cols += [(k, grp) for k in sorted(k for k in KEYS if k.startswith(pre + "FY") and not k.endswith("_LABEL"))]
+        cols.append((pre + "AVG", grp))
+    return [(k, g) for k, g in cols if k in KEYS]
+
+
+def cell(r: dict[str, str], key: str, group: str) -> tuple[str, str | None]:
+    """(text, ramp class) the page should print for one cell."""
+    raw, v = r[key], num(r[key])
+    if group == "meta":
+        return (str(HALF_UP(v, "1")) if key == "NAMEPLATE_MW" and v is not None else raw.strip()), None
+    if v is None:
+        return "N/A", "seq-none"
+    if group == "mlf":
+        step = next((i for i, e in enumerate(MLF_EDGES) if v >= e), 7)
+        return str(HALF_UP(v, "0.0001")), f"seq-{step}"
+    return f"{HALF_UP(v * 100, '0.1')}%", f"seq-{sum(v >= e for e in LOSS_EDGES)}"
+
+
+def base_rows(scope: str) -> list[dict[str, str]]:
+    return rows if scope == "ALL" else [r for r in rows if r["STATE"] == STATES[scope] or r["REGIONID"] == scope]
+
+
+def expected_tiles(scope: str) -> list[list[str]]:
+    base = base_rows(scope)
+    n = len(base)
+    solar = sum(r["FUEL_TYPE"] == "Solar" for r in base)
+    wind = sum(r["FUEL_TYPE"] == "Wind" for r in base)
+    rez = sum(r["REZ"] == "Y" for r in base)
+    mlf_key = [k for k, g in columns(scope) if g == "mlf"][-1]
+    mlf = [v for r in base if (v := num(r[mlf_key])) is not None]
+    near = [v for r in base if (v := num(r["ELI_CURTAILMENT_NEAR"])) is not None]
+    n_of = lambda k: f"{k} of {n} with a value" if k else "none with a value"
+    where = "NEM" if scope == "ALL" else STATES[scope]
+    return [
+        [str(n), "Generators", where],
+        [f"{solar} · {wind}", "Solar · wind farms", f"split of {n}"],
+        [str(rez), "In a REZ", f"{n - rez} outside a zone"],
+        [str(HALF_UP(sum(mlf) / len(mlf), "0.0001")) if mlf else "N/A",
+         f"Avg MLF, {mlf_key.replace('MLF_', '')}", n_of(len(mlf))],
+        [f"{HALF_UP(sum(near) / len(near) * 100, '0.1')}%" if near else "N/A",
+         "Avg ELI near-term curtailment, 2026-28", n_of(len(near))],
+    ]
+
 with sync_playwright() as pw:
     br = pw.chromium.launch()
     pg = br.new_page(viewport={"width": 1440, "height": 900})
@@ -60,11 +133,35 @@ with sync_playwright() as pw:
 
     print("data")
     check(nrows() == n_all, f"all {n_all} generators render on load", f"{nrows()} rows")
-    stats = " ".join(pg.eval_on_selector_all("#stats *", "e => e.map(x => x.innerText)"))
-    check(str(n_solar) in stats and str(n_wind) in stats and str(n_rez) in stats,
-          "the stat tiles quote the CSV counts (solar / wind / in REZ)", stats.replace("\n", " ")[:120])
     check(duids()[0] == top["DUID"], "the default sort (ELI near-term, desc) puts the top generator first",
           f"{duids()[0]} vs {top['DUID']}")
+
+    print("values match the csv (every tab: the five tiles, every cell and its ramp step)")
+    for scope, tab in [("ALL", "All")] + list(STATES.items()):
+        pg.evaluate("""(label) => { const b = [...document.querySelectorAll('#tabs button, #tabs .seg-item')]
+            .find(x => x.innerText.trim() === label); b.click(); }""", tab)
+        pg.wait_for_timeout(400)
+        tiles = pg.eval_on_selector_all("#stats > div", "e => e.map(t => [...t.children].map(c => c.innerText.trim()))")
+        want_tiles = expected_tiles(scope)
+        check(tiles == want_tiles, f"{tab}: the five stat tiles equal the figures recomputed from the csv",
+              f"page {tiles} vs csv {want_tiles}")
+        cols = columns(scope)
+        page_cols = pg.eval_on_selector_all("#thead th[data-col]", "e => e.map(x => x.dataset.col)")
+        check(page_cols == [k for k, _ in cols], f"{tab}: the columns are the csv's, in the page's order",
+              f"{len(page_cols)} on page vs {len(cols)} expected")
+        page = {r[0]: r[1:] for r in pg.eval_on_selector_all(
+            "#tbody tr", "e => e.map(tr => [tr.dataset.duid, ...[...tr.children].slice(1).map(td => "
+                         "[td.innerText.trim(), (td.className.match(/\\bseq-(\\d|none)\\b/) || [null])[0]])])")}
+        want = {r["DUID"]: [list(cell(r, k, g)) for k, g in cols] for r in base_rows(scope)}
+        missing = [d for d in want if d not in page]
+        extra = [d for d in page if d not in want]
+        bad = [(d, k, page[d][i], want[d][i]) for d in want if d in page
+               for i, (k, _) in enumerate(cols) if i >= len(page[d]) or page[d][i] != want[d][i]]
+        check(not missing and not extra and not bad,
+              f"{tab}: every cell equals summary.csv ({len(want)} generators x {len(cols)} columns, text and step)",
+              f"missing {missing[:2]}, extra {extra[:2]}, {len(bad)} wrong, e.g. {bad[:3]}")
+        count = pg.inner_text("#rowCount").strip()
+        check(count == f"{len(want)} of {n_all} shown", f"{tab}: the row count is stated", count)
 
     print("tabs")
     for state in ("NSW", "VIC", "TAS"):
