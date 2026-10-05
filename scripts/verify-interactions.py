@@ -86,7 +86,11 @@ def cell(r: dict[str, str], key: str, group: str) -> tuple[str, str | None]:
     """(text, ramp class) the page should print for one cell."""
     raw, v = r[key], num(r[key])
     if group == "meta":
-        return (str(HALF_UP(v, "1")) if key == "NAMEPLATE_MW" and v is not None else raw.strip()), None
+        if key == "NAMEPLATE_MW" and v is not None:
+            return str(HALF_UP(v, "1")), None
+        if key == "REZ_NAME" and raw == "Non-REZ":      # the data's "no match", not a location
+            return "No REZ match", None
+        return raw.strip(), None
     if v is None:
         return "N/A", "seq-none"
     if group == "mlf":
@@ -113,7 +117,7 @@ def expected_tiles(scope: str) -> list[list[str]]:
     return [
         [str(n), "Generators", where],
         [f"{solar} · {wind}", "Solar · wind farms", f"split of {n}"],
-        [str(rez), "In a REZ", f"{n - rez} outside a zone"],
+        [str(rez), "In a REZ", f"{n - rez} not matched to a REZ"],
         [str(HALF_UP(sum(mlf) / len(mlf), "0.0001")) if mlf else "N/A",
          f"Avg MLF, {mlf_key.replace('MLF_', '')}", n_of(len(mlf))],
         [f"{HALF_UP(sum(near) / len(near) * 100, '0.1')}%" if near else "N/A",
@@ -162,6 +166,12 @@ with sync_playwright() as pw:
               f"missing {missing[:2]}, extra {extra[:2]}, {len(bad)} wrong, e.g. {bad[:3]}")
         count = pg.inner_text("#rowCount").strip()
         check(count == f"{len(want)} of {n_all} shown", f"{tab}: the row count is stated", count)
+    # REZ = N means the seeded workbook did not match the unit (all 108 wind farms), so nothing on the
+    # page — text, tooltip or filter label — may claim a generator is outside a zone.
+    claims = pg.evaluate("""() => [document.body.innerText, ...[...document.querySelectorAll('[title]')].map(x => x.title),
+        ...[...document.querySelectorAll('option')].map(o => o.textContent)].filter(t => /outside a (REZ|zone)|Non-REZ/i.test(t))""")
+    check(not claims, "no text claims a generator is outside a REZ (the data only knows 'not matched')",
+          f"{len(claims)} found, e.g. {[c[:60] for c in claims[:2]]}")
 
     print("tabs")
     for state in ("NSW", "VIC", "TAS"):
