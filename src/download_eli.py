@@ -65,19 +65,31 @@ def fetch_eli_curtailment(cache_dir: str, eli_year: int | None = None) -> pd.Dat
         logger.warning("No curtailment data parsed from ELI report")
         return pd.DataFrame()
 
-    # Merge near and medium term on location + voltage + region
-    if not near_term.empty and not medium_term.empty:
-        result = pd.merge(
-            near_term, medium_term,
-            on=["LOCATION", "VOLTAGE_KV", "REGION"],
-            how="outer",
-        )
-    elif not near_term.empty:
-        result = near_term
-    else:
-        result = medium_term
+    result = combine_terms(near_term, medium_term)
 
     logger.info(f"Parsed ELI curtailment for {len(result)} connection points")
+    return result
+
+
+def combine_terms(near: pd.DataFrame, med: pd.DataFrame) -> pd.DataFrame:
+    """Join near- and medium-term tables on LOCATION + VOLTAGE_KV.
+
+    Region is taken from the near-term row (medium-term if absent) rather than
+    joined on: a location whose region differs between the two sheets would
+    otherwise split into two half-empty rows (one per region).
+    """
+    if near.empty or med.empty:
+        return near if not near.empty else med
+    result = pd.merge(near, med, on=["LOCATION", "VOLTAGE_KV"], how="outer",
+                      suffixes=("", "_med"))
+    if "REGION_med" in result.columns:
+        both = result["REGION"].notna() & result["REGION_med"].notna()
+        conflicts = result[both & (result["REGION"] != result["REGION_med"])]
+        for r in conflicts.itertuples():
+            logger.warning(f"ELI region differs between sheets for {r.LOCATION} {r.VOLTAGE_KV} kV: "
+                           f"near {r.REGION}, medium {r.REGION_med}; using near")
+        result["REGION"] = result["REGION"].fillna(result["REGION_med"])
+        result = result.drop(columns=["REGION_med"])
     return result
 
 

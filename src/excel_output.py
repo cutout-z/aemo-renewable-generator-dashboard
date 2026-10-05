@@ -97,7 +97,7 @@ def _write_summary_table(wb: Workbook, data: pd.DataFrame, region_name: str,
             cell.alignment = Alignment(horizontal="center")
 
             # Number formatting
-            if key.startswith(("MLF_", "ELI_", "CURTAILMENT_ACTUAL_")):
+            if key.startswith(("MLF_", "ELI_CURTAILMENT_", "CURTAILMENT_ACTUAL_")):
                 cell.number_format = "0.0000"
             elif key.startswith(("ISP_CURTAILMENT_", "ISP_OFFLOADING_")):
                 cell.number_format = "0.00"
@@ -127,7 +127,9 @@ def _write_heatmap(wb: Workbook, data: pd.DataFrame, region_name: str):
     ws = wb.create_sheet(title="Heatmap")
 
     # Get numeric columns for heatmap
-    value_cols = [c for c in data.columns if c.startswith(("MLF_", "ELI_", "CURTAILMENT_ACTUAL_", "ISP_"))]
+    value_cols = [c for c in data.columns
+                  if c.startswith(("MLF_", "ELI_", "CURTAILMENT_ACTUAL_", "ISP_"))
+                  and not c.endswith("_SOURCE")]
     if not value_cols:
         ws.cell(row=1, column=1, value="No numeric data available")
         return
@@ -213,6 +215,8 @@ def _get_column_spec(data: pd.DataFrame) -> list[tuple[str, str]]:
         spec.append(("ELI_CURTAILMENT_NEAR", "ELI Near Term"))
     if "ELI_CURTAILMENT_MED" in data.columns:
         spec.append(("ELI_CURTAILMENT_MED", "ELI Med Term"))
+    if "ELI_SOURCE" in data.columns:
+        spec.append(("ELI_SOURCE", "ELI Source"))
 
     # Add MLF columns
     for col in sorted(data.columns):

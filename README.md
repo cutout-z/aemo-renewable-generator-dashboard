@@ -49,6 +49,17 @@ Per the AEMO ELI report, curtailment projections are based on the introduction o
 
 These are projections, not actuals. They indicate the *risk* of curtailment at each connection point.
 
+Each unit takes its seeded per-DUID value where there is one (`ELI_SOURCE` =
+`per-DUID`). Otherwise it is filled from the location table (`ELI_SOURCE` =
+`location`): same `LOCATION` in the unit's own region, the row at the unit's
+connection voltage if there is one, else the location's only row (several voltages
+and none matching = left empty); wind farms take the Wind columns, solar farms the
+Solar columns. `ELI_SOURCE` is empty where there is no value. On the seeded solar
+farms this rule reproduces the per-DUID values for 101/104 (near) and 102/104
+(medium). Units with no `LOCATION` (today: every wind farm and the unseeded solar
+farms, since no AEMO table available to the pipeline maps a DUID to an ELI
+location) cannot be filled.
+
 ### ISP curtailment & economic offloading forecasts
 
 From the ISP appendices, published with the ELI report:
