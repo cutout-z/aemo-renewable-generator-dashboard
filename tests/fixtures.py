@@ -79,3 +79,29 @@ class FakeResponse:
         if self.status_code >= 400:
             import requests
             raise requests.HTTPError(f"HTTP {self.status_code}")
+
+
+GEN_INFO_COLUMNS = [" Survey ID", "Site Name", "Site Owner", "Region", "Unit Name",
+                    "Technology Type", "Technology Detail", "DUID", "Dispatch Type",
+                    "Aggregated Nameplate Capacity (MW AC)", "Commitment Status"]
+
+
+def gen_info_xlsx(rows=None, extra_columns=None) -> bytes:
+    """A Generation Information workbook shaped like the July 2026 edition."""
+    rows = rows if rows is not None else [
+        [2001, "Wandoan South Solar Stage 2", "Owner", "QLD1", "U1", "Solar PV",
+         "Single Axis Tracking", "WANDSF2", "Semi-Scheduled", 310, "In Service"],
+        [2002, "Ararat Wind Farm", "Owner", "VIC1", "U1", "Wind", "Onshore",
+         "ARWF1", "Semi-Scheduled", 240, "In Service"],
+        [2003, "Kidston Pumped Hydro", "Owner", "QLD1", "U2", "Hydro", "Pumped",
+         "KIDSPHG2", "Scheduled", 125, "In Commissioning"],
+    ]
+    cols = GEN_INFO_COLUMNS + list(extra_columns or [])
+    body = pd.DataFrame(rows, columns=cols)
+    buf = io.BytesIO()
+    with pd.ExcelWriter(buf, engine="openpyxl") as xw:
+        pd.DataFrame({"Disclaimer": ["..."]}).to_excel(xw, sheet_name="Disclaimer", index=False)
+        preamble = pd.DataFrame([["Existing Generators & New Developments"], ["note"], ["note"]])
+        preamble.to_excel(xw, sheet_name="Generator Information", index=False, header=False)
+        body.to_excel(xw, sheet_name="Generator Information", index=False, startrow=3)
+    return buf.getvalue()

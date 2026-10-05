@@ -69,6 +69,16 @@ took effect in the last 24 months but is absent from the list is logged as a war
 (DUDETAILSUMMARY has no fuel type, so such units are reported, never added).
 Each run records what it fetched in `data/source_status.json` (not committed).
 
+NEM Generation Information is republished about quarterly under a new file name, so
+it is not pinned: each run reads the edition links off AEMO's Generation Information
+page when it can, otherwise probes `nem-generation-information-<month>-<year>.xlsx`
+newest month first down to the cached edition, keeps the last good copy on failure,
+and warns when the cached edition is more than ~4 months old. The July 2026 edition
+has site, owner, region, technology, DUID, capacity and commitment status but **no
+REZ, location or connection-voltage column**, so it currently enriches nothing; it is
+used to name the technology of unlisted units in the DUDETAILSUMMARY warning, and
+its REZ/location/voltage columns are picked up automatically if an edition adds them.
+
 ### MLFs
 
 Marginal Loss Factors represent the electrical losses between a generator's connection point and the regional reference node. An MLF of 0.90 means the generator receives 90% of the regional reference price.

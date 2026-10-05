@@ -16,6 +16,7 @@ from fixtures import (CHALLENGE_PAGE, DEFAULT_REG_ROWS, FakeResponse, dudetail_z
 def _no_dudetail(monkeypatch):
     monkeypatch.setattr(dudetail, "fetch_latest_dudetailsummary",
                         lambda *a, **k: (None, None))
+    monkeypatch.setattr(dg, "_load_gen_info", lambda cache_path: None)
 
 
 def test_check_workbook_bytes():
@@ -120,12 +121,15 @@ def test_fetch_generators_warns_about_units_the_list_lacks(tmp_path, monkeypatch
     ]))
     monkeypatch.setattr(dudetail, "fetch_latest_dudetailsummary",
                         lambda *a, **k: (dud, "2026-08"))
+    monkeypatch.setattr(dg, "_load_gen_info", lambda cache_path: pd.DataFrame(
+        {"DUID": ["WANDSF2"], "TECHNOLOGY": ["Solar PV"]}))
 
     with caplog.at_level(logging.WARNING):
         gens = dg.fetch_generators(str(tmp_path))
 
     assert "WANDSF2" not in set(gens["DUID"])  # never invented
-    assert any("Registration List lacks WANDSF2" in r.message for r in caplog.records)
+    msgs = [r.message for r in caplog.records if "Registration List lacks WANDSF2" in r.message]
+    assert msgs and "Generation Information says 'Solar PV'" in msgs[0]
     rec = source_status.load(tmp_path)["dudetailsummary"]
     assert rec["month"] == "2026-08"
     assert [m["DUID"] for m in rec["missing_from_registration"]] == ["WANDSF2"]

@@ -1,7 +1,9 @@
 """Download and parse solar + wind farm listing from AEMO.
 
-Primary source: NEM Registration and Exemption List (always available)
-Enrichment: NEM Generation Information workbook (when downloadable) for REZ/location/voltage
+Primary source: NEM Registration and Exemption List (refreshed every run)
+Cross-check: MMSDM DUDETAILSUMMARY (src/dudetail.py)
+Enrichment: newest NEM Generation Information edition (src/gen_info.py) for any
+REZ/location/voltage columns it carries, then the seeded workbook data
 """
 
 from __future__ import annotations
@@ -15,7 +17,7 @@ from pathlib import Path
 import pandas as pd
 import requests
 
-from . import config, dudetail, source_status
+from . import config, dudetail, gen_info as gen_info_mod, source_status
 
 logger = logging.getLogger(__name__)
 
@@ -31,12 +33,10 @@ REGISTRATION_FILE = "NEM-Registration-and-Exemption-List.xls"
 _XLSX_MAGIC = b"PK\x03\x04"
 _XLS_MAGIC = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
 
-# NEM Generation Information — has REZ/location/voltage but URL changes quarterly
-NEM_GEN_INFO_SHEETS = [
-    "ExistingGeneration&NewDevs",
-    "Existing Generation & New Devs",
-    "ExistingGeneration-Registered",
-]
+# Columns taken from Generation Information when an edition carries them.
+# NAMEPLATE_MW is deliberately not taken: its capacities are per survey row
+# (stages, DC/AC) and would add a third MW source to the table.
+GEN_INFO_ENRICH_COLS = ["LOCATION", "REZ_NAME", "VOLTAGE_KV"]
 
 
 def fetch_generators(cache_dir: str) -> pd.DataFrame:
@@ -56,15 +56,15 @@ def fetch_generators(cache_dir: str) -> pd.DataFrame:
     if generators.empty:
         raise RuntimeError(f"No solar/wind generators parsed from {reg_path}")
 
-    # ── Cross-check: units AEMO has registered that the list lacks ──
-    _cross_check_dudetailsummary(cache_path, _registered_duids(reg_path))
+    # ── NEM Generation Information: newest edition, cached ──────────
+    gen_info = _load_gen_info(cache_path)
 
-    # ── Enrichment: NEM Generation Information (may fail) ───────────
-    gen_info = _try_download_gen_info(cache_path)
+    # ── Cross-check: units AEMO has registered that the list lacks ──
+    _cross_check_dudetailsummary(cache_path, _registered_duids(reg_path), gen_info)
+
+    # ── Enrichment: NEM Generation Information ──────────────────────
     if gen_info is not None and not gen_info.empty:
-        generators = _enrich_with_gen_info(generators, gen_info)
-    else:
-        logger.info("NEM Generation Information not available")
+        generators = _enrich_with_gen_info(generators, gen_info, columns=GEN_INFO_ENRICH_COLS)
 
     # ── Enrichment: Seeded data from workbook (if available) ────────
     enrich_path = Path(cache_dir) / "generator_enrichment.feather"
@@ -183,7 +183,22 @@ def _registered_duids(xls_path: Path) -> set[str]:
     return set(duids[duids != "-"])
 
 
-def _cross_check_dudetailsummary(cache_path: Path, registered: set[str]) -> None:
+def _load_gen_info(cache_path: Path) -> pd.DataFrame | None:
+    """Refresh (if a newer edition exists) and parse Generation Information."""
+    try:
+        path, edition = gen_info_mod.refresh_gen_info(cache_path)
+        if path is None:
+            return None
+        df = gen_info_mod.parse_gen_info(path)
+        df["GEN_INFO_EDITION"] = edition
+        return df
+    except Exception as e:
+        logger.warning(f"NEM Generation Information unavailable: {e}")
+        return None
+
+
+def _cross_check_dudetailsummary(cache_path: Path, registered: set[str],
+                                 gen_info: pd.DataFrame | None = None) -> None:
     """Warn about recently registered GENERATOR DUIDs the Registration List lacks."""
     previous = source_status.load(cache_path).get("dudetailsummary", {})
     record = {"months_window": dudetail.RECENT_MONTHS, "checked_at": source_status.now_iso(),
@@ -197,11 +212,15 @@ def _cross_check_dudetailsummary(cache_path: Path, registered: set[str]) -> None
         else:
             recent = dudetail.recent_generators(dud)
             missing = dudetail.missing_from_registration(dud, registered)
+            tech = {}
+            if gen_info is not None and "TECHNOLOGY" in gen_info.columns:
+                tech = dict(zip(gen_info["DUID"], gen_info["TECHNOLOGY"].astype(str)))
             record.update(month=month, recent_generators=len(recent),
                           missing_from_registration=[
                               {"DUID": r.DUID, "REGIONID": r.REGIONID,
                                "STATIONID": r.STATIONID,
-                               "first_start": r.FIRST_START.date().isoformat()}
+                               "first_start": r.FIRST_START.date().isoformat(),
+                               "gen_info_technology": tech.get(r.DUID)}
                               for r in missing.itertuples()])
             logger.info(f"DUDETAILSUMMARY {month}: {len(recent)} GENERATOR DUIDs registered "
                         f"in the last {dudetail.RECENT_MONTHS} months, "
@@ -209,7 +228,9 @@ def _cross_check_dudetailsummary(cache_path: Path, registered: set[str]) -> None
             for r in missing.itertuples():
                 logger.warning(f"Registration List lacks {r.DUID} ({r.STATIONID}, {r.REGIONID}), "
                                f"in DUDETAILSUMMARY since {r.FIRST_START.date()}; "
-                               "fuel unknown, not added")
+                               + (f"Generation Information says {tech[r.DUID]!r}; "
+                                  if r.DUID in tech else "fuel unknown; ")
+                               + "not added")
     except Exception as e:
         record["error"] = str(e)
         logger.warning(f"DUDETAILSUMMARY cross-check failed: {e}")
@@ -274,61 +295,13 @@ def _parse_registration_list(xls_path: Path) -> pd.DataFrame:
     return df
 
 
-def _try_download_gen_info(cache_path: Path) -> pd.DataFrame | None:
-    """Try to download and parse NEM Generation Information for enrichment."""
-    xlsx_path = cache_path / "nem-generation-information.xlsx"
-
-    if not xlsx_path.exists():
-        try:
-            logger.info("Trying to download NEM Generation Information...")
-            _download_with_retry(config.NEM_GEN_INFO_URL, xlsx_path)
-        except Exception as e:
-            logger.info(f"NEM Generation Information download failed: {e}")
-            return None
-
-    try:
-        xls = pd.ExcelFile(xlsx_path, engine="openpyxl")
-        sheet = None
-        for candidate in NEM_GEN_INFO_SHEETS:
-            if candidate in xls.sheet_names:
-                sheet = candidate
-                break
-        if sheet is None:
-            logger.warning(f"No matching sheet in Gen Info. Available: {xls.sheet_names}")
-            return None
-
-        df = pd.read_excel(xls, sheet_name=sheet)
-
-        # Map columns
-        col_map = _detect_gen_info_columns(df)
-        df = df.rename(columns=col_map)
-
-        # Filter to solar/wind with DUID
-        df = df.dropna(subset=["DUID"])
-        df["DUID"] = df["DUID"].astype(str).str.strip()
-
-        mask = pd.Series(False, index=df.index)
-        for col in ["TECHNOLOGY", "FUEL_TYPE_RAW"]:
-            if col in df.columns:
-                col_lower = df[col].astype(str).str.lower()
-                mask = mask | col_lower.str.contains("solar|photovoltaic", na=False)
-                mask = mask | col_lower.str.contains("wind", na=False)
-        df = df[mask].copy()
-
-        logger.info(f"Parsed {len(df)} generators from NEM Gen Info for enrichment")
-        return df
-
-    except Exception as e:
-        logger.warning(f"Failed to parse NEM Gen Info: {e}")
-        return None
-
-
-def _enrich_with_gen_info(generators: pd.DataFrame, gen_info: pd.DataFrame) -> pd.DataFrame:
-    """Enrich registration list data with location/REZ/voltage from Gen Info."""
+def _enrich_with_gen_info(generators: pd.DataFrame, gen_info: pd.DataFrame,
+                          columns: list[str] | None = None) -> pd.DataFrame:
+    """Enrich registration list data with location/REZ/voltage from another source."""
     enrichment_cols = []
-    # NAMEPLATE_MW: prefer Gen Info nameplate over Registration List reg cap
+    # NAMEPLATE_MW: prefer the enriching source's nameplate over Registration List reg cap
     prefer_enriched = set()
-    for col in ["LOCATION", "REZ_NAME", "VOLTAGE_KV", "UNIT_STATUS", "NAMEPLATE_MW"]:
+    for col in columns or ["LOCATION", "REZ_NAME", "VOLTAGE_KV", "UNIT_STATUS", "NAMEPLATE_MW"]:
         if col in gen_info.columns:
             enrichment_cols.append(col)
             if col == "NAMEPLATE_MW":
@@ -353,7 +326,7 @@ def _enrich_with_gen_info(generators: pd.DataFrame, gen_info: pd.DataFrame) -> p
                 result[col] = result[enriched_col]
             result = result.drop(columns=[enriched_col])
 
-    logger.info(f"Enriched generators with {enrichment_cols} from NEM Gen Info")
+    logger.info(f"Enriched generators with {enrichment_cols}")
     return result
 
 

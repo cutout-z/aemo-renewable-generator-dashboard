@@ -55,11 +55,16 @@ MLF_TRACKER_SUMMARY_URL = (
     "https://cutout-z.github.io/aemo-mlf-tracker/outputs/summary.csv"
 )
 
-# NEM Generation Information workbook
-NEM_GEN_INFO_URL = (
-    "https://aemo.com.au/-/media/files/electricity/nem/"
+# NEM Generation Information workbook: republished about quarterly under a new
+# name (nem-generation-information-<month>-<year>.xlsx), so src/gen_info.py
+# discovers the newest edition instead of pinning one.
+NEM_GEN_INFO_PAGE_URL = (
+    "https://www.aemo.com.au/energy-systems/electricity/national-electricity-market-nem/"
+    "nem-forecasting-and-planning/forecasting-and-planning-data/generation-information"
+)
+NEM_GEN_INFO_BASE_URL = (
+    "https://www.aemo.com.au/-/media/files/electricity/nem/"
     "planning_and_forecasting/generation_information/"
-    "nem-generation-information-april-2025.xlsx"
 )
 
 # ELI report chart data — explicit URLs per publication year
