@@ -230,27 +230,21 @@ def _parse_registration_list(xls_path: Path) -> pd.DataFrame:
             logger.error(f"Failed to parse Registration List: {e}")
             return pd.DataFrame()
 
-    # Map columns
-    col_map = {}
-    columns_lower = {c: c.lower().strip() for c in df.columns}
+    # Map columns (candidates in order of preference: the descriptor columns,
+    # e.g. "Wind - Onshore", win over the "- Primary" ones, e.g. "Renewable")
     mappings = {
         "DUID": ["duid"],
         "PROJECT_NAME": ["station name", "station"],
         "REGIONID": ["region"],
         "TECHNOLOGY": ["technology type - descriptor", "technology type"],
-        "FUEL_SOURCE": ["fuel source - descriptor", "fuel source - primary"],
+        # Primary ("Solar", "Wind", "Battery Storage"): the descriptor names the
+        # co-located fuel for hybrid batteries (HPR1 "Wind"), which must stay out
+        "FUEL_SOURCE": ["fuel source - primary", "fuel source"],
         "NAMEPLATE_MW": ["reg cap generation (mw)", "reg cap (mw)", "nameplate capacity"],
         "DISPATCH_TYPE": ["dispatch type"],
         "CLASSIFICATION": ["classification"],
     }
-    for target, candidates in mappings.items():
-        for orig_col, lower_col in columns_lower.items():
-            if any(c in lower_col for c in candidates):
-                if target not in col_map:
-                    col_map[orig_col] = target
-                break
-
-    df = df.rename(columns=col_map)
+    df = df.rename(columns=_map_columns(df.columns, mappings))
     df = df.dropna(subset=["DUID"])
     df["DUID"] = df["DUID"].astype(str).str.strip()
     df = df[df["DUID"] != "-"]  # Exclude placeholder DUIDs (e.g. Portland Wind Farm, Callide)
@@ -363,11 +357,32 @@ def _enrich_with_gen_info(generators: pd.DataFrame, gen_info: pd.DataFrame) -> p
     return result
 
 
+def _map_columns(columns, mappings: dict[str, list[str]]) -> dict:
+    """Map source headers to standard names.
+
+    For each target, candidates are tried in order: first as an exact
+    (case-insensitive) header, then as a substring. A header is used once.
+    """
+    lower = {c: str(c).lower().strip() for c in columns}
+    col_map: dict = {}
+    for target, candidates in mappings.items():
+        found = None
+        for cand in candidates:
+            found = next((c for c, l in lower.items() if l == cand and c not in col_map), None)
+            if found is not None:
+                break
+        if found is None:
+            for cand in candidates:
+                found = next((c for c, l in lower.items() if cand in l and c not in col_map), None)
+                if found is not None:
+                    break
+        if found is not None:
+            col_map[found] = target
+    return col_map
+
+
 def _detect_gen_info_columns(df: pd.DataFrame) -> dict:
     """Map NEM Gen Info column headers to standard names."""
-    col_map = {}
-    columns_lower = {c: c.lower().strip() for c in df.columns}
-
     mappings = {
         "DUID": ["duid"],
         "PROJECT_NAME": ["site name", "station name", "project name"],
@@ -380,15 +395,7 @@ def _detect_gen_info_columns(df: pd.DataFrame) -> dict:
         "UNIT_STATUS": ["unit status", "status bucket summary"],
         "REZ_NAME": ["rez", "rez name", "renewable energy zone"],
     }
-
-    for target, candidates in mappings.items():
-        for orig_col, lower_col in columns_lower.items():
-            if any(c in lower_col for c in candidates):
-                if target not in col_map:
-                    col_map[orig_col] = target
-                break
-
-    return col_map
+    return _map_columns(df.columns, mappings)
 
 
 def _classify_fuel(row) -> str:
