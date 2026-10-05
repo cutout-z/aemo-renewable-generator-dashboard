@@ -284,9 +284,8 @@ function renderLegends() {
 
 // ── Column detection ─────────────────────────────────────────────────────
 
-function detectColumns(keys) {
+function detectColumns(keys, showRegion = activeRegion === 'ALL') {
   const defs = [];
-  const showRegion = activeRegion === 'ALL';
 
   // Meta columns
   defs.push({key:'DUID', label:'DUID', group:'meta'});
@@ -617,8 +616,11 @@ function exportSelectedToExcel() {
   if (selected.size === 0) return;
   const selectedRows = allData.filter(r => selected.has(r.DUID));
   const keys = Object.keys(allData[0] || {});
-  const defs = detectColumns(keys);
-  const headers = defs.map(d => d.label);
+  // The export always carries State (a selection can span regions and outlive the region view it was made in)
+  // and names each metric with its group: the table's short labels repeat across groups, so a bare
+  // "FY25-26" was both an actual-curtailment and an MLF column, and FY1/FY2/FY3/Avg appeared twice.
+  const defs = detectColumns(keys, true);
+  const headers = exportHeaders(defs);
   const wsData = [headers];
   selectedRows.forEach(row => {
     wsData.push(defs.map(d => {
@@ -632,6 +634,18 @@ function exportSelectedToExcel() {
   ws['!cols'] = defs.map(d => ({wch: d.group === 'meta' ? (d.key === 'PROJECT_NAME' ? 30 : 14) : 12}));
   XLSX.utils.book_append_sheet(wb, ws, 'Selected');
   XLSX.writeFile(wb, `curtailment_${selected.size}_assets.xlsx`);
+}
+
+function exportHeaders(defs) {
+  const first = allData[0] || {};
+  const META = {NAMEPLATE_MW: 'Nameplate (MW)', REZ: 'In a REZ (Y/N)'};
+  return defs.map(d => {
+    if (d.group === 'meta') return META[d.key] || d.label;
+    let label = d.labelKey && first[d.labelKey] ? `FY${first[d.labelKey]}` : d.label;
+    if (label === 'Avg') label = 'average of the forecast years';
+    const unit = d.group === 'mlf' ? '' : ' (share of energy)';
+    return `${GROUP_LABELS[d.group]} ${label}${unit}`;
+  });
 }
 
 // ── Downloads ────────────────────────────────────────────────────────────

@@ -13,10 +13,12 @@ Exit 1 on any breakage.
 from __future__ import annotations
 
 import csv
+import io
 import pathlib
 import sys
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
+import openpyxl
 from playwright.sync_api import sync_playwright
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -245,6 +247,17 @@ with sync_playwright() as pw:
         pg.click("#exportSelected")
     check(dl.value.suggested_filename.endswith(".xlsx"),
           "the XLSX export actually downloads", dl.value.suggested_filename)
+    # Its header row: every column once, State always present, and every metric named with its group
+    # (the table's short labels — "FY25-26", "FY1", "Avg" — repeat across groups).
+    xl = openpyxl.load_workbook(io.BytesIO(pathlib.Path(dl.value.path()).read_bytes()), read_only=True)
+    xl_heads = [c.value for c in next(xl.active.iter_rows(max_row=1))]
+    groups = ("Actual curtailment", "ELI projected", "Marginal loss factor", "ISP curtailment forecast", "ISP offloading forecast")
+    metric_heads = xl_heads[len([k for k, g in columns("ALL") if g == "meta"]):]
+    dup = sorted({h for h in xl_heads if xl_heads.count(h) > 1})
+    unnamed = [h for h in metric_heads if not str(h).startswith(groups)]
+    check(not dup and "State" in xl_heads and not unnamed and len(metric_heads) == len([k for k, g in columns("ALL") if g != "meta"]),
+          "the export's headers are unambiguous (each once, State kept, metrics named by group)",
+          f"duplicated {dup}; without a group {unnamed[:3]}; State {'State' in xl_heads}")
     pg.evaluate("document.getElementById('clearSelection').click()")
     pg.wait_for_timeout(400)
     check(pg.get_attribute("#exportSelected", "disabled") is not None, "clearing disables the export button")
