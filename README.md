@@ -90,6 +90,13 @@ python -m src.main
 # Ignore feather caches and re-fetch everything
 python -m src.main --full-refresh
 
+# Run against a copy of the caches, writing outputs elsewhere (data/ and outputs/ untouched)
+python -m src.main --cache-dir /tmp/ren-cache --output-dir /tmp/ren-out
+python tests/validate_outputs.py --outputs-dir /tmp/ren-out
+
+# Offline unit tests
+python -m pytest -q tests
+
 # Then open index.html in a browser
 ```
 

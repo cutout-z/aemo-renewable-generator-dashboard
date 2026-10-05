@@ -4,6 +4,7 @@ Checks summary.csv and regional Excel workbooks for data integrity
 before committing to the repository. Exits non-zero on any failure.
 """
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -24,8 +25,9 @@ def check(condition, msg):
     return condition
 
 
-def validate():
-    summary_path = OUTPUTS_DIR / "summary.csv"
+def validate(outputs_dir: Path = OUTPUTS_DIR):
+    outputs_dir = Path(outputs_dir)
+    summary_path = outputs_dir / "summary.csv"
     check(summary_path.exists(), "summary.csv does not exist")
     if not summary_path.exists():
         return
@@ -84,15 +86,23 @@ def validate():
 
     # --- Regional Excel workbooks exist ---
     for region_id, name in REGION_NAMES.items():
-        xlsx_path = OUTPUTS_DIR / f"{name}_curtailment.xlsx"
+        xlsx_path = outputs_dir / f"{name}_curtailment.xlsx"
         check(xlsx_path.exists(), f"{xlsx_path.name} does not exist")
 
 
-if __name__ == "__main__":
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--outputs-dir", default=str(OUTPUTS_DIR),
+                        help="Directory holding summary.csv and the workbooks (default: outputs/)")
+    args = parser.parse_args(argv)
     print("Validating AEMO Renewable Generator Dashboard outputs...")
-    validate()
+    validate(Path(args.outputs_dir))
     if errors:
         print(f"\n{len(errors)} validation error(s) found — aborting.")
         sys.exit(1)
     else:
         print("\nAll validations passed.")
+
+
+if __name__ == "__main__":
+    main()

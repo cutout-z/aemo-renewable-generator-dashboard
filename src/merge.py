@@ -1,5 +1,7 @@
 """Merge all data sources into a single per-farm summary DataFrame."""
 
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 
@@ -16,6 +18,7 @@ def build_summary(
     eli_curtailment: pd.DataFrame,
     rez_forecasts: pd.DataFrame,
     actual_curtailment: pd.DataFrame,
+    cache_dir: str | None = None,
 ) -> pd.DataFrame:
     """Join all data sources into the master summary.
 
@@ -47,7 +50,9 @@ def build_summary(
 
     # 3. Merge ELI projected curtailment
     # First try per-DUID data (from seeded workbook), then location-based
-    eli_duid_path = Path(__file__).resolve().parent.parent / config.DATA_DIR / "eli_per_duid.feather"
+    if cache_dir is None:
+        cache_dir = str(Path(__file__).resolve().parent.parent / config.DATA_DIR)
+    eli_duid_path = Path(cache_dir) / "eli_per_duid.feather"
     if eli_duid_path.exists():
         eli_duid = pd.read_feather(eli_duid_path).drop_duplicates(subset="DUID")
         summary = summary.merge(eli_duid, on="DUID", how="left")

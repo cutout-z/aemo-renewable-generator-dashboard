@@ -1,5 +1,7 @@
 """CLI orchestrator for AEMO Solar & Wind Curtailment Dashboard."""
 
+from __future__ import annotations
+
 import argparse
 import logging
 import sys
@@ -26,14 +28,21 @@ logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
-def run(full_refresh: bool = False):
-    """Main execution flow."""
-    cache_dir = str(PROJECT_ROOT / config.DATA_DIR)
-    output_dir = str(PROJECT_ROOT / config.OUTPUT_DIR)
-    summary_path = PROJECT_ROOT / config.SUMMARY_CSV
+def run(full_refresh: bool = False, cache_dir: str | None = None,
+        output_dir: str | None = None):
+    """Main execution flow.
+
+    cache_dir / output_dir default to the repo's data/ and outputs/; pass other
+    directories to run the pipeline without touching the committed files.
+    """
+    cache_root = Path(cache_dir) if cache_dir else PROJECT_ROOT / config.DATA_DIR
+    output_root = Path(output_dir) if output_dir else PROJECT_ROOT / config.OUTPUT_DIR
+    cache_dir = str(cache_root)
+    output_dir = str(output_root)
+    summary_path = output_root / Path(config.SUMMARY_CSV).name
 
     # ── Step 1: Generator listing (the spine) ────────────────────────────
-    gen_cache = PROJECT_ROOT / config.GENERATOR_CACHE
+    gen_cache = cache_root / Path(config.GENERATOR_CACHE).name
     if not full_refresh and gen_cache.exists():
         logger.info("Loading cached generator listing...")
         generators = pd.read_feather(gen_cache)
@@ -47,7 +56,7 @@ def run(full_refresh: bool = False):
     logger.info(f"Tracking {len(all_duids)} solar/wind generators")
 
     # ── Step 2: MLF data from aemo-mlf-tracker ───────────────────────────
-    mlf_cache = PROJECT_ROOT / config.MLF_CACHE
+    mlf_cache = cache_root / Path(config.MLF_CACHE).name
     if not full_refresh and mlf_cache.exists():
         logger.info("Loading cached MLF data...")
         mlf_data = pd.read_feather(mlf_cache)
@@ -58,7 +67,7 @@ def run(full_refresh: bool = False):
             mlf_data.reset_index(drop=True).to_feather(mlf_cache)
 
     # ── Step 3: ELI projected curtailment ────────────────────────────────
-    eli_cache = PROJECT_ROOT / config.ELI_CURTAILMENT_CACHE
+    eli_cache = cache_root / Path(config.ELI_CURTAILMENT_CACHE).name
     if not full_refresh and eli_cache.exists():
         logger.info("Loading cached ELI curtailment data...")
         eli_data = pd.read_feather(eli_cache)
@@ -77,7 +86,7 @@ def run(full_refresh: bool = False):
                 eli_data = pd.DataFrame()
 
     # ── Step 4: REZ forecasts ────────────────────────────────────────────
-    rez_cache = PROJECT_ROOT / config.REZ_FORECAST_CACHE
+    rez_cache = cache_root / Path(config.REZ_FORECAST_CACHE).name
     if not full_refresh and rez_cache.exists():
         logger.info("Loading cached REZ forecast data...")
         rez_data = pd.read_feather(rez_cache)
@@ -96,7 +105,7 @@ def run(full_refresh: bool = False):
                 rez_data = pd.DataFrame()
 
     # ── Step 5: Actual curtailment from credit dashboard ────────────────
-    curt_cache = PROJECT_ROOT / config.CURTAILMENT_CACHE
+    curt_cache = cache_root / Path(config.CURTAILMENT_CACHE).name
     if not full_refresh and curt_cache.exists():
         logger.info("Loading cached actual curtailment data...")
         actual_curtailment = pd.read_feather(curt_cache)
@@ -121,6 +130,7 @@ def run(full_refresh: bool = False):
         eli_curtailment=eli_data,
         rez_forecasts=rez_data,
         actual_curtailment=actual_curtailment,
+        cache_dir=cache_dir,
     )
 
     # ── Step 7: Save outputs ─────────────────────────────────────────────
@@ -143,8 +153,17 @@ def main():
         action="store_true",
         help="Re-fetch all data from sources (default: use cached if available)",
     )
+    parser.add_argument(
+        "--cache-dir",
+        help="Directory for cached inputs (default: data/)",
+    )
+    parser.add_argument(
+        "--output-dir",
+        help="Directory for summary.csv and the workbooks (default: outputs/)",
+    )
     args = parser.parse_args()
-    run(full_refresh=args.full_refresh)
+    run(full_refresh=args.full_refresh, cache_dir=args.cache_dir,
+        output_dir=args.output_dir)
 
 
 if __name__ == "__main__":
