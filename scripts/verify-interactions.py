@@ -43,6 +43,7 @@ n_rez = sum(1 for r in rows if r["REZ"] == "Y")
 # those to the end, so the "first row" assertion only applies to units that have a number.
 with_eli = [r for r in rows if r["ELI_CURTAILMENT_NEAR"].strip()]
 top = max(with_eli, key=lambda r: float(r["ELI_CURTAILMENT_NEAR"]))
+by_duid = {r["DUID"]: r for r in rows}
 duid_min = min(r["DUID"] for r in rows if r["DUID"].strip())
 duid_max = max(r["DUID"] for r in rows if r["DUID"].strip())
 print(f"csv: {n_all} generators · solar {n_solar} · wind {n_wind} · in REZ {n_rez} · "
@@ -217,6 +218,20 @@ with sync_playwright() as pw:
     check(first_asc == duid_min and first_desc == duid_max,
           "clicking a header sorts, clicking again reverses",
           f"{first_asc} (want {duid_min}) -> {first_desc} (want {duid_max})")
+    # Blanks last in BOTH directions, every value present in order, and the loaded data left in file
+    # order (sorting allData in place reordered what the ISP labels and the export read).
+    n_eli = len(with_eli)
+    for direction in ("asc", "desc"):
+        pg.evaluate("([c, d]) => { sortCol = c; sortDir = d; renderTable(); }", ["ELI_CURTAILMENT_NEAR", direction])
+        order = duids()
+        vals = [Decimal(by_duid[d]["ELI_CURTAILMENT_NEAR"]) for d in order[:n_eli] if by_duid[d]["ELI_CURTAILMENT_NEAR"].strip()]
+        tail_blank = all(not by_duid[d]["ELI_CURTAILMENT_NEAR"].strip() for d in order[n_eli:])
+        check(len(vals) == n_eli and vals == sorted(vals, reverse=direction == "desc") and tail_blank,
+              f"sorting ELI near-term {direction}: values in order, the {n_all - n_eli} blanks last",
+              f"{len(vals)} valued first; blanks last: {tail_blank}")
+    file_order = pg.evaluate("allData.map(r => r.DUID)")
+    check(file_order == [r["DUID"] for r in rows], "sorting leaves the loaded data in file order",
+          f"first {file_order[:3]} vs csv {[r['DUID'] for r in rows[:3]]}")
 
     print("selection and export")
     pg.evaluate("document.getElementById('selectAll').click()")

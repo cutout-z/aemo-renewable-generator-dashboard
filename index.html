@@ -356,12 +356,15 @@ function getFiltered() {
     (r.REZ_NAME || '').toLowerCase().includes(search)
   );
   if (sortCol) {
-    rows.sort((a, b) => {
+    // Sort a copy: with no filter set, `rows` IS allData, and sorting it in place reordered the data
+    // the ISP labels and the export read. Blanks go last in both directions, and two blanks compare
+    // equal (returning 1 for both made the comparator inconsistent).
+    const blank = v => v === '' || v === undefined || v === 'N/A';
+    rows = [...rows].sort((a, b) => {
       let va = a[sortCol], vb = b[sortCol];
+      if (blank(va) || blank(vb)) return blank(va) - blank(vb);
       const na = parseFloat(va), nb = parseFloat(vb);
       if (!isNaN(na) && !isNaN(nb)) { va = na; vb = nb; }
-      if (va === '' || va === undefined || va === 'N/A') return 1;
-      if (vb === '' || vb === undefined || vb === 'N/A') return -1;
       if (va < vb) return sortDir === 'asc' ? -1 : 1;
       if (va > vb) return sortDir === 'asc' ? 1 : -1;
       return 0;
