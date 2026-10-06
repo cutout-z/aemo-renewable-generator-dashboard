@@ -38,7 +38,7 @@ This dashboard fetches the credit dashboard's published FY rollup (`curtailment_
 curtailment_FY = Σ(monthly_curtailment × monthly_generation) / Σ(monthly_generation)
 ```
 
-Values are in [0, 1]. Partial FYs (`months_covered < 12`) are excluded from the cross-sectional table.
+Values are in [0, 1]. Partial FYs (`months_covered < 12`) are excluded from the cross-sectional table. `ACTUAL_MONTHS_<FY>` carries the rollup's `months_covered` for each unit and year (empty = no row), and `CLASSIFICATION` the Registration List's Semi-Scheduled / Non-Scheduled, so the page can say why a value is missing: a partial year (and, when the earlier year is complete, that a month has no data rather than a late start), a non-scheduled unit absent from the rollup, or no row at all.
 
 ### ELI projected curtailment
 

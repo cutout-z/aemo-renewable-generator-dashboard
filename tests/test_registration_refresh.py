@@ -38,6 +38,7 @@ def test_refresh_replaces_a_stale_cached_list(tmp_path, monkeypatch):
     gens = dg.fetch_generators(str(tmp_path))
 
     assert "WANDSF2" in set(gens["DUID"])
+    assert set(gens["CLASSIFICATION"]) == {"Semi-Scheduled"}  # kept for the page's N/A reasons
     rec = source_status.load(tmp_path)["registration_list"]
     assert rec["refreshed"] is True and rec["error"] is None
 

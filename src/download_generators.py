@@ -56,8 +56,10 @@ def fetch_generators(cache_dir: str) -> pd.DataFrame:
 
     Returns DataFrame with columns:
         DUID, PROJECT_NAME, LOCATION, REZ, REZ_NAME, REZ_SOURCE, STATE, REGIONID,
-        NAMEPLATE_MW, VOLTAGE_KV, FUEL_TYPE, TECHNOLOGY, UNIT_STATUS
-    (REZ contract: see NON_REZ_NAME above / assign_rez)
+        NAMEPLATE_MW, VOLTAGE_KV, FUEL_TYPE, TECHNOLOGY, CLASSIFICATION, UNIT_STATUS
+    (CLASSIFICATION: the Registration List's Semi-Scheduled / Non-Scheduled, footnote
+    asterisks dropped; the page uses it to say why a unit has no actual curtailment.
+    REZ contract: see NON_REZ_NAME above / assign_rez)
     """
     cache_path = Path(cache_dir)
     cache_path.mkdir(parents=True, exist_ok=True)
@@ -105,7 +107,7 @@ def fetch_generators(cache_dir: str) -> pd.DataFrame:
     keep_cols = [
         "DUID", "PROJECT_NAME", "LOCATION", "REZ", "REZ_NAME", "REZ_SOURCE",
         "STATE", "REGIONID", "NAMEPLATE_MW", "VOLTAGE_KV",
-        "FUEL_TYPE", "TECHNOLOGY", "UNIT_STATUS",
+        "FUEL_TYPE", "TECHNOLOGY", "CLASSIFICATION", "UNIT_STATUS",
     ]
     keep_cols = [c for c in keep_cols if c in generators.columns]
     generators = generators[keep_cols].copy()
@@ -373,6 +375,11 @@ def _parse_registration_list(xls_path: Path) -> pd.DataFrame:
 
     # Classify fuel type
     df["FUEL_TYPE"] = df.apply(_classify_fuel, axis=1)
+
+    # "Non-Scheduled*" / "Non-Scheduled**": the asterisks point at footnotes
+    if "CLASSIFICATION" in df.columns:
+        df["CLASSIFICATION"] = (df["CLASSIFICATION"].fillna("").astype(str)
+                                .str.strip().str.rstrip("*").str.strip())
 
     # Convert capacity
     if "NAMEPLATE_MW" in df.columns:

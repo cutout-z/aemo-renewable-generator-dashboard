@@ -41,9 +41,13 @@ def _fetch(monkeypatch, df, now):
     return fc.fetch_curtailment_by_fy(DUIDS)
 
 
+def _value_columns(out):
+    return [c for c in out.columns if not c.startswith("ACTUAL_MONTHS_")]
+
+
 def test_early_july_keeps_the_last_two_complete_years(monkeypatch):
     out = _fetch(monkeypatch, _early_july_rollup(), EARLY_JULY)
-    assert list(out.columns) == ["DUID", "CURTAILMENT_ACTUAL_FY23-24", "CURTAILMENT_ACTUAL_FY24-25"]
+    assert _value_columns(out) == ["DUID", "CURTAILMENT_ACTUAL_FY23-24", "CURTAILMENT_ACTUAL_FY24-25"]
     assert out["CURTAILMENT_ACTUAL_FY23-24"].notna().all()
     assert out["CURTAILMENT_ACTUAL_FY24-25"].notna().all()
     by = out.set_index("DUID")
@@ -54,7 +58,7 @@ def test_rolls_forward_once_june_lands(monkeypatch):
     df = _early_july_rollup()
     df.loc[df["fy_start"] == 2025, "months_covered"] = 12
     out = _fetch(monkeypatch, df, datetime(2026, 8, 5, tzinfo=config.NEM_TZ))
-    assert list(out.columns) == ["DUID", "CURTAILMENT_ACTUAL_FY24-25", "CURTAILMENT_ACTUAL_FY25-26"]
+    assert _value_columns(out) == ["DUID", "CURTAILMENT_ACTUAL_FY24-25", "CURTAILMENT_ACTUAL_FY25-26"]
     assert out["CURTAILMENT_ACTUAL_FY25-26"].notna().all()
 
 
@@ -72,3 +76,14 @@ def test_partial_unit_years_stay_empty():
     out = fc.reshape(df, DUIDS, [2023, 2024]).set_index("DUID")
     assert pd.isna(out.loc["CCCSF1", "CURTAILMENT_ACTUAL_FY24-25"])
     assert out.loc["AAASF1", "CURTAILMENT_ACTUAL_FY24-25"] == 0.11
+
+
+def test_months_covered_travels_with_each_year():
+    df = _early_july_rollup()
+    df.loc[(df["duid"] == "CCCSF1") & (df["fy_start"] == 2024), "months_covered"] = 11
+    df = df[~((df["duid"] == "BBBWF1") & (df["fy_start"] == 2024))]  # no row at all
+    out = fc.reshape(df, DUIDS, [2023, 2024]).set_index("DUID")
+    assert out.loc["CCCSF1", "ACTUAL_MONTHS_FY24-25"] == 11
+    assert pd.isna(out.loc["CCCSF1", "CURTAILMENT_ACTUAL_FY24-25"])
+    assert pd.isna(out.loc["BBBWF1", "ACTUAL_MONTHS_FY24-25"])
+    assert out.loc["AAASF1", "ACTUAL_MONTHS_FY24-25"] == 12

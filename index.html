@@ -486,7 +486,24 @@ function naReason(row, d) {
                             : 'N/A: no ISP forecast in outputs/summary.csv for this generator';
   if (d.group === 'eli') return 'N/A: no ELI projection in outputs/summary.csv for this generator';
   if (d.group === 'mlf') return 'N/A: no MLF in outputs/summary.csv for this generator';
-  return 'N/A: no completed-year actual in outputs/summary.csv for this generator';
+  return actualNaReason(row, d.label);
+}
+
+// Why a unit has no actual for a year, from what the csv carries: the rollup's months for that unit
+// and year (ACTUAL_MONTHS_<FY>, empty = no row at all) and the Registration List classification.
+function actualNaReason(row, fy) {
+  const monthsKey = 'ACTUAL_MONTHS_' + fy;
+  if (!(monthsKey in row)) return 'N/A: no full-year actual in outputs/summary.csv for this generator';
+  const months = parseInt(row[monthsKey], 10);
+  if (months > 0 && months < 12) {
+    const fullYear = colDefs.find(c => c.group === 'actual' && c.label < fy && parseInt(row['ACTUAL_MONTHS_' + c.label], 10) >= 12);
+    return `N/A: the upstream rollup has ${months} of 12 months of ${fy} for this generator, and only full years are shown. ` +
+      (fullYear ? `It has all 12 months of ${fullYear.label}, so this is a month with no data in the rollup (for example no output), not a late start`
+                : 'The unit started during the year, or some months have no data in the rollup');
+  }
+  if (/^non-scheduled/i.test(row.CLASSIFICATION || ''))
+    return 'N/A: non-scheduled unit with no row in the upstream rollup. Curtailment is measured against the availability a unit offers into dispatch, and most non-scheduled units make no such offer';
+  return `N/A: no ${fy} row for this generator in the upstream rollup (not operating in ${fy}, or not yet in its data)`;
 }
 
 // The header's second row sticks under the first; measure rather than guess the first row's height.

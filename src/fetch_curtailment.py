@@ -71,23 +71,32 @@ def reshape(df: pd.DataFrame, generator_duids: set[str], fys: list[int]) -> pd.D
 
     A unit with fewer than 12 months in a FY gets no value for it: partial FYs
     would mislead the cross-sectional comparison the dashboard is built for.
+    ACTUAL_MONTHS_<FY> carries the rollup's months_covered for each unit and FY
+    (empty when the rollup has no row for it), so the page can say why a value
+    is missing: a partial year, or no row at all.
     """
     labels = {y: config.fy_label(y) for y in fys}
-    full = df[df["fy_start"].isin(fys) & (df["months_covered"] >= FULL_YEAR_MONTHS)]
-    full = full.drop_duplicates(subset=["duid", "fy_start"], keep="first")
-    values = {(r.duid, int(r.fy_start)): float(r.curtailment_pct) for r in full.itertuples()}
+    rows_fy = df[df["fy_start"].isin(fys)].drop_duplicates(subset=["duid", "fy_start"], keep="first")
+    values, months = {}, {}
+    for r in rows_fy.itertuples():
+        key = (r.duid, int(r.fy_start))
+        months[key] = r.months_covered
+        if r.months_covered >= FULL_YEAR_MONTHS:
+            values[key] = r.curtailment_pct
 
     rows = []
     for duid in sorted(generator_duids):
         row = {"DUID": duid}
         for y, label in labels.items():
             row[f"CURTAILMENT_ACTUAL_{label}"] = values.get((duid, y))
+        for y, label in labels.items():
+            row[f"ACTUAL_MONTHS_{label}"] = months.get((duid, y))
         rows.append(row)
 
-    columns = ["DUID"] + [f"CURTAILMENT_ACTUAL_{labels[y]}" for y in fys]
-    result = pd.DataFrame(rows, columns=columns)
-    value_cols = columns[1:]
-    for col in value_cols:
+    value_cols = [f"CURTAILMENT_ACTUAL_{labels[y]}" for y in fys]
+    month_cols = [f"ACTUAL_MONTHS_{labels[y]}" for y in fys]
+    result = pd.DataFrame(rows, columns=["DUID"] + value_cols + month_cols)
+    for col in value_cols + month_cols:
         result[col] = pd.to_numeric(result[col], errors="coerce").astype("float64")
     matched = result.dropna(subset=value_cols, how="all") if value_cols else result.iloc[0:0]
     logger.info(f"Matched curtailment for {len(matched)} of {len(result)} generators "

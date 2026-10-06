@@ -30,3 +30,13 @@ def test_map_columns_prefers_earlier_candidates_and_exact_headers():
         "REGIONID": ["region"],
     })
     assert m == {"Technology Type - Descriptor": "TECHNOLOGY", "Region": "REGIONID"}
+
+
+def test_classification_is_kept_without_footnote_marks(tmp_path):
+    old_wind = reg_row("CNUNDAWF", "Canunda Wind Farm", "SA1", "Wind", "Wind - Onshore", 46)
+    old_wind["Classification"] = "Non-Scheduled*"
+    path = tmp_path / "reg.xls"
+    path.write_bytes(registration_xlsx(DEFAULT_REG_ROWS + [old_wind]))
+    df = dg._parse_registration_list(path).set_index("DUID")
+    assert df.loc["CNUNDAWF", "CLASSIFICATION"] == "Non-Scheduled"
+    assert df.loc["ARWF1", "CLASSIFICATION"] == "Semi-Scheduled"
