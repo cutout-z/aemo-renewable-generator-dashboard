@@ -1,10 +1,16 @@
 """Seed cache files from the local Excel workbook.
 
 Usage:
-    python -m src.seed_from_workbook /path/to/solar-databook.xlsx
+    python -m src.seed_from_workbook /path/to/solar-databook.xlsx --out-dir /tmp/seed
+    python -m src.seed_from_workbook /path/to/solar-databook.xlsx --force   # into data/
 
-This parses the workbook tabs and writes feather cache files so the
-main pipeline can run without downloading from AEMO.
+This parses the workbook tabs and writes feather cache files
+(eli_curtailment, generator_enrichment, eli_per_duid) so the main pipeline
+can run without downloading from AEMO.
+
+It never replaces an existing file unless --force is given, and it never
+writes rez_forecasts.feather or rez_membership.feather: those come from the
+ELI regional appendices (python -m src.eli_appendix).
 """
 
 from __future__ import annotations
@@ -28,43 +34,51 @@ logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
-def seed(workbook_path: str):
-    """Parse the workbook and create cache files."""
+# Written by src/eli_appendix.py from AEMO's appendices; the seed must never replace them
+PROTECTED = frozenset({Path(config.REZ_FORECAST_CACHE).name, "rez_membership.feather"})
+
+
+def _write(df: pd.DataFrame, path: Path) -> None:
+    if path.name in PROTECTED:
+        raise ValueError(f"refusing to write {path.name}: it comes from python -m src.eli_appendix")
+    df.reset_index(drop=True).to_feather(path)
+
+
+def seed(workbook_path: str, out_dir: str | Path | None = None, force: bool = False):
+    """Parse the workbook and create cache files in `out_dir` (default data/).
+
+    Existing files are left alone (exit 1, nothing written) unless `force`.
+    """
     wb_path = Path(workbook_path)
     if not wb_path.exists():
         logger.error(f"Workbook not found: {wb_path}")
         sys.exit(1)
 
-    cache_dir = PROJECT_ROOT / config.DATA_DIR
-    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache_dir = Path(out_dir) if out_dir else PROJECT_ROOT / config.DATA_DIR
 
     xls = pd.ExcelFile(wb_path, engine="openpyxl")
     logger.info(f"Sheets: {xls.sheet_names}")
 
-    # ── ELI Curtailment (Near Term + Medium Term) ────────────────────
-    eli_data = _parse_eli_sheets(xls)
-    if not eli_data.empty:
-        eli_path = PROJECT_ROOT / config.ELI_CURTAILMENT_CACHE
-        eli_data.reset_index(drop=True).to_feather(eli_path)
-        logger.info(f"Seeded ELI curtailment: {len(eli_data)} entries → {eli_path}")
+    outputs = {
+        Path(config.ELI_CURTAILMENT_CACHE).name: ("ELI curtailment", _parse_eli_sheets(xls)),
+        # REZ forecasts are not seeded from the workbook: its transcription had
+        # errors (SA South East offloading 0% vs AEMO's 10/9/9; "-" stored as 0).
+        # They come from the ELI regional appendices: python -m src.eli_appendix
+        "generator_enrichment.feather": ("generator enrichment", _parse_summary_generators(xls)),
+        # Pre-matched ELI curtailment per DUID from the Summary tab
+        "eli_per_duid.feather": ("per-DUID ELI curtailment", _parse_summary_eli(xls)),
+    }
+    outputs = {name: v for name, v in outputs.items() if not v[1].empty}
+    existing = [name for name in outputs if (cache_dir / name).exists()]
+    if existing and not force:
+        logger.error(f"Not overwriting {', '.join(existing)} in {cache_dir}: pass --force "
+                     "to replace them, or --out-dir to seed somewhere else")
+        sys.exit(1)
 
-    # REZ forecasts are not seeded from the workbook: its transcription had
-    # errors (SA South East offloading 0% vs AEMO's 10/9/9; "-" stored as 0).
-    # They come from the ELI regional appendices: python -m src.eli_appendix
-
-    # ── Generator enrichment + pre-matched curtailment from Summary tab ─
-    gen_enrich = _parse_summary_generators(xls)
-    if not gen_enrich.empty:
-        enrich_path = PROJECT_ROOT / config.DATA_DIR / "generator_enrichment.feather"
-        gen_enrich.reset_index(drop=True).to_feather(enrich_path)
-        logger.info(f"Seeded generator enrichment: {len(gen_enrich)} entries → {enrich_path}")
-
-    # Pre-matched ELI curtailment per DUID from Summary tab
-    eli_per_duid = _parse_summary_eli(xls)
-    if not eli_per_duid.empty:
-        eli_duid_path = PROJECT_ROOT / config.DATA_DIR / "eli_per_duid.feather"
-        eli_per_duid.reset_index(drop=True).to_feather(eli_duid_path)
-        logger.info(f"Seeded per-DUID ELI curtailment: {len(eli_per_duid)} entries → {eli_duid_path}")
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    for name, (what, df) in outputs.items():
+        _write(df, cache_dir / name)
+        logger.info(f"Seeded {what}: {len(df)} entries → {cache_dir / name}")
 
     logger.info("Seed complete.")
 
@@ -295,8 +309,11 @@ def _parse_summary_eli(xls: pd.ExcelFile) -> pd.DataFrame:
 def main():
     parser = argparse.ArgumentParser(description="Seed cache from Excel workbook")
     parser.add_argument("workbook", help="Path to the solar databook Excel file")
+    parser.add_argument("--out-dir", help="Directory to write the cache files to (default: data/)")
+    parser.add_argument("--force", action="store_true",
+                        help="Replace existing cache files (never rez_forecasts / rez_membership)")
     args = parser.parse_args()
-    seed(args.workbook)
+    seed(args.workbook, out_dir=args.out_dir, force=args.force)
 
 
 if __name__ == "__main__":
