@@ -79,9 +79,13 @@ connection voltage if there is one, else the location's only row (several voltag
 and none matching = left empty); wind farms take the Wind columns, solar farms the
 Solar columns. `ELI_SOURCE` is empty where there is no value. On the seeded solar
 farms this rule reproduces the per-DUID values for 101/104 (near) and 102/104
-(medium). Units with no `LOCATION` (today: every wind farm and the unseeded solar
-farms, since no AEMO table available to the pipeline maps a DUID to an ELI
-location) cannot be filled.
+(medium). No AEMO table maps a DUID to an ELI location, so a unit with no
+`LOCATION` (every wind farm, and the unseeded solar farms) is matched by name
+instead (`ELI_SOURCE` = `location-name`): the one ELI location in its region
+named as a whole word in its project name (Ararat Wind Farm → Ararat), same
+voltage rules. On the 21 seeded solar farms the rule fires for, it picks the
+seeded location for 20 (the 21st, Stubbo, now has its own ELI location). Today
+it fills 6 wind farms and 4 solar farms; the other wind farms stay empty.
 
 ### ISP curtailment & economic offloading forecasts
 
@@ -103,15 +107,25 @@ These are forecast at the REZ level and mapped to individual farms by REZ member
 |--------|--------|
 | `REZ` | `Y` in a REZ · `N` a source says it is outside every REZ · empty = unknown |
 | `REZ_NAME` | the zone name · `Non-REZ` only when `REZ` is `N` · empty = unknown |
-| `REZ_SOURCE` | `geninfo` · `seed` · empty — where the `Y`/`N` came from |
+| `REZ_SOURCE` | `geninfo` · `eli` · `eli-station` · `seed` · empty — where the `Y`/`N` came from |
 
 Precedence: NEM Generation Information where it states a REZ (no edition has a REZ
-column today), then the seeded workbook (`generator_enrichment.feather`, from the
-databook's Summary tab: `REZ (Y/N)` and `REZ`), otherwise unknown. **`N` is
-established only by the seed's explicit `REZ (Y/N)` = `N`** (or a Generation
-Information cell reading "Non-REZ"); a blank or missing value is never read as
-"outside". The seed covers 104 solar DUIDs and no wind farms, so every wind farm is
-unknown until a source covers it.
+column today); then the ELI regional appendices (`eli`), which list each existing
+unit by DUID under its REZ or under "Non-REZ" (`data/rez_membership.feather`, built
+by `python -m src.eli_appendix`); then a unit the appendices don't list at the same
+DUDETAILSUMMARY station as units they list in one section (`eli-station`, e.g.
+WANDSF2 from WANDSF1); then the seeded workbook (`generator_enrichment.feather`:
+`REZ (Y/N)` and `REZ`); otherwise unknown. **`N` is only ever written when a source
+says so explicitly**; a blank or missing value is never read as "outside". The
+appendices use the same REZ boundaries as the ISP forecasts above, and agree with
+the seed on all 97 units both cover. Today: wind 66 in a REZ, 17 outside, 25 unknown
+(units the 2025 appendices don't list, mostly small non-scheduled or newer farms).
+
+When a new ELI edition is published, rebuild both reference files:
+
+```
+python -m src.eli_appendix          # downloads the five appendix PDFs; needs pdftotext (poppler)
+```
 
 ### Generator listing
 
@@ -203,7 +217,7 @@ After the pipeline runs and before committing, an automated validation step (`te
 - Curtailment values in [0, 1]
 - All 5 regional Excel workbooks exist
 - REZ contract: `REZ` in {`Y`, `N`, empty}; `Non-REZ` only with `REZ` = `N`; every `Y`/`N` has a `REZ_SOURCE`; `Y` has a zone name
-- `ELI_SOURCE` in {`per-DUID`, `location`, empty}, empty exactly when there is no ELI value
+- `ELI_SOURCE` in {`per-DUID`, `location`, `location-name`, empty}, empty exactly when there is no ELI value
 - `TECHNOLOGY` is not "Renewable" for every row
 - Source freshness (`data/source_status.json`, written by the run): the Registration List's last good fetch is at most 30 days old, and at most 3 GENERATOR DUIDs registered in the last 24 months (per DUDETAILSUMMARY) are missing from it; a stale Generation Information edition is reported as a warning
 - ELI edition (`eli` in `data/source_status.json`): each refresh probes next year's chart-data file on AEMO (one-byte Range request; a missing file redirects to /404) and a published newer edition is printed as a warning, not a failure
