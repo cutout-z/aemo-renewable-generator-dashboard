@@ -145,7 +145,7 @@
   <div class="card-head">
     <div>
       <h2 class="card-title">Generators</h2>
-      <p class="card-sub max-w-[90ch]">One row per generator. <strong class="font-medium text-ink">Actual</strong> is curtailment achieved in the last completed financial years; <strong class="font-medium text-ink">ELI</strong> and <strong class="font-medium text-ink">ISP</strong> are projections (ISP is forecast per REZ); <strong class="font-medium text-ink">MLF</strong> is the share of the regional price a generator receives. Click a column to sort.</p>
+      <p class="card-sub max-w-[90ch]">One row per generator. The three curtailment families measure different things and are not comparable with each other. <strong class="font-medium text-ink">Actual</strong> is this unit's measured shortfall against the availability it offered, over a full financial year, and includes output it withheld at negative prices (economic curtailment). <strong class="font-medium text-ink">ELI</strong> is AEMO's modelled curtailment of a hypothetical new 300 MW project at the same connection point, from network, system-security and demand limits, with no price-driven bidding. <strong class="font-medium text-ink">ISP</strong> is the 2024 ISP's forecast for the whole REZ: curtailment by transmission congestion, and economic offloading (output reduced on price) separately. <strong class="font-medium text-ink">MLF</strong> is the share of the regional price a generator receives. Hover a column group for its definition; click a column to sort.</p>
     </div>
   </div>
   <div class="flex flex-wrap gap-x-8 gap-y-3 px-5 pb-3 pt-3" id="legends">
@@ -213,6 +213,16 @@
 const STATES = {NSW1:'NSW',QLD1:'QLD',VIC1:'VIC',SA1:'SA',TAS1:'TAS'};
 const EXCEL_FILES = {NSW1:'NSW_curtailment.xlsx',QLD1:'QLD_curtailment.xlsx',VIC1:'VIC_curtailment.xlsx',SA1:'SA_curtailment.xlsx',TAS1:'TAS_curtailment.xlsx'};
 const GROUP_LABELS = {actual:'Actual curtailment', eli:'ELI projected', mlf:'Marginal loss factor', 'isp-c':'ISP curtailment forecast (2024 ISP)', 'isp-o':'ISP offloading forecast (2024 ISP)'};
+// What each family measures (the group header's tooltip). Actual, ELI and ISP are all "curtailment" but
+// three different quantities: a measured shortfall incl. economic curtailment, a modelled marginal-project
+// figure with no price-driven bidding, and a REZ-wide forecast split into congestion and price.
+const GROUP_NOTES = {
+  actual: 'Measured: 1 − energy generated ÷ the availability the unit offered into dispatch, over a full financial year (Generator Credit Dashboard rollup of AEMO dispatch data). Counts every reason output fell short of that availability, including economic curtailment (output withheld at negative prices) as well as network and system-security limits.',
+  eli: 'Modelled by AEMO (2025 ELI report): the share of a hypothetical new 300 MW solar or wind project\'s energy at this connection point that would not be dispatched, because of transmission limits, minimum synchronous units for system security (near term only) and limited demand or export. Excludes negative-price bidding, outages and maintenance. A signal for new connections, not a forecast for this unit.',
+  mlf: 'Marginal loss factor: the share of the regional reference price this generator receives after network losses.',
+  'isp-c': '2024 ISP forecast (Step Change) for the whole REZ: transmission curtailment, the share of the REZ\'s wind and solar energy reduced because of transmission congestion. A REZ figure, not this unit.',
+  'isp-o': '2024 ISP forecast (Step Change) for the whole REZ: economic offloading, the share of the REZ\'s wind and solar energy reduced because of market price (low or negative prices). A REZ figure, not this unit.'
+};
 // The ISP forecasts are the Final 2024 ISP's (Step Change), made in 2024 for 2025-26 to 2027-28. A year
 // that has ended keeps its forecast value; its header's tooltip says the year has ended so it is not read as an outcome.
 const ISP_SOURCE = '2024 ISP, Step Change scenario';
@@ -284,7 +294,7 @@ function decMean(raws, shift, dp) {
 function renderLegends() {
   const swatches = (labels) => labels.map((l, i) => `<span class="lg seq-${i}">${l}</span>`).join('');
   document.getElementById('legends').innerHTML =
-    `<div data-heat-legend="loss"><div class="mb-1.5 text-[12px] font-medium text-muted">Share of energy lost: actual, ELI and ISP columns. Stronger fill = more lost</div><div class="flex flex-wrap gap-0.5">${swatches(LOSS_LABELS)}</div></div>` +
+    `<div data-heat-legend="loss"><div class="mb-1.5 text-[12px] font-medium text-muted">Share of energy lost, one scale for actual, ELI and ISP (each a different loss). Stronger fill = more lost</div><div class="flex flex-wrap gap-0.5">${swatches(LOSS_LABELS)}</div></div>` +
     `<div data-heat-legend="mlf"><div class="mb-1.5 text-[12px] font-medium text-muted">MLF, by price lost (1 − MLF). Stronger fill = lower MLF</div><div class="flex flex-wrap gap-0.5">${swatches(MLF_LABELS)}</div></div>` +
     `<div data-heat-legend="na"><div class="mb-1.5 text-[12px] font-medium text-muted">Not available</div><div class="flex items-center gap-2"><span class="lg seq-none na">N/A</span><span class="max-w-[46ch] text-[12px] leading-4 text-faint">No value in the data file. ISP forecasts are made per REZ, so a generator outside a REZ, or whose REZ is unknown, is N/A there.</span></div></div>`;
 }
@@ -562,7 +572,7 @@ function renderTable() {
         metaSeen++;
       }
     } else {
-      groupRow += `<th class="gh fam-${g}" colspan="${span}" scope="colgroup"><span class="fam-dot"></span>${GROUP_LABELS[g] || g}</th>`;
+      groupRow += `<th class="gh fam-${g}" colspan="${span}" scope="colgroup"${GROUP_NOTES[g] ? ` title="${GROUP_NOTES[g]}"` : ''}><span class="fam-dot"></span>${GROUP_LABELS[g] || g}</th>`;
       for (let j = i; j < i + span; j++) {
         const d = colDefs[j];
         colRow += `<th class="ch r fam-${g}" scope="col" data-col="${d.key}" tabindex="0"${d.title ? ` title="${d.title}"` : ''}${sortAttr(d)}>${d.label}</th>`;

@@ -28,28 +28,49 @@ For every utility-scale solar and wind farm in the NEM:
 
 ## Methodology
 
+### Three different "curtailment" figures
+
+The table puts three curtailment families side by side. They measure different
+things and are not comparable with each other:
+
+| Family | What it is | Includes | Excludes |
+|--------|-----------|----------|----------|
+| **Actual** | Measured, this unit, a full FY: 1 − energy generated ÷ the availability the unit offered into dispatch | every reason output fell short of offered availability: network and system-security constraints **and economic curtailment** (output withheld at negative prices) | outages already taken out of the offered availability |
+| **ELI** | Modelled by AEMO: share of a hypothetical **new 300 MW** solar or wind project's energy at the unit's ELI location that would not be dispatched | transmission (thermal or stability) limits, minimum synchronous units for system security (near term only), limited regional demand or export | negative-price (economic) bidding, outages, maintenance |
+| **ISP** | Forecast by the 2024 ISP (Step Change) for the **whole REZ**, as two figures | curtailment: output reduced by transmission congestion; economic offloading: output reduced on market price | anything unit-specific |
+
+So an actual figure above the ELI or ISP figure is not by itself a sign the
+projection was wrong: the actual includes economic curtailment, which ELI leaves
+out and ISP reports separately as offloading.
+
 ### Actual curtailment
 
-Sourced from the [Generator Credit Dashboard](https://github.com/cutout-z/aemo-generator-credit-dashboard), which computes monthly per-DUID curtailment from AEMO's `INTERMITTENT_GEN_SCADA` table (quality flags separate grid curtailment from mechanical outages from Dec 2024 onwards). Its pipeline re-pulls only the last two months of dispatch each run, so the shared history is never rebuilt from scratch.
+Sourced from the [Generator Credit Dashboard](https://github.com/cutout-z/aemo-generator-credit-dashboard), which computes a monthly curtailment proxy per DUID from AEMO dispatch data: SCADA output against the unit's bid-in `AVAILABILITY` in `DISPATCHLOAD` (not the UIGF forecast). It is a shortfall against offered availability, not a split by cause: network and system-security constraints and economic curtailment (bidding off at negative prices) are all in it. Its pipeline re-pulls only the last two months of dispatch each run, so the shared history is never rebuilt from scratch.
 
-This dashboard fetches the credit dashboard's published FY rollup (`curtailment_by_fy.csv`) and surfaces the two latest financial years it covers in full: a FY qualifies once it has ended (in NEM time, AEST) and the rollup has a unit with all 12 months in it. Just after 1 July the year that has ended still has 11 months upstream, so the table keeps the previous two years until June's data lands instead of showing an empty column. The rollup is a generation-weighted average across the 12 months of each FY:
+This dashboard fetches the credit dashboard's published FY rollup (`curtailment_by_fy.csv`) and surfaces the two latest financial years it covers in full: a FY qualifies once it has ended (in NEM time, AEST) and the rollup has a unit with all 12 months in it. Just after 1 July the year that has ended still has 11 months upstream, so the table keeps the previous two years until June's data lands instead of showing an empty column. Each FY value in the rollup is a ratio of summed energy over the FY's months (not an average of monthly percentages):
 
 ```
-curtailment_FY = Σ(monthly_curtailment × monthly_generation) / Σ(monthly_generation)
+curtailment_FY = 1 − Σ(eligible actual MWh) / Σ(potential MWh)     potential = offered AVAILABILITY
 ```
 
 Values are in [0, 1]. Partial FYs (`months_covered < 12`) are excluded from the cross-sectional table. `ACTUAL_MONTHS_<FY>` carries the rollup's `months_covered` for each unit and year (empty = no row), and `CLASSIFICATION` the Registration List's Semi-Scheduled / Non-Scheduled, so the page can say why a value is missing: a partial year (and, when the earlier year is complete, that a month has no data rather than a late start), a non-scheduled unit absent from the rollup, or no row at all.
 
 ### ELI projected curtailment
 
-Per the AEMO ELI report, curtailment projections are based on the introduction of a hypothetical 100 MW generator at each connection point. They represent the proportion of energy that would be curtailed due to network constraints.
+Per AEMO's 2025 ELI report, a hypothetical **300 MW** wind or solar project was tested in turn at representative locations across the NEM and dispatched in market modelling consistent with the 2024 ESOO, subject to network limits, system security limits, regional demand and market conditions:
+
+```
+projected curtailment = 1 − additional wind and solar energy dispatched / additional wind and solar energy available
+```
+
+Energy goes undispatched in that model because of intra- or inter-regional transmission limits (thermal or stability), the need to run coal and gas units for system security (near term only), or limited export and local demand (including distributed PV). It is **not** only network constraints, and it leaves out what the report says happens in practice but is not modelled: negative-price periods driven by economic bidding, transmission outages, generator maintenance. It is the curtailment of an additional project at the location, not a forecast for the existing unit.
 
 - **Near term (2026-28)**: operating conditions before the key ISP transmission is built: committed augmentations only, minimum synchronous-unit requirements for system security in force
 - **Medium term (2030-35)**: once that transmission is built (committed, anticipated and actionable projects advised to commission before 2031) and system security limits are resolved
 
 These are the horizons the 2025 ELI report's executive summary gives; its Table 2 calls the conditions representative of 2026-2029 and 2031-2035, depending on the speed of development. The page labels the columns Near (26-28) and Med (30-35), the workbooks ELI Near Term (2026-28) and ELI Med Term (2030-35).
 
-These are projections, not actuals. They indicate the *risk* of curtailment at each connection point.
+These are projections, not actuals. They indicate the *risk* of curtailment for a new connection at each location.
 
 Each unit takes its seeded per-DUID value where there is one (`ELI_SOURCE` =
 `per-DUID`). Otherwise it is filled from the location table (`ELI_SOURCE` =
@@ -64,10 +85,10 @@ location) cannot be filled.
 
 ### ISP curtailment & economic offloading forecasts
 
-From the ISP appendices, published with the ELI report:
+From the "VRE curtailment and economic offloading – ISP forecast" table in each REZ section of the ELI regional appendices. The 2024 ISP (Appendix 3) defines both as a percentage of the REZ's wind and solar (VRE) energy:
 
-- **Curtailment**: Proportion of energy curtailed due to network thermal limits, voltage stability, or system strength constraints
-- **Economic offloading**: Proportion of energy where the generator would choose not to dispatch due to negative prices (economic decision, not physical constraint)
+- **Curtailment** (the ISP's "transmission curtailment"): generation reduces output because of transmission network congestion (constrained down or off by operational limits)
+- **Economic offloading** (the ISP's "economic spill"): generation reduces output because of market price
 
 The forecasts are the Final 2024 ISP's (Step Change scenario), as the 2025 ELI appendices state; they were made in 2024 for 2025-26, 2026-27 and 2027-28. 2025-26 has since ended: its value is still the 2024 forecast, not an outcome, the page's ISP group headers say "(2024 ISP)" and an ended year's column header has a tooltip saying so (the Actual columns carry outcomes). The values are not relabelled or replaced; they change when a new ELI edition republishes newer ISP forecasts.
 
