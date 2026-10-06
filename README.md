@@ -32,7 +32,7 @@ For every utility-scale solar and wind farm in the NEM:
 
 Sourced from the [Generator Credit Dashboard](https://github.com/cutout-z/aemo-generator-credit-dashboard), which computes monthly per-DUID curtailment from AEMO's `INTERMITTENT_GEN_SCADA` table (quality flags separate grid curtailment from mechanical outages from Dec 2024 onwards). Its pipeline re-pulls only the last two months of dispatch each run, so the shared history is never rebuilt from scratch.
 
-This dashboard fetches the credit dashboard's published FY rollup (`curtailment_by_fy.csv`) and surfaces the last two completed financial years. The rollup is a generation-weighted average across the 12 months of each FY:
+This dashboard fetches the credit dashboard's published FY rollup (`curtailment_by_fy.csv`) and surfaces the two latest financial years it covers in full: a FY qualifies once it has ended (in NEM time, AEST) and the rollup has a unit with all 12 months in it. Just after 1 July the year that has ended still has 11 months upstream, so the table keeps the previous two years until June's data lands instead of showing an empty column. The rollup is a generation-weighted average across the 12 months of each FY:
 
 ```
 curtailment_FY = Σ(monthly_curtailment × monthly_generation) / Σ(monthly_generation)
