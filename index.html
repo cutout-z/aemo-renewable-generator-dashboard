@@ -398,10 +398,11 @@ function renderStats() {
   const nearRows = rows.filter(r => parseDec(r.ELI_CURTAILMENT_NEAR));
   const nearVals = nearRows.map(r => r.ELI_CURTAILMENT_NEAR);
   const avgNear = nearVals.length ? decMean(nearVals, 2, 1) + '%' : 'N/A';
-  // ELI figures exist for solar farms only today, so a NEM-wide label overstated what the mean covers.
-  // Say which fuels it does cover, from the rows themselves.
+  // ELI figures cover far more solar than wind farms, so a NEM-wide label overstated what the mean
+  // covers. Say which fuels it does cover, and how many of each, from the rows themselves.
   const nearFuels = [...new Set(nearRows.map(r => r.FUEL_TYPE))].sort();
-  const nearScope = nearFuels.length === 1 ? ` · ${nearFuels[0].toLowerCase()} farms only` : '';
+  const nearScope = nearFuels.length === 1 ? ` · ${nearFuels[0].toLowerCase()} farms only`
+    : nearFuels.length ? ' · ' + nearFuels.map(f => `${nearRows.filter(r => r.FUEL_TYPE === f).length} ${f.toLowerCase()}`).join(', ') : '';
 
   const scope = activeRegion === 'ALL' ? 'NEM' : STATES[activeRegion];
   const nOf = (n) => `${n} of ${rows.length} with a value`;
@@ -730,7 +731,7 @@ Papa.parse('outputs/summary.csv', {
     renderDownloads();
     document.getElementById('footer').innerHTML = '<span>' + [
       `${allData.length} generators tracked`,
-      'Source: AEMO ELI Report (projections), NEM Generation Information, MMSDM Archive (MLFs); actual curtailment from the Generator Credit Dashboard rollup',
+      'Source: AEMO ELI Report and its regional appendices (projections, REZ membership), NEM Registration and Exemption List (generators), AEMO MLF Tracker (MLFs); actual curtailment from the Generator Credit Dashboard rollup',
       'Two rhythms: actuals monthly (last two completed FYs), ELI and ISP annual (July), MLFs annual (July/Oct)',
       'The CSV carries no publish date; the dashboard refreshes daily and republishes only when values change'
     ].join(' · ') + '</span>';
