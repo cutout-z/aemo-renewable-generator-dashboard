@@ -181,6 +181,7 @@ After the pipeline runs and before committing, an automated validation step (`te
 - `ELI_SOURCE` in {`per-DUID`, `location`, empty}, empty exactly when there is no ELI value
 - `TECHNOLOGY` is not "Renewable" for every row
 - Source freshness (`data/source_status.json`, written by the run): the Registration List's last good fetch is at most 30 days old, and at most 3 GENERATOR DUIDs registered in the last 24 months (per DUDETAILSUMMARY) are missing from it; a stale Generation Information edition is reported as a warning
+- Actual curtailment (`actual_curtailment` in `data/source_status.json`): a run whose upstream fetch failed and republished the cached rollup prints a warning; it fails when that cache's last good fetch is more than 35 days old, or when there was no cache and the summary has no actual columns
 
 If any check fails, the NAS lane or manual fallback workflow exits before committing — preventing bad data from reaching the dashboard.
 
