@@ -14,7 +14,7 @@ from pathlib import Path
 import pandas as pd
 import requests
 
-from . import config
+from . import config, source_status
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,65 @@ MEDIUM_TERM_SHEETS = [
 ]
 
 
-def fetch_eli_curtailment(cache_dir: str, eli_year: int | None = None) -> pd.DataFrame:
+STATUS_KEY = "eli"
+
+
+def chart_data_url(year: int) -> str:
+    return config.ELI_BASE_URL + f"{year}/{year}-eli-report-chart-data.xlsx"
+
+
+def probe_newer_edition(edition: int, session=None) -> dict:
+    """Ask AEMO whether next year's ELI chart data file exists, without downloading it.
+
+    A one-byte Range request, redirects not followed: an existing file answers
+    200/206; a missing one 302 to aemo.com.au/404 (or 404). Anything else (403
+    from the bot wall, a network error) leaves the answer unknown (None).
+    """
+    year = edition + 1
+    url = chart_data_url(year)
+    record = {"edition": edition, "checked_at": source_status.now_iso(), "probed_url": url,
+              "newer_edition_available": None, "probe_status": None, "error": None}
+    session = session or requests.Session()
+    try:
+        resp = session.get(url, headers={"Range": "bytes=0-0", "User-Agent": config.USER_AGENT},
+                           timeout=config.REQUEST_TIMEOUT, allow_redirects=False, stream=True)
+    except requests.RequestException as e:
+        record["error"] = str(e)
+        return record
+    code = resp.status_code
+    record["probe_status"] = code
+    location = str(resp.headers.get("Location", ""))
+    if code in (200, 206):
+        record["newer_edition_available"] = True
+    elif code == 404 or (300 <= code < 400 and location.rstrip("/").endswith("/404")):
+        record["newer_edition_available"] = False
+    else:
+        record["error"] = f"HTTP {code}" + (f" -> {location}" if location else "")
+    close = getattr(resp, "close", None)
+    if close:
+        close()
+    return record
+
+
+def check_newer_edition(cache_dir: str | Path, edition: int, session=None) -> dict:
+    """Probe for the next ELI edition, log a warning if it exists, record it in source_status.json."""
+    record = probe_newer_edition(edition, session=session)
+    if record["newer_edition_available"]:
+        logger.warning("!" * 72)
+        logger.warning(f"A NEWER ELI EDITION ({edition + 1}) IS PUBLISHED: {record['probed_url']}. "
+                       f"The dashboard still uses {edition}: add it to config.ELI_CHART_DATA_URLS "
+                       "and ELI_REGIONAL_APPENDIX_URLS, then rerun python -m src.eli_appendix.")
+        logger.warning("!" * 72)
+    elif record["newer_edition_available"] is None:
+        logger.info(f"Could not tell whether ELI {edition + 1} is out: {record['error']}")
+    else:
+        logger.info(f"ELI {edition} is the latest edition (no {edition + 1} chart data yet)")
+    source_status.update(cache_dir, STATUS_KEY, record)
+    return record
+
+
+def fetch_eli_curtailment(cache_dir: str, eli_year: int | None = None,
+                          session=None) -> pd.DataFrame:
     """Download and parse ELI report chart data for projected curtailment.
 
     Returns DataFrame with columns:
@@ -50,6 +108,9 @@ def fetch_eli_curtailment(cache_dir: str, eli_year: int | None = None) -> pd.Dat
     if not url:
         logger.error(f"No ELI chart data URL configured for year {eli_year}")
         return pd.DataFrame()
+
+    # A newer edition goes unnoticed otherwise: the URLs above are per edition
+    check_newer_edition(cache_path, eli_year, session=session)
 
     xlsx_path = cache_path / f"eli_chart_data_{eli_year}.xlsx"
 

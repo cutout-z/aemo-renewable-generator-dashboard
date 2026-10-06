@@ -215,6 +215,15 @@ def validate_sources(cache_dir: Path):
 
     check_actual_curtailment(status)
 
+    eli = status.get("eli", {})
+    if eli.get("newer_edition_available"):
+        print(f"  WARN: ELI {eli.get('edition', 0) + 1} has been published "
+              f"({eli.get('probed_url')}); the dashboard still uses ELI {eli.get('edition')}")
+    elif eli.get("newer_edition_available") is None and eli:
+        print(f"  WARN: could not check for a newer ELI edition ({eli.get('error')})")
+    elif eli:
+        print(f"ELI edition: {eli.get('edition')} (latest; checked {eli.get('checked_at')})")
+
 
 def check_actual_curtailment(status):
     """Warn when this run republished cached actuals; fail when they are stale or absent."""
