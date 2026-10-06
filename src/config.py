@@ -1,6 +1,6 @@
 """Configuration for AEMO Solar & Wind Curtailment Dashboard."""
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 # ─── Regions ────────────────────────────────────────────────────────────────
 
@@ -19,11 +19,25 @@ STATE_TO_REGION = {v: k for k, v in REGION_NAMES.items()}
 
 # ─── Financial Year Logic ───────────────────────────────────────────────────
 
-def current_fy_start() -> int:
-    """Return the start calendar year of the current financial year.
+# NEM market time is AEST (UTC+10, no daylight saving, as Australia/Brisbane).
+# The FY rollover is read in it, not in the host's local time: the GitHub runner
+# is UTC (10 hours late), the NAS container's zone is whatever it was built with.
+NEM_TZ = timezone(timedelta(hours=10), "AEST")
+
+
+def nem_now() -> datetime:
+    """The current time in NEM market time (AEST)."""
+    return datetime.now(NEM_TZ)
+
+
+def current_fy_start(now: datetime | None = None) -> int:
+    """Return the start calendar year of the current financial year, in NEM time.
     FY runs July 1 to June 30. E.g. in March 2026 → FY25-26 → returns 2025.
+    A naive `now` is taken to be NEM time already.
     """
-    now = datetime.now()
+    now = now or nem_now()
+    if now.tzinfo is not None:
+        now = now.astimezone(NEM_TZ)
     return now.year if now.month >= 7 else now.year - 1
 
 
