@@ -13,8 +13,8 @@ For every utility-scale solar and wind farm in the NEM:
 | **Actual curtailment** | Last 2 completed FYs, sourced from the credit dashboard | Monthly |
 | **ELI projected curtailment** | Near-term (2026-28) and medium-term (2030-35) projections | Annual (July) |
 | **Marginal loss factors** | Last 2 actual FYs + current year draft | Annual (July/Oct) |
-| **ISP curtailment forecast** | Next 3 FY forecasts + average, by REZ | Annual (July) |
-| **ISP economic offloading** | Next 3 FY forecasts + average, by REZ | Annual (July) |
+| **ISP curtailment forecast** | The Final 2024 ISP's forecast (Step Change) for 2025-26 to 2027-28 + average, by REZ | With each ELI edition (July) |
+| **ISP economic offloading** | Same source and years | With each ELI edition (July) |
 
 ## Data sources
 
@@ -68,6 +68,8 @@ From the ISP appendices, published with the ELI report:
 
 - **Curtailment**: Proportion of energy curtailed due to network thermal limits, voltage stability, or system strength constraints
 - **Economic offloading**: Proportion of energy where the generator would choose not to dispatch due to negative prices (economic decision, not physical constraint)
+
+The forecasts are the Final 2024 ISP's (Step Change scenario), as the 2025 ELI appendices state; they were made in 2024 for 2025-26, 2026-27 and 2027-28. 2025-26 has since ended: its value is still the 2024 forecast, not an outcome, the page's ISP group headers say "(2024 ISP)" and an ended year's column header has a tooltip saying so (the Actual columns carry outcomes). The values are not relabelled or replaced; they change when a new ELI edition republishes newer ISP forecasts.
 
 These are forecast at the REZ level and mapped to individual farms by REZ membership
 (joined on `REZ_NAME`). Units outside a REZ, or whose REZ is unknown, show N/A.

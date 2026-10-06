@@ -212,7 +212,14 @@
 <script>
 const STATES = {NSW1:'NSW',QLD1:'QLD',VIC1:'VIC',SA1:'SA',TAS1:'TAS'};
 const EXCEL_FILES = {NSW1:'NSW_curtailment.xlsx',QLD1:'QLD_curtailment.xlsx',VIC1:'VIC_curtailment.xlsx',SA1:'SA_curtailment.xlsx',TAS1:'TAS_curtailment.xlsx'};
-const GROUP_LABELS = {actual:'Actual curtailment', eli:'ELI projected', mlf:'Marginal loss factor', 'isp-c':'ISP curtailment forecast', 'isp-o':'ISP offloading forecast'};
+const GROUP_LABELS = {actual:'Actual curtailment', eli:'ELI projected', mlf:'Marginal loss factor', 'isp-c':'ISP curtailment forecast (2024 ISP)', 'isp-o':'ISP offloading forecast (2024 ISP)'};
+// The ISP forecasts are the Final 2024 ISP's (Step Change), made in 2024 for 2025-26 to 2027-28. A year
+// that has ended keeps its forecast value; its header's tooltip says the year has ended so it is not read as an outcome.
+const ISP_SOURCE = '2024 ISP, Step Change scenario';
+function fyEnded(label) {                 // '25-26' → true from 1 July 2026, 00:00 AEST (UTC+10)
+  const m = /^(\d\d)-(\d\d)$/.exec(label || '');
+  return !!m && Date.now() >= Date.UTC(2000 + parseInt(m[2], 10), 5, 30, 14);
+}
 
 let allData = [];
 let colDefs = [];  // [{key, label, group}]
@@ -525,7 +532,14 @@ function renderTable() {
 
   // Resolve ISP FY labels from the first row that carries one: units whose REZ is unknown have no
   // ISP forecast and no label, so the first row alone could leave the header reading "FY1".
-  colDefs.forEach(d => { const l = d.labelKey && firstLabel(d.labelKey); if (l) d.label = l; });
+  colDefs.forEach(d => {
+    const l = d.labelKey && firstLabel(d.labelKey);
+    if (!l) return;
+    d.label = l;   // the header stays the data's FY label; an ended year says so in its tooltip
+    if (fyEnded(l)) {
+      d.title = `Forecast for FY${l} made in the ${ISP_SOURCE}. That year has ended: this is still the forecast, not an outcome (the Actual columns show outcomes)`;
+    }
+  });
 
   const RIGHT = new Set(['NAMEPLATE_MW']);
   const sortAttr = (d) => d.key === sortCol ? ` aria-sort="${sortDir === 'asc' ? 'ascending' : 'descending'}"` : '';
@@ -551,7 +565,7 @@ function renderTable() {
       groupRow += `<th class="gh fam-${g}" colspan="${span}" scope="colgroup"><span class="fam-dot"></span>${GROUP_LABELS[g] || g}</th>`;
       for (let j = i; j < i + span; j++) {
         const d = colDefs[j];
-        colRow += `<th class="ch r fam-${g}" scope="col" data-col="${d.key}" tabindex="0"${sortAttr(d)}>${d.label}</th>`;
+        colRow += `<th class="ch r fam-${g}" scope="col" data-col="${d.key}" tabindex="0"${d.title ? ` title="${d.title}"` : ''}${sortAttr(d)}>${d.label}</th>`;
       }
     }
     i += span;

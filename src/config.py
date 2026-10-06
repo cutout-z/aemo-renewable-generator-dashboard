@@ -112,6 +112,12 @@ ELI_REGIONAL_APPENDIX_URLS = {
     },
 }
 
+# The REZ curtailment / economic-offloading forecasts in the 2025 ELI appendices are
+# the Final 2024 ISP's (Step Change scenario), as the appendices state; their three
+# years (2025-26 to 2027-28) were forecast in 2024, so the first has since ended.
+ISP_FORECAST_EDITION = "2024 ISP"
+ISP_FORECAST_SCENARIO = "Step Change"
+
 # Actual curtailment: consolidated FY rollup from the credit dashboard pipeline.
 # The credit dashboard computes monthly curtailment per DUID from
 # INTERMITTENT_GEN_SCADA and publishes the FY rollup via GitHub Pages.
