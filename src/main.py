@@ -90,23 +90,8 @@ def run(full_refresh: bool = False, cache_dir: str | None = None,
                 eli_data = pd.DataFrame()
 
     # ── Step 4: REZ forecasts ────────────────────────────────────────────
-    rez_cache = cache_root / Path(config.REZ_FORECAST_CACHE).name
-    if not full_refresh and rez_cache.exists():
-        logger.info("Loading cached REZ forecast data...")
-        rez_data = pd.read_feather(rez_cache)
-    else:
-        try:
-            rez_data = fetch_rez_forecasts(cache_dir)
-            if not rez_data.empty:
-                rez_cache.parent.mkdir(parents=True, exist_ok=True)
-                rez_data.reset_index(drop=True).to_feather(rez_cache)
-        except Exception as e:
-            logger.warning(f"REZ forecast download failed: {e}")
-            if rez_cache.exists():
-                logger.warning("Using cached REZ forecast data after refresh failure")
-                rez_data = pd.read_feather(rez_cache)
-            else:
-                rez_data = pd.DataFrame()
+    # Extracted from the ELI regional appendices by `python -m src.eli_appendix`
+    rez_data = fetch_rez_forecasts(cache_dir)
 
     # ── Step 5: Actual curtailment from credit dashboard ────────────────
     curt_cache = cache_root / Path(config.CURTAILMENT_CACHE).name

@@ -17,7 +17,7 @@ from pathlib import Path
 import pandas as pd
 import requests
 
-from . import config, dudetail, gen_info as gen_info_mod, source_status
+from . import config, dudetail, eli_appendix, gen_info as gen_info_mod, source_status
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ SEED_ENRICH_COLS = ["LOCATION", "VOLTAGE_KV", "UNIT_STATUS", "NAMEPLATE_MW"]
 # REZ output contract (summary.csv):
 #   REZ        "Y" in a REZ | "N" a source says outside every REZ | "" unknown
 #   REZ_NAME   zone name | "Non-REZ" (only with REZ "N") | "" unknown
-#   REZ_SOURCE "geninfo" | "seed" | "" — where the Y/N came from
+#   REZ_SOURCE "geninfo" | "eli" | "eli-station" | "seed" | "" — where the Y/N came from
 NON_REZ_NAME = "Non-REZ"
 _NON_REZ_VALUES = {"non-rez", "non rez", "nonrez", "not in a rez", "outside rez",
                    "outside a rez", "no rez"}
@@ -95,7 +95,11 @@ def fetch_generators(cache_dir: str) -> pd.DataFrame:
         generators["STATE"] = generators["REGIONID"].map(config.REGION_NAMES)
 
     # Determine REZ membership: Y / N / unknown, with its source
-    generators = assign_rez(generators, gen_info=gen_info, seed=seed)
+    membership = eli_appendix.load_membership(cache_path)
+    dud = dudetail.load_cached(cache_path)
+    stations = dudetail.station_ids(dud) if dud is not None else {}
+    generators = assign_rez(generators, gen_info=gen_info, seed=seed,
+                            membership=membership, stations=stations)
 
     # Select final columns
     keep_cols = [
@@ -204,14 +208,21 @@ def classify_rez_value(value) -> tuple[str, str] | None:
 
 
 def assign_rez(generators: pd.DataFrame, gen_info: pd.DataFrame | None = None,
-               seed: pd.DataFrame | None = None) -> pd.DataFrame:
+               seed: pd.DataFrame | None = None, membership: pd.DataFrame | None = None,
+               stations: dict[str, str] | None = None) -> pd.DataFrame:
     """Set REZ / REZ_NAME / REZ_SOURCE for every unit, wind included.
 
-    Precedence: Generation Information where it states a REZ (no edition has a
-    REZ column today), then the seeded workbook's "REZ (Y/N)" + "REZ" columns,
-    otherwise unknown (""). "N"/"Non-REZ" is only ever written when a source
-    says so explicitly: the seed's REZ (Y/N) = "N", or a Gen Info cell reading
-    "Non-REZ". A blank or missing value is unknown, never "outside".
+    Precedence:
+      1. Generation Information where it states a REZ (no edition has a REZ
+         column today) — "geninfo";
+      2. the ELI regional appendices, which list each unit under its REZ or
+         under "Non-REZ" (src/eli_appendix.py) — "eli";
+      3. a unit the appendices don't list, at the same DUDETAILSUMMARY station
+         as units they do list, all in one section — "eli-station"
+         (WANDSF2 from WANDSF1, CLRKCWF2 from CLRKCWF1);
+      4. the seeded workbook's "REZ (Y/N)" + "REZ" columns — "seed";
+      otherwise unknown (""). "N"/"Non-REZ" is only ever written when a source
+    says so explicitly. A blank or missing value is unknown, never "outside".
     """
     out = generators.copy()
     gi = {}
@@ -221,10 +232,23 @@ def assign_rez(generators: pd.DataFrame, gen_info: pd.DataFrame | None = None,
     if seed is not None and "DUID" in seed.columns:
         for r in seed.drop_duplicates(subset="DUID").to_dict("records"):
             sd[str(r["DUID"])] = r
+    eli, by_station = {}, {}
+    if membership is not None and not membership.empty:
+        eli = dict(zip(membership["DUID"].astype(str), membership["REZ_NAME"]))
+        stations = stations or {}
+        sections: dict[str, set[str]] = {}
+        for duid, name in eli.items():
+            if duid in stations:
+                sections.setdefault(stations[duid], set()).add(name)
+        by_station = {st: names.pop() for st, names in sections.items() if len(names) == 1}
 
     rez, names, sources = [], [], []
     for duid in out["DUID"].astype(str):
         result, source = classify_rez_value(gi.get(duid)), "geninfo"
+        if result is None and duid in eli:
+            result, source = classify_rez_value(eli[duid]), "eli"
+        if result is None and (stations or {}).get(duid) in by_station:
+            result, source = classify_rez_value(by_station[stations[duid]]), "eli-station"
         if result is None and duid in sd:
             source = "seed"
             row = sd[duid]
