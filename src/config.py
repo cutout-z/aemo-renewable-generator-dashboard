@@ -67,23 +67,29 @@ NEM_GEN_INFO_BASE_URL = (
     "planning_and_forecasting/generation_information/"
 )
 
-# ELI report chart data — explicit URLs per publication year
-# AEMO changes URL patterns each year, so we maintain an explicit mapping
+# ELI report chart data (location-based projected curtailment). AEMO moved the
+# ELI files under planning_and_forecasting/enhanced-locational-information/<year>/
+# in 2025; src/download_eli.py logs a warning when next year's edition appears.
+ELI_BASE_URL = (
+    "https://www.aemo.com.au/-/media/files/electricity/nem/"
+    "planning_and_forecasting/enhanced-locational-information/"
+)
 ELI_CHART_DATA_URLS = {
-    2025: (
-        "https://aemo.com.au/-/media/files/electricity/nem/"
-        "planning_and_forecasting/inputs-assumptions-methodologies/2025/"
-        "2025-eli-report-chart-data.xlsx"
-    ),
+    2025: ELI_BASE_URL + "2025/2025-eli-report-chart-data.xlsx",
 }
 
-# ELI appendix (REZ forecasts) — explicit URLs
-ELI_APPENDIX_URLS = {
-    2025: (
-        "https://aemo.com.au/-/media/files/electricity/nem/"
-        "planning_and_forecasting/inputs-assumptions-methodologies/2025/"
-        "appendices-to-2025-eli-report.xlsx"
-    ),
+# ELI regional appendices (PDF): REZ membership by DUID and the ISP REZ
+# forecasts. Read by `python -m src.eli_appendix` once per edition; the
+# pipeline uses the data/rez_membership.feather and data/rez_forecasts.feather
+# it writes.
+ELI_REGIONAL_APPENDIX_URLS = {
+    2025: {
+        state: ELI_BASE_URL + f"2025/2025-eli-report-appendix-{part}.pdf"
+        for state, part in {
+            "NSW": "a3-new-south-wales", "QLD": "a4-queensland", "SA": "a5-south-australia",
+            "TAS": "a6-tasmania", "VIC": "a7-victoria",
+        }.items()
+    },
 }
 
 # Actual curtailment: consolidated FY rollup from the credit dashboard pipeline.
