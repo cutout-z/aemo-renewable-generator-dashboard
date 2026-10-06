@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from . import config
+from . import config, source_status
 from .download_generators import fetch_generators
 from .download_mlf import fetch_mlf_data
 from .download_eli import fetch_eli_curtailment
@@ -90,23 +90,8 @@ def run(full_refresh: bool = False, cache_dir: str | None = None,
                 eli_data = pd.DataFrame()
 
     # ── Step 4: REZ forecasts ────────────────────────────────────────────
-    rez_cache = cache_root / Path(config.REZ_FORECAST_CACHE).name
-    if not full_refresh and rez_cache.exists():
-        logger.info("Loading cached REZ forecast data...")
-        rez_data = pd.read_feather(rez_cache)
-    else:
-        try:
-            rez_data = fetch_rez_forecasts(cache_dir)
-            if not rez_data.empty:
-                rez_cache.parent.mkdir(parents=True, exist_ok=True)
-                rez_data.reset_index(drop=True).to_feather(rez_cache)
-        except Exception as e:
-            logger.warning(f"REZ forecast download failed: {e}")
-            if rez_cache.exists():
-                logger.warning("Using cached REZ forecast data after refresh failure")
-                rez_data = pd.read_feather(rez_cache)
-            else:
-                rez_data = pd.DataFrame()
+    # Extracted from the ELI regional appendices by `python -m src.eli_appendix`
+    rez_data = fetch_rez_forecasts(cache_dir)
 
     # ── Step 5: Actual curtailment from credit dashboard ────────────────
     curt_cache = cache_root / Path(config.CURTAILMENT_CACHE).name
@@ -114,18 +99,7 @@ def run(full_refresh: bool = False, cache_dir: str | None = None,
         logger.info("Loading cached actual curtailment data...")
         actual_curtailment = pd.read_feather(curt_cache)
     else:
-        try:
-            actual_curtailment = fetch_curtailment_by_fy(all_duids)
-            if not actual_curtailment.empty:
-                curt_cache.parent.mkdir(parents=True, exist_ok=True)
-                actual_curtailment.reset_index(drop=True).to_feather(curt_cache)
-        except Exception as e:
-            logger.warning(f"Actual curtailment refresh failed: {e}")
-            if curt_cache.exists():
-                logger.warning("Using cached actual curtailment data after refresh failure")
-                actual_curtailment = pd.read_feather(curt_cache)
-            else:
-                actual_curtailment = pd.DataFrame()
+        actual_curtailment = refresh_actual_curtailment(all_duids, cache_root, curt_cache)
 
     # ── Step 6: Build merged summary ─────────────────────────────────────
     summary = build_summary(
@@ -146,6 +120,45 @@ def run(full_refresh: bool = False, cache_dir: str | None = None,
     generate_all_workbooks(summary, output_dir)
 
     logger.info("Done.")
+
+
+ACTUAL_STATUS_KEY = "actual_curtailment"
+
+
+def refresh_actual_curtailment(all_duids: set[str], cache_root: Path,
+                               curt_cache: Path) -> pd.DataFrame:
+    """Fetch the upstream FY rollup; on failure fall back to the cached copy.
+
+    Either way the outcome goes into source_status.json, so a run that
+    republishes cached actuals says so and tests/validate_outputs.py can warn
+    (fresh fallback) or fail (stale or no actuals at all).
+    """
+    previous = source_status.load(cache_root).get(ACTUAL_STATUS_KEY, {})
+    record = {"attempted_at": source_status.now_iso(), "refreshed": False, "error": None,
+              "fetched_at": previous.get("fetched_at"), "fys": previous.get("fys", []),
+              "used_cache": False}
+    try:
+        actual = fetch_curtailment_by_fy(all_duids)
+        value_cols = [c for c in actual.columns if c.startswith("CURTAILMENT_ACTUAL_")]
+        if not value_cols or actual[value_cols].isna().all().all():
+            raise ValueError("upstream rollup has no complete-FY value for any tracked unit")
+        curt_cache.parent.mkdir(parents=True, exist_ok=True)
+        actual.reset_index(drop=True).to_feather(curt_cache)
+        record.update(refreshed=True, fetched_at=record["attempted_at"],
+                      fys=[c.replace("CURTAILMENT_ACTUAL_", "") for c in value_cols])
+    except Exception as e:
+        record["error"] = str(e)
+        if curt_cache.exists():
+            actual = pd.read_feather(curt_cache)
+            record["used_cache"] = True
+            logger.error(f"ACTUAL CURTAILMENT REFRESH FAILED: {e}; republishing the cached "
+                         f"copy (last good fetch {record['fetched_at'] or 'unknown'})")
+        else:
+            actual = pd.DataFrame()
+            logger.error(f"ACTUAL CURTAILMENT REFRESH FAILED: {e}; no cached copy, the "
+                         "actual-curtailment columns are left out")
+    source_status.update(cache_root, ACTUAL_STATUS_KEY, record)
+    return actual
 
 
 def main():

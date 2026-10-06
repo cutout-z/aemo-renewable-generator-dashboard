@@ -1,6 +1,6 @@
 """Configuration for AEMO Solar & Wind Curtailment Dashboard."""
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 # ─── Regions ────────────────────────────────────────────────────────────────
 
@@ -19,11 +19,25 @@ STATE_TO_REGION = {v: k for k, v in REGION_NAMES.items()}
 
 # ─── Financial Year Logic ───────────────────────────────────────────────────
 
-def current_fy_start() -> int:
-    """Return the start calendar year of the current financial year.
+# NEM market time is AEST (UTC+10, no daylight saving, as Australia/Brisbane).
+# The FY rollover is read in it, not in the host's local time: the GitHub runner
+# is UTC (10 hours late), the NAS container's zone is whatever it was built with.
+NEM_TZ = timezone(timedelta(hours=10), "AEST")
+
+
+def nem_now() -> datetime:
+    """The current time in NEM market time (AEST)."""
+    return datetime.now(NEM_TZ)
+
+
+def current_fy_start(now: datetime | None = None) -> int:
+    """Return the start calendar year of the current financial year, in NEM time.
     FY runs July 1 to June 30. E.g. in March 2026 → FY25-26 → returns 2025.
+    A naive `now` is taken to be NEM time already.
     """
-    now = datetime.now()
+    now = now or nem_now()
+    if now.tzinfo is not None:
+        now = now.astimezone(NEM_TZ)
     return now.year if now.month >= 7 else now.year - 1
 
 
@@ -67,24 +81,42 @@ NEM_GEN_INFO_BASE_URL = (
     "planning_and_forecasting/generation_information/"
 )
 
-# ELI report chart data — explicit URLs per publication year
-# AEMO changes URL patterns each year, so we maintain an explicit mapping
+# ELI report chart data (location-based projected curtailment). AEMO moved the
+# ELI files under planning_and_forecasting/enhanced-locational-information/<year>/
+# in 2025; src/download_eli.py logs a warning when next year's edition appears.
+ELI_BASE_URL = (
+    "https://www.aemo.com.au/-/media/files/electricity/nem/"
+    "planning_and_forecasting/enhanced-locational-information/"
+)
+# ELI projected-curtailment horizons, as AEMO's 2025 ELI report states them (executive
+# summary: "near-term (2026 to 2028), and medium-term (2030 to 2035) horizons"; Table 2
+# calls the conditions representative of 2026-2029 and 2031-2035, depending on the speed
+# of development). The page, README and workbooks label the columns with these.
+ELI_HORIZONS = {"NEAR": (2026, 2028), "MED": (2030, 2035)}
+
 ELI_CHART_DATA_URLS = {
-    2025: (
-        "https://aemo.com.au/-/media/files/electricity/nem/"
-        "planning_and_forecasting/inputs-assumptions-methodologies/2025/"
-        "2025-eli-report-chart-data.xlsx"
-    ),
+    2025: ELI_BASE_URL + "2025/2025-eli-report-chart-data.xlsx",
 }
 
-# ELI appendix (REZ forecasts) — explicit URLs
-ELI_APPENDIX_URLS = {
-    2025: (
-        "https://aemo.com.au/-/media/files/electricity/nem/"
-        "planning_and_forecasting/inputs-assumptions-methodologies/2025/"
-        "appendices-to-2025-eli-report.xlsx"
-    ),
+# ELI regional appendices (PDF): REZ membership by DUID and the ISP REZ
+# forecasts. Read by `python -m src.eli_appendix` once per edition; the
+# pipeline uses the data/rez_membership.feather and data/rez_forecasts.feather
+# it writes.
+ELI_REGIONAL_APPENDIX_URLS = {
+    2025: {
+        state: ELI_BASE_URL + f"2025/2025-eli-report-appendix-{part}.pdf"
+        for state, part in {
+            "NSW": "a3-new-south-wales", "QLD": "a4-queensland", "SA": "a5-south-australia",
+            "TAS": "a6-tasmania", "VIC": "a7-victoria",
+        }.items()
+    },
 }
+
+# The REZ curtailment / economic-offloading forecasts in the 2025 ELI appendices are
+# the Final 2024 ISP's (Step Change scenario), as the appendices state; their three
+# years (2025-26 to 2027-28) were forecast in 2024, so the first has since ended.
+ISP_FORECAST_EDITION = "2024 ISP"
+ISP_FORECAST_SCENARIO = "Step Change"
 
 # Actual curtailment: consolidated FY rollup from the credit dashboard pipeline.
 # The credit dashboard computes monthly curtailment per DUID from

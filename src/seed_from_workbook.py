@@ -1,10 +1,16 @@
 """Seed cache files from the local Excel workbook.
 
 Usage:
-    python -m src.seed_from_workbook /path/to/solar-databook.xlsx
+    python -m src.seed_from_workbook /path/to/solar-databook.xlsx --out-dir /tmp/seed
+    python -m src.seed_from_workbook /path/to/solar-databook.xlsx --force   # into data/
 
-This parses the workbook tabs and writes feather cache files so the
-main pipeline can run without downloading from AEMO.
+This parses the workbook tabs and writes feather cache files
+(eli_curtailment, generator_enrichment, eli_per_duid) so the main pipeline
+can run without downloading from AEMO.
+
+It never replaces an existing file unless --force is given, and it never
+writes rez_forecasts.feather or rez_membership.feather: those come from the
+ELI regional appendices (python -m src.eli_appendix).
 """
 
 from __future__ import annotations
@@ -28,46 +34,51 @@ logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
-def seed(workbook_path: str):
-    """Parse the workbook and create cache files."""
+# Written by src/eli_appendix.py from AEMO's appendices; the seed must never replace them
+PROTECTED = frozenset({Path(config.REZ_FORECAST_CACHE).name, "rez_membership.feather"})
+
+
+def _write(df: pd.DataFrame, path: Path) -> None:
+    if path.name in PROTECTED:
+        raise ValueError(f"refusing to write {path.name}: it comes from python -m src.eli_appendix")
+    df.reset_index(drop=True).to_feather(path)
+
+
+def seed(workbook_path: str, out_dir: str | Path | None = None, force: bool = False):
+    """Parse the workbook and create cache files in `out_dir` (default data/).
+
+    Existing files are left alone (exit 1, nothing written) unless `force`.
+    """
     wb_path = Path(workbook_path)
     if not wb_path.exists():
         logger.error(f"Workbook not found: {wb_path}")
         sys.exit(1)
 
-    cache_dir = PROJECT_ROOT / config.DATA_DIR
-    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache_dir = Path(out_dir) if out_dir else PROJECT_ROOT / config.DATA_DIR
 
     xls = pd.ExcelFile(wb_path, engine="openpyxl")
     logger.info(f"Sheets: {xls.sheet_names}")
 
-    # ── ELI Curtailment (Near Term + Medium Term) ────────────────────
-    eli_data = _parse_eli_sheets(xls)
-    if not eli_data.empty:
-        eli_path = PROJECT_ROOT / config.ELI_CURTAILMENT_CACHE
-        eli_data.reset_index(drop=True).to_feather(eli_path)
-        logger.info(f"Seeded ELI curtailment: {len(eli_data)} entries → {eli_path}")
+    outputs = {
+        Path(config.ELI_CURTAILMENT_CACHE).name: ("ELI curtailment", _parse_eli_sheets(xls)),
+        # REZ forecasts are not seeded from the workbook: its transcription had
+        # errors (SA South East offloading 0% vs AEMO's 10/9/9; "-" stored as 0).
+        # They come from the ELI regional appendices: python -m src.eli_appendix
+        "generator_enrichment.feather": ("generator enrichment", _parse_summary_generators(xls)),
+        # Pre-matched ELI curtailment per DUID from the Summary tab
+        "eli_per_duid.feather": ("per-DUID ELI curtailment", _parse_summary_eli(xls)),
+    }
+    outputs = {name: v for name, v in outputs.items() if not v[1].empty}
+    existing = [name for name in outputs if (cache_dir / name).exists()]
+    if existing and not force:
+        logger.error(f"Not overwriting {', '.join(existing)} in {cache_dir}: pass --force "
+                     "to replace them, or --out-dir to seed somewhere else")
+        sys.exit(1)
 
-    # ── REZ Forecasts ────────────────────────────────────────────────
-    rez_data = _parse_rez_sheet(xls)
-    if not rez_data.empty:
-        rez_path = PROJECT_ROOT / config.REZ_FORECAST_CACHE
-        rez_data.reset_index(drop=True).to_feather(rez_path)
-        logger.info(f"Seeded REZ forecasts: {len(rez_data)} entries → {rez_path}")
-
-    # ── Generator enrichment + pre-matched curtailment from Summary tab ─
-    gen_enrich = _parse_summary_generators(xls)
-    if not gen_enrich.empty:
-        enrich_path = PROJECT_ROOT / config.DATA_DIR / "generator_enrichment.feather"
-        gen_enrich.reset_index(drop=True).to_feather(enrich_path)
-        logger.info(f"Seeded generator enrichment: {len(gen_enrich)} entries → {enrich_path}")
-
-    # Pre-matched ELI curtailment per DUID from Summary tab
-    eli_per_duid = _parse_summary_eli(xls)
-    if not eli_per_duid.empty:
-        eli_duid_path = PROJECT_ROOT / config.DATA_DIR / "eli_per_duid.feather"
-        eli_per_duid.reset_index(drop=True).to_feather(eli_duid_path)
-        logger.info(f"Seeded per-DUID ELI curtailment: {len(eli_per_duid)} entries → {eli_duid_path}")
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    for name, (what, df) in outputs.items():
+        _write(df, cache_dir / name)
+        logger.info(f"Seeded {what}: {len(df)} entries → {cache_dir / name}")
 
     logger.info("Seed complete.")
 
@@ -149,129 +160,6 @@ def _parse_curtailment_tab(xls: pd.ExcelFile, sheet_name: str, term: str) -> pd.
 
     result = pd.DataFrame(rows)
     logger.info(f"Parsed {len(result)} entries from '{sheet_name}'")
-    return result
-
-
-def _parse_rez_sheet(xls: pd.ExcelFile) -> pd.DataFrame:
-    """Parse REZ forecast sheet from the workbook."""
-    sheet_name = "REZ forecast"
-    if sheet_name not in xls.sheet_names:
-        logger.warning(f"Sheet '{sheet_name}' not found")
-        return pd.DataFrame()
-
-    df = pd.read_excel(xls, sheet_name=sheet_name, header=None)
-
-    # Find header row with "State" and "REZ"
-    header_idx = None
-    for i in range(min(20, len(df))):
-        row_vals = [str(v).strip().lower() for v in df.iloc[i].tolist()]
-        if "state" in row_vals and "rez" in row_vals:
-            header_idx = i
-            break
-
-    if header_idx is None:
-        logger.warning("No header row found in REZ forecast sheet")
-        return pd.DataFrame()
-
-    headers = [str(v).strip() for v in df.iloc[header_idx].tolist()]
-    data = df.iloc[header_idx + 1:].copy()
-    data.columns = headers
-
-    # Detect section boundaries from the row above headers
-    section_row = [str(v).strip().lower() for v in df.iloc[header_idx - 1].tolist()] if header_idx > 0 else []
-    curtailment_start = None
-    offloading_start = None
-    for idx, val in enumerate(section_row):
-        if "curtailment" in val and curtailment_start is None:
-            curtailment_start = idx
-        if "offloading" in val or "economic" in val:
-            offloading_start = idx
-
-    # Find FY columns and Average columns
-    fy_cols = []
-    avg_cols = []
-    for i, h in enumerate(headers):
-        h_clean = h.strip()
-        if "average" in h_clean.lower() or "avg" in h_clean.lower():
-            avg_cols.append((i, h))
-        elif len(h_clean) >= 5 and "-" in h_clean:
-            parts = h_clean.split("-")
-            if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
-                fy_cols.append((i, h))
-
-    # Split into curtailment and offloading based on section headers
-    curtailment_cols = []
-    offloading_cols = []
-    all_data_cols = fy_cols + avg_cols
-    all_data_cols.sort(key=lambda x: x[0])
-
-    if offloading_start is not None:
-        for idx, h in all_data_cols:
-            if idx < offloading_start:
-                curtailment_cols.append((idx, h))
-            else:
-                offloading_cols.append((idx, h))
-    else:
-        mid = len(all_data_cols) // 2
-        curtailment_cols = all_data_cols[:mid]
-        offloading_cols = all_data_cols[mid:]
-
-    # Parse rows
-    rows = []
-    current_state = ""
-    for _, row in data.iterrows():
-        state_val = row.get("State", "")
-        rez_val = row.get("REZ", "")
-
-        if pd.notna(state_val) and str(state_val).strip():
-            state_str = str(state_val).strip()
-            if any(x in state_str.lower() for x in ["subtotal", "total"]):
-                continue
-            current_state = state_str
-
-        if pd.isna(rez_val) or str(rez_val).strip() == "":
-            continue
-        rez_str = str(rez_val).strip()
-        if any(x in rez_str.lower() for x in ["subtotal", "total"]):
-            continue
-
-        entry = {"STATE": current_state, "REZ_NAME": rez_str}
-
-        # Curtailment values
-        for i, (col_idx, col_name) in enumerate(curtailment_cols):
-            val = pd.to_numeric(row.iloc[col_idx] if col_idx < len(row) else None, errors="coerce")
-            if "average" in col_name.lower():
-                entry["CURTAILMENT_AVG"] = val
-            else:
-                entry[f"CURTAILMENT_FY{i+1}"] = val
-                entry[f"CURTAILMENT_FY{i+1}_LABEL"] = col_name
-
-        # Offloading values
-        off_idx = 0
-        for col_idx, col_name in offloading_cols:
-            val = pd.to_numeric(row.iloc[col_idx] if col_idx < len(row) else None, errors="coerce")
-            if "average" in col_name.lower():
-                entry["OFFLOADING_AVG"] = val
-            else:
-                off_idx += 1
-                entry[f"OFFLOADING_FY{off_idx}"] = val
-                entry[f"OFFLOADING_FY{off_idx}_LABEL"] = col_name
-
-        # Compute averages if not present
-        if "CURTAILMENT_AVG" not in entry:
-            c_vals = [entry.get(f"CURTAILMENT_FY{j+1}") for j in range(3)]
-            c_vals = [v for v in c_vals if pd.notna(v)]
-            entry["CURTAILMENT_AVG"] = sum(c_vals) / len(c_vals) if c_vals else None
-
-        if "OFFLOADING_AVG" not in entry:
-            o_vals = [entry.get(f"OFFLOADING_FY{j+1}") for j in range(3)]
-            o_vals = [v for v in o_vals if pd.notna(v)]
-            entry["OFFLOADING_AVG"] = sum(o_vals) / len(o_vals) if o_vals else None
-
-        rows.append(entry)
-
-    result = pd.DataFrame(rows)
-    logger.info(f"Parsed {len(result)} REZ forecast entries")
     return result
 
 
@@ -421,8 +309,11 @@ def _parse_summary_eli(xls: pd.ExcelFile) -> pd.DataFrame:
 def main():
     parser = argparse.ArgumentParser(description="Seed cache from Excel workbook")
     parser.add_argument("workbook", help="Path to the solar databook Excel file")
+    parser.add_argument("--out-dir", help="Directory to write the cache files to (default: data/)")
+    parser.add_argument("--force", action="store_true",
+                        help="Replace existing cache files (never rez_forecasts / rez_membership)")
     args = parser.parse_args()
-    seed(args.workbook)
+    seed(args.workbook, out_dir=args.out_dir, force=args.force)
 
 
 if __name__ == "__main__":

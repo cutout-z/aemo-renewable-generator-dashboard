@@ -145,7 +145,7 @@
   <div class="card-head">
     <div>
       <h2 class="card-title">Generators</h2>
-      <p class="card-sub max-w-[90ch]">One row per generator. <strong class="font-medium text-ink">Actual</strong> is curtailment achieved in the last completed financial years; <strong class="font-medium text-ink">ELI</strong> and <strong class="font-medium text-ink">ISP</strong> are projections (ISP is forecast per REZ); <strong class="font-medium text-ink">MLF</strong> is the share of the regional price a generator receives. Click a column to sort.</p>
+      <p class="card-sub max-w-[90ch]">One row per generator. The three curtailment families measure different things and are not comparable with each other. <strong class="font-medium text-ink">Actual</strong> is this unit's measured shortfall against the availability it offered, over a full financial year, and includes output it withheld at negative prices (economic curtailment). <strong class="font-medium text-ink">ELI</strong> is AEMO's modelled curtailment of a hypothetical new 300 MW project at the same connection point, from network, system-security and demand limits, with no price-driven bidding. <strong class="font-medium text-ink">ISP</strong> is the 2024 ISP's forecast for the whole REZ: curtailment by transmission congestion, and economic offloading (output reduced on price) separately. <strong class="font-medium text-ink">MLF</strong> is the share of the regional price a generator receives. Hover a column group for its definition; click a column to sort.</p>
     </div>
   </div>
   <div class="flex flex-wrap gap-x-8 gap-y-3 px-5 pb-3 pt-3" id="legends">
@@ -212,7 +212,24 @@
 <script>
 const STATES = {NSW1:'NSW',QLD1:'QLD',VIC1:'VIC',SA1:'SA',TAS1:'TAS'};
 const EXCEL_FILES = {NSW1:'NSW_curtailment.xlsx',QLD1:'QLD_curtailment.xlsx',VIC1:'VIC_curtailment.xlsx',SA1:'SA_curtailment.xlsx',TAS1:'TAS_curtailment.xlsx'};
-const GROUP_LABELS = {actual:'Actual curtailment', eli:'ELI projected', mlf:'Marginal loss factor', 'isp-c':'ISP curtailment forecast', 'isp-o':'ISP offloading forecast'};
+const GROUP_LABELS = {actual:'Actual curtailment', eli:'ELI projected', mlf:'Marginal loss factor', 'isp-c':'ISP curtailment forecast (2024 ISP)', 'isp-o':'ISP offloading forecast (2024 ISP)'};
+// What each family measures (the group header's tooltip). Actual, ELI and ISP are all "curtailment" but
+// three different quantities: a measured shortfall incl. economic curtailment, a modelled marginal-project
+// figure with no price-driven bidding, and a REZ-wide forecast split into congestion and price.
+const GROUP_NOTES = {
+  actual: 'Measured: 1 − energy generated ÷ the availability the unit offered into dispatch, over a full financial year (Generator Credit Dashboard rollup of AEMO dispatch data). Counts every reason output fell short of that availability, including economic curtailment (output withheld at negative prices) as well as network and system-security limits.',
+  eli: 'Modelled by AEMO (2025 ELI report): the share of a hypothetical new 300 MW solar or wind project\'s energy at this connection point that would not be dispatched, because of transmission limits, minimum synchronous units for system security (near term only) and limited demand or export. Excludes negative-price bidding, outages and maintenance. A signal for new connections, not a forecast for this unit.',
+  mlf: 'Marginal loss factor: the share of the regional reference price this generator receives after network losses.',
+  'isp-c': '2024 ISP forecast (Step Change) for the whole REZ: transmission curtailment, the share of the REZ\'s wind and solar energy reduced because of transmission congestion. A REZ figure, not this unit.',
+  'isp-o': '2024 ISP forecast (Step Change) for the whole REZ: economic offloading, the share of the REZ\'s wind and solar energy reduced because of market price (low or negative prices). A REZ figure, not this unit.'
+};
+// The ISP forecasts are the Final 2024 ISP's (Step Change), made in 2024 for 2025-26 to 2027-28. A year
+// that has ended keeps its forecast value; its header's tooltip says the year has ended so it is not read as an outcome.
+const ISP_SOURCE = '2024 ISP, Step Change scenario';
+function fyEnded(label) {                 // '25-26' → true from 1 July 2026, 00:00 AEST (UTC+10)
+  const m = /^(\d\d)-(\d\d)$/.exec(label || '');
+  return !!m && Date.now() >= Date.UTC(2000 + parseInt(m[2], 10), 5, 30, 14);
+}
 
 let allData = [];
 let colDefs = [];  // [{key, label, group}]
@@ -277,7 +294,7 @@ function decMean(raws, shift, dp) {
 function renderLegends() {
   const swatches = (labels) => labels.map((l, i) => `<span class="lg seq-${i}">${l}</span>`).join('');
   document.getElementById('legends').innerHTML =
-    `<div data-heat-legend="loss"><div class="mb-1.5 text-[12px] font-medium text-muted">Share of energy lost: actual, ELI and ISP columns. Stronger fill = more lost</div><div class="flex flex-wrap gap-0.5">${swatches(LOSS_LABELS)}</div></div>` +
+    `<div data-heat-legend="loss"><div class="mb-1.5 text-[12px] font-medium text-muted">Share of energy lost, one scale for actual, ELI and ISP (each a different loss). Stronger fill = more lost</div><div class="flex flex-wrap gap-0.5">${swatches(LOSS_LABELS)}</div></div>` +
     `<div data-heat-legend="mlf"><div class="mb-1.5 text-[12px] font-medium text-muted">MLF, by price lost (1 − MLF). Stronger fill = lower MLF</div><div class="flex flex-wrap gap-0.5">${swatches(MLF_LABELS)}</div></div>` +
     `<div data-heat-legend="na"><div class="mb-1.5 text-[12px] font-medium text-muted">Not available</div><div class="flex items-center gap-2"><span class="lg seq-none na">N/A</span><span class="max-w-[46ch] text-[12px] leading-4 text-faint">No value in the data file. ISP forecasts are made per REZ, so a generator outside a REZ, or whose REZ is unknown, is N/A there.</span></div></div>`;
 }
@@ -303,7 +320,7 @@ function detectColumns(keys, showRegion = activeRegion === 'ALL') {
 
   // ELI projected
   if (keys.includes('ELI_CURTAILMENT_NEAR')) defs.push({key:'ELI_CURTAILMENT_NEAR', label:'Near (26-28)', group:'eli'});
-  if (keys.includes('ELI_CURTAILMENT_MED')) defs.push({key:'ELI_CURTAILMENT_MED', label:'Med (29-35)', group:'eli'});
+  if (keys.includes('ELI_CURTAILMENT_MED')) defs.push({key:'ELI_CURTAILMENT_MED', label:'Med (30-35)', group:'eli'});
 
   // MLF
   keys.filter(k => k.startsWith('MLF_')).sort().forEach(k => {
@@ -398,10 +415,11 @@ function renderStats() {
   const nearRows = rows.filter(r => parseDec(r.ELI_CURTAILMENT_NEAR));
   const nearVals = nearRows.map(r => r.ELI_CURTAILMENT_NEAR);
   const avgNear = nearVals.length ? decMean(nearVals, 2, 1) + '%' : 'N/A';
-  // ELI figures exist for solar farms only today, so a NEM-wide label overstated what the mean covers.
-  // Say which fuels it does cover, from the rows themselves.
+  // ELI figures cover far more solar than wind farms, so a NEM-wide label overstated what the mean
+  // covers. Say which fuels it does cover, and how many of each, from the rows themselves.
   const nearFuels = [...new Set(nearRows.map(r => r.FUEL_TYPE))].sort();
-  const nearScope = nearFuels.length === 1 ? ` · ${nearFuels[0].toLowerCase()} farms only` : '';
+  const nearScope = nearFuels.length === 1 ? ` · ${nearFuels[0].toLowerCase()} farms only`
+    : nearFuels.length ? ' · ' + nearFuels.map(f => `${nearRows.filter(r => r.FUEL_TYPE === f).length} ${f.toLowerCase()}`).join(', ') : '';
 
   const scope = activeRegion === 'ALL' ? 'NEM' : STATES[activeRegion];
   const nOf = (n) => `${n} of ${rows.length} with a value`;
@@ -485,7 +503,24 @@ function naReason(row, d) {
                             : 'N/A: no ISP forecast in outputs/summary.csv for this generator';
   if (d.group === 'eli') return 'N/A: no ELI projection in outputs/summary.csv for this generator';
   if (d.group === 'mlf') return 'N/A: no MLF in outputs/summary.csv for this generator';
-  return 'N/A: no completed-year actual in outputs/summary.csv for this generator';
+  return actualNaReason(row, d.label);
+}
+
+// Why a unit has no actual for a year, from what the csv carries: the rollup's months for that unit
+// and year (ACTUAL_MONTHS_<FY>, empty = no row at all) and the Registration List classification.
+function actualNaReason(row, fy) {
+  const monthsKey = 'ACTUAL_MONTHS_' + fy;
+  if (!(monthsKey in row)) return 'N/A: no full-year actual in outputs/summary.csv for this generator';
+  const months = parseInt(row[monthsKey], 10);
+  if (months > 0 && months < 12) {
+    const fullYear = colDefs.find(c => c.group === 'actual' && c.label < fy && parseInt(row['ACTUAL_MONTHS_' + c.label], 10) >= 12);
+    return `N/A: the upstream rollup has ${months} of 12 months of ${fy} for this generator, and only full years are shown. ` +
+      (fullYear ? `It has all 12 months of ${fullYear.label}, so this is a month with no data in the rollup (for example no output), not a late start`
+                : 'The unit started during the year, or some months have no data in the rollup');
+  }
+  if (/^non-scheduled/i.test(row.CLASSIFICATION || ''))
+    return 'N/A: non-scheduled unit with no row in the upstream rollup. Curtailment is measured against the availability a unit offers into dispatch, and most non-scheduled units make no such offer';
+  return `N/A: no ${fy} row for this generator in the upstream rollup (not operating in ${fy}, or not yet in its data)`;
 }
 
 // The header's second row sticks under the first; measure rather than guess the first row's height.
@@ -507,7 +542,14 @@ function renderTable() {
 
   // Resolve ISP FY labels from the first row that carries one: units whose REZ is unknown have no
   // ISP forecast and no label, so the first row alone could leave the header reading "FY1".
-  colDefs.forEach(d => { const l = d.labelKey && firstLabel(d.labelKey); if (l) d.label = l; });
+  colDefs.forEach(d => {
+    const l = d.labelKey && firstLabel(d.labelKey);
+    if (!l) return;
+    d.label = l;   // the header stays the data's FY label; an ended year says so in its tooltip
+    if (fyEnded(l)) {
+      d.title = `Forecast for FY${l} made in the ${ISP_SOURCE}. That year has ended: this is still the forecast, not an outcome (the Actual columns show outcomes)`;
+    }
+  });
 
   const RIGHT = new Set(['NAMEPLATE_MW']);
   const sortAttr = (d) => d.key === sortCol ? ` aria-sort="${sortDir === 'asc' ? 'ascending' : 'descending'}"` : '';
@@ -530,10 +572,10 @@ function renderTable() {
         metaSeen++;
       }
     } else {
-      groupRow += `<th class="gh fam-${g}" colspan="${span}" scope="colgroup"><span class="fam-dot"></span>${GROUP_LABELS[g] || g}</th>`;
+      groupRow += `<th class="gh fam-${g}" colspan="${span}" scope="colgroup"${GROUP_NOTES[g] ? ` title="${GROUP_NOTES[g]}"` : ''}><span class="fam-dot"></span>${GROUP_LABELS[g] || g}</th>`;
       for (let j = i; j < i + span; j++) {
         const d = colDefs[j];
-        colRow += `<th class="ch r fam-${g}" scope="col" data-col="${d.key}" tabindex="0"${sortAttr(d)}>${d.label}</th>`;
+        colRow += `<th class="ch r fam-${g}" scope="col" data-col="${d.key}" tabindex="0"${d.title ? ` title="${d.title}"` : ''}${sortAttr(d)}>${d.label}</th>`;
       }
     }
     i += span;
@@ -730,7 +772,7 @@ Papa.parse('outputs/summary.csv', {
     renderDownloads();
     document.getElementById('footer').innerHTML = '<span>' + [
       `${allData.length} generators tracked`,
-      'Source: AEMO ELI Report (projections), NEM Generation Information, MMSDM Archive (MLFs); actual curtailment from the Generator Credit Dashboard rollup',
+      'Source: AEMO ELI Report and its regional appendices (projections, REZ membership), NEM Registration and Exemption List (generators), AEMO MLF Tracker (MLFs); actual curtailment from the Generator Credit Dashboard rollup',
       'Two rhythms: actuals monthly (last two completed FYs), ELI and ISP annual (July), MLFs annual (July/Oct)',
       'The CSV carries no publish date; the dashboard refreshes daily and republishes only when values change'
     ].join(' · ') + '</span>';

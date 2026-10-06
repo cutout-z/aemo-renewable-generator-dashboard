@@ -21,8 +21,8 @@ REGION_NAMES = {"NSW1": "NSW", "QLD1": "QLD", "VIC1": "VIC", "SA1": "SA", "TAS1"
 
 # REZ / ELI output contract
 REZ_VALUES = {"Y", "N", ""}
-REZ_SOURCES = {"geninfo", "seed", ""}
-ELI_SOURCES = {"per-DUID", "location", ""}
+REZ_SOURCES = {"geninfo", "eli", "eli-station", "seed", ""}
+ELI_SOURCES = {"per-DUID", "location", "location-name", ""}
 NON_REZ = "Non-REZ"
 
 # Source freshness: the lane runs daily, so a list this old means refreshes keep failing
@@ -30,6 +30,9 @@ MAX_REGISTRATION_AGE_DAYS = 30
 # Recently registered GENERATOR DUIDs (DUDETAILSUMMARY) the Registration List may lack
 MAX_UNLISTED_RECENT_GENERATORS = 3
 GEN_INFO_STALE_DAYS = 122
+# Actual curtailment (the credit dashboard's FY rollup, fetched daily): a run that fell
+# back to the cached copy warns; a last good fetch older than this fails
+MAX_ACTUAL_AGE_DAYS = 35
 
 errors = []
 
@@ -209,6 +212,42 @@ def validate_sources(cache_dir: Path):
         print(f"  WARN: NEM Generation Information edition {edition} is {gi_age} days old")
     else:
         print(f"NEM Generation Information edition: {edition}")
+
+    check_actual_curtailment(status)
+
+    eli = status.get("eli", {})
+    if eli.get("newer_edition_available"):
+        print(f"  WARN: ELI {eli.get('edition', 0) + 1} has been published "
+              f"({eli.get('probed_url')}); the dashboard still uses ELI {eli.get('edition')}")
+    elif eli.get("newer_edition_available") is None and eli:
+        print(f"  WARN: could not check for a newer ELI edition ({eli.get('error')})")
+    elif eli:
+        print(f"ELI edition: {eli.get('edition')} (latest; checked {eli.get('checked_at')})")
+
+
+def check_actual_curtailment(status):
+    """Warn when this run republished cached actuals; fail when they are stale or absent."""
+    rec = status.get("actual_curtailment")
+    if not rec:
+        print("  WARN: no actual-curtailment record in source_status.json (run predates it, "
+              "or the run used the cache without refreshing)")
+        return
+    age = _age_days(rec.get("fetched_at"))
+    fys = ", ".join(rec.get("fys") or []) or "none"
+    if not rec.get("error"):
+        print(f"Actual curtailment: refreshed {age:.1f} days ago ({fys})" if age is not None
+              else f"Actual curtailment: {fys}")
+        return
+    if not rec.get("used_cache"):
+        check(False, f"Actual curtailment refresh failed and there is no cached copy, so the "
+                     f"summary has no actual columns: {rec.get('error')}")
+        return
+    age_txt = f"{age:.0f} days old" if age is not None else "of unknown age"
+    print(f"  WARN: actual curtailment refresh failed ({rec.get('error')}); this run "
+          f"republished the cached copy, {age_txt} ({fys})")
+    check(age is not None and age <= MAX_ACTUAL_AGE_DAYS,
+          f"Actual curtailment cache is {age_txt} (> {MAX_ACTUAL_AGE_DAYS} days) and the "
+          f"upstream refresh keeps failing: {rec.get('error')}")
 
 
 def main(argv=None):

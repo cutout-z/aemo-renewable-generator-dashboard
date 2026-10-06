@@ -131,6 +131,25 @@ def recent_generators(dud: pd.DataFrame, today: date | None = None,
     return first[first["FIRST_START"] >= cutoff].reset_index(drop=True)
 
 
+def station_ids(dud: pd.DataFrame) -> dict[str, str]:
+    """DUID → STATIONID from each DUID's latest record (units of one site share it)."""
+    latest = dud.sort_values("START_DATE").drop_duplicates(subset="DUID", keep="last")
+    ids = latest.set_index(latest["DUID"].str.strip())["STATIONID"].astype(str).str.strip()
+    return {d: s for d, s in ids.items() if s}
+
+
+def load_cached(cache_path: Path) -> pd.DataFrame | None:
+    """The DUDETAILSUMMARY archive cached by the last cross-check, if any."""
+    path = Path(cache_path) / CACHE_FILE
+    if not path.exists():
+        return None
+    try:
+        return parse_dudetailsummary(path.read_bytes())
+    except (ValueError, zipfile.BadZipFile) as e:
+        logger.warning(f"Cached DUDETAILSUMMARY unreadable ({e})")
+        return None
+
+
 def missing_from_registration(dud: pd.DataFrame, registered_duids: set[str],
                               today: date | None = None,
                               months: int = RECENT_MONTHS) -> pd.DataFrame:
