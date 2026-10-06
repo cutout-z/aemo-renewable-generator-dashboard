@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -121,6 +122,14 @@ def _fill_eli_from_location(summary: pd.DataFrame, eli: pd.DataFrame) -> pd.Data
     is used; otherwise the location must have a single row (several voltages and
     no exact voltage = ambiguous, left empty). Wind farms take the WIND columns,
     solar farms the SOLAR columns. ELI_SOURCE = "location" where filled.
+
+    A unit with no LOCATION (every wind farm: the seed covers solar only) is
+    matched by name instead: if exactly one ELI location in its region appears
+    as a whole word in its PROJECT_NAME (Ararat Wind Farm → Ararat, Bulgana
+    Green Power Hub → Bulgana), that location is used, same voltage rules.
+    ELI_SOURCE = "location-name". On the 21 seeded solar farms this rule
+    fires for, it picks the seeded location for 20; the 21st (Stubbo) now has
+    its own ELI location where the seed used neighbouring Beryl.
     """
     result = summary.copy()
     if "LOCATION" not in result.columns or "LOCATION" not in eli.columns:
@@ -137,12 +146,18 @@ def _fill_eli_from_location(summary: pd.DataFrame, eli: pd.DataFrame) -> pd.Data
     region_col = "STATE" if "STATE" in result.columns else "REGIONID"
     filled = ambiguous = 0
     for idx, row in result.iterrows():
-        if row["ELI_SOURCE"] or pd.isna(row.get("LOCATION")) or not str(row["LOCATION"]).strip():
+        if row["ELI_SOURCE"]:
             continue
         fuel = str(row.get("FUEL_TYPE", "")).upper()
         if fuel not in ("SOLAR", "WIND"):
             continue
-        rows = by_place.get((str(row["LOCATION"]).strip().lower(), _norm_region(row.get(region_col))))
+        region = _norm_region(row.get(region_col))
+        location, source = row.get("LOCATION"), "location"
+        if pd.isna(location) or not str(location).strip():
+            location, source = _location_from_name(row.get("PROJECT_NAME"), region, by_place), "location-name"
+            if location is None:
+                continue
+        rows = by_place.get((str(location).strip().lower(), region))
         if rows is None:
             continue
         volt = _norm_volt(row.get("VOLTAGE_KV"))
@@ -159,12 +174,22 @@ def _fill_eli_from_location(summary: pd.DataFrame, eli: pd.DataFrame) -> pd.Data
             continue
         for col, v in values.items():
             result.at[idx, col] = v
-        result.at[idx, "ELI_SOURCE"] = "location"
+        result.at[idx, "ELI_SOURCE"] = source
         filled += 1
 
     logger.info(f"Location-based ELI filled {filled} unit(s)"
                 + (f"; {ambiguous} ambiguous (several voltages, none matching)" if ambiguous else ""))
     return result
+
+
+def _location_from_name(name, region: str, by_place: dict) -> str | None:
+    """The one ELI location in `region` named as a whole word in `name`, else None."""
+    text = str(name or "").lower()
+    if not text.strip():
+        return None
+    hits = {loc for loc, reg in by_place if reg == region
+            and re.search(r"\b" + re.escape(loc) + r"\b", text)}
+    return hits.pop() if len(hits) == 1 else None
 
 
 def _log_eli_coverage(summary: pd.DataFrame) -> None:

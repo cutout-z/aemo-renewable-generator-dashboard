@@ -8,6 +8,7 @@ import pytest
 from src import download_generators as dg
 from src import eli_appendix as ea
 from src.download_rez import fetch_rez_forecasts
+from src.merge import _fill_eli_from_location
 
 # Shapes copied from the 2025 appendices: the contents page, a normal forecast
 # table, a "-" year (no VRE projected), the QLD layout that wraps "Step Change"
@@ -130,3 +131,35 @@ def test_station_split_across_sections_is_not_inherited():
     out = dg.assign_rez(_gens("A3"), membership=membership,
                         stations={"A1": "ST", "A2": "ST", "A3": "ST"}).iloc[0]
     assert (out["REZ"], out["REZ_SOURCE"]) == ("", "")
+
+
+ELI = pd.DataFrame({
+    "LOCATION": ["Ararat", "Mortlake", "Mortlake", "Ross"],
+    "VOLTAGE_KV": [220, 500, 220, 275],
+    "REGION": ["VIC", "VIC", "VIC", "QLD"],
+    "SOLAR_CURTAILMENT_NEAR": [0.46, 0.2, 0.21, 0.1], "WIND_CURTAILMENT_NEAR": [0.33, 0.19, 0.18, 0.05],
+    "SOLAR_CURTAILMENT_MED": [0.06, 0.1, 0.11, 0.01], "WIND_CURTAILMENT_MED": [0.06, 0.09, 0.08, 0.0],
+})
+
+
+def test_units_without_a_location_are_matched_by_name():
+    summary = pd.DataFrame({
+        "DUID": ["ARWF1", "MRTLSWF1", "RRSF1", "OTHERWF1", "ARSEED1"],
+        "PROJECT_NAME": ["Ararat Wind Farm", "Mortlake South Wind Farm", "Ross River Solar Farm",
+                         "Rossmore Wind Farm", "Ararat Solar"],
+        "LOCATION": [None, None, None, None, "Ross"],
+        "VOLTAGE_KV": [None, None, None, None, 275],
+        "STATE": ["VIC", "VIC", "QLD", "VIC", "QLD"],
+        "FUEL_TYPE": ["Wind", "Wind", "Solar", "Wind", "Solar"],
+        "ELI_CURTAILMENT_NEAR": [float("nan")] * 5, "ELI_CURTAILMENT_MED": [float("nan")] * 5,
+        "ELI_SOURCE": [""] * 5,
+    })
+    out = _fill_eli_from_location(summary, ELI).set_index("DUID")
+    assert out.loc["ARWF1", "ELI_SOURCE"] == "location-name"
+    assert out.loc["ARWF1", "ELI_CURTAILMENT_NEAR"] == 0.33          # the WIND column
+    # Mortlake has two voltages and the unit has none: ambiguous, left empty
+    assert out.loc["MRTLSWF1", "ELI_SOURCE"] == ""
+    assert out.loc["RRSF1", "ELI_CURTAILMENT_NEAR"] == 0.1           # whole word "Ross"
+    assert out.loc["OTHERWF1", "ELI_SOURCE"] == ""                   # "Rossmore" is not "Ross"
+    # A seeded LOCATION is used as before, not the name
+    assert out.loc["ARSEED1", "ELI_SOURCE"] == "location"
