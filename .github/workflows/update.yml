@@ -6,9 +6,11 @@ on:
   workflow_dispatch:
     inputs:
       full_refresh:
-        description: 'Re-fetch all data (ignore feather caches)'
+        # Default true: the NAS lane (deploy/run-update.sh) always runs --full-refresh, and a
+        # cached run would republish feather caches the daily lane has since replaced.
+        description: 'Re-fetch all data (ignore feather caches), as the NAS lane does'
         required: false
-        default: 'false'
+        default: 'true'
 
 permissions:
   contents: write

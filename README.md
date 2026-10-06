@@ -160,7 +160,7 @@ Production updates run on the **NAS runner** (QNAP `ai-wif-runner` container) vi
 - The lane refreshes generator listing, MLF feed, ELI/REZ source data, and the Credit Dashboard curtailment rollup.
 - If AEMO ELI/REZ workbook URLs fail, the pipeline falls back to cached source snapshots rather than dropping projected-curtailment or REZ forecast columns.
 - The lane commits as `aemo-nas-bot` and publishes only when canonical `outputs/summary.csv` changes, so daily workbook/cache regeneration does not create noisy commits.
-- GitHub Actions is kept as a manual verification/fallback runner with optional `full_refresh`.
+- GitHub Actions is kept as a manual verification/fallback runner. Its `full_refresh` input defaults to `true`, matching the NAS lane (`PIPELINE_ARGS` defaults to `--full-refresh`); set it to `false` only to rebuild outputs from the committed caches.
 - GitHub Pages deploys on those pushes.
 
 *Historical:* this lane ran on a Hetzner VPS under the `aemo-renewable-generator-dashboard.timer` systemd timer before the 2026-09 NAS migration. That setup is retired and its unit files were deleted in the same cleanup.
