@@ -44,8 +44,10 @@ Values are in [0, 1]. Partial FYs (`months_covered < 12`) are excluded from the 
 
 Per the AEMO ELI report, curtailment projections are based on the introduction of a hypothetical 100 MW generator at each connection point. They represent the proportion of energy that would be curtailed due to network constraints.
 
-- **Near term**: Based on current system operating conditions (2026-28 horizon)
-- **Medium term**: Based on projected future system conditions including committed network augmentations (2030-35 horizon)
+- **Near term (2026-28)**: operating conditions before the key ISP transmission is built: committed augmentations only, minimum synchronous-unit requirements for system security in force
+- **Medium term (2030-35)**: once that transmission is built (committed, anticipated and actionable projects advised to commission before 2031) and system security limits are resolved
+
+These are the horizons the 2025 ELI report's executive summary gives; its Table 2 calls the conditions representative of 2026-2029 and 2031-2035, depending on the speed of development. The page labels the columns Near (26-28) and Med (30-35), the workbooks ELI Near Term (2026-28) and ELI Med Term (2030-35).
 
 These are projections, not actuals. They indicate the *risk* of curtailment at each connection point.
 

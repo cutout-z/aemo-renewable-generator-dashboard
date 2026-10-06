@@ -303,7 +303,7 @@ function detectColumns(keys, showRegion = activeRegion === 'ALL') {
 
   // ELI projected
   if (keys.includes('ELI_CURTAILMENT_NEAR')) defs.push({key:'ELI_CURTAILMENT_NEAR', label:'Near (26-28)', group:'eli'});
-  if (keys.includes('ELI_CURTAILMENT_MED')) defs.push({key:'ELI_CURTAILMENT_MED', label:'Med (29-35)', group:'eli'});
+  if (keys.includes('ELI_CURTAILMENT_MED')) defs.push({key:'ELI_CURTAILMENT_MED', label:'Med (30-35)', group:'eli'});
 
   // MLF
   keys.filter(k => k.startsWith('MLF_')).sort().forEach(k => {

@@ -1,8 +1,8 @@
 """Download and parse AEMO Enhanced Locational Information (ELI) report chart data.
 
-The ELI report contains projected curtailment by connection point for:
-- Near term (next 2-3 years): curtailment % at each connection point
-- Medium term (5-10 years): curtailment % at each connection point
+The ELI report contains projected curtailment by connection point for two
+horizons (config.ELI_HORIZONS; 2025 report: near term 2026-28, medium term
+2030-35), for a hypothetical 300 MW solar or wind project at each location.
 """
 
 from __future__ import annotations

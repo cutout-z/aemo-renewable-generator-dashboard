@@ -211,10 +211,11 @@ def _get_column_spec(data: pd.DataFrame) -> list[tuple[str, str]]:
             spec.append((col, label))
 
     # Add ELI projected curtailment
+    horizon = {t: f"{a}-{b % 100:02d}" for t, (a, b) in config.ELI_HORIZONS.items()}
     if "ELI_CURTAILMENT_NEAR" in data.columns:
-        spec.append(("ELI_CURTAILMENT_NEAR", "ELI Near Term"))
+        spec.append(("ELI_CURTAILMENT_NEAR", f"ELI Near Term ({horizon['NEAR']})"))
     if "ELI_CURTAILMENT_MED" in data.columns:
-        spec.append(("ELI_CURTAILMENT_MED", "ELI Med Term"))
+        spec.append(("ELI_CURTAILMENT_MED", f"ELI Med Term ({horizon['MED']})"))
     if "ELI_SOURCE" in data.columns:
         spec.append(("ELI_SOURCE", "ELI Source"))
 

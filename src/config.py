@@ -88,6 +88,12 @@ ELI_BASE_URL = (
     "https://www.aemo.com.au/-/media/files/electricity/nem/"
     "planning_and_forecasting/enhanced-locational-information/"
 )
+# ELI projected-curtailment horizons, as AEMO's 2025 ELI report states them (executive
+# summary: "near-term (2026 to 2028), and medium-term (2030 to 2035) horizons"; Table 2
+# calls the conditions representative of 2026-2029 and 2031-2035, depending on the speed
+# of development). The page, README and workbooks label the columns with these.
+ELI_HORIZONS = {"NEAR": (2026, 2028), "MED": (2030, 2035)}
+
 ELI_CHART_DATA_URLS = {
     2025: ELI_BASE_URL + "2025/2025-eli-report-chart-data.xlsx",
 }
