@@ -120,7 +120,9 @@ def expected_tiles(scope: str) -> list[list[str]]:
     near_rows = [r for r in base if num(r["ELI_CURTAILMENT_NEAR"]) is not None]
     near = [num(r["ELI_CURTAILMENT_NEAR"]) for r in near_rows]
     near_fuels = sorted({r["FUEL_TYPE"] for r in near_rows})
-    near_scope = f" · {near_fuels[0].lower()} farms only" if len(near_fuels) == 1 else ""
+    near_scope = (f" · {near_fuels[0].lower()} farms only" if len(near_fuels) == 1 else
+                  " · " + ", ".join(f"{sum(r['FUEL_TYPE'] == f for r in near_rows)} {f.lower()}"
+                                    for f in near_fuels) if near_fuels else "")
     n_of = lambda k: f"{k} of {n} with a value" if k else "none with a value"
     where = "NEM" if scope == "ALL" else STATES[scope]
     return [
