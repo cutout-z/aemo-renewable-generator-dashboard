@@ -48,3 +48,7 @@ jobs:
           git add outputs/ data/*.feather
           git diff --staged --quiet || git commit -m "Update curtailment data"
           git push
+
+      # Last, after the push: red while a newer ELI edition is confirmed but not wired in
+      - name: Post-publish check
+        run: python -m src.post_publish_check

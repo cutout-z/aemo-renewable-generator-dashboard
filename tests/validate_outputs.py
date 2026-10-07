@@ -12,6 +12,10 @@ from pathlib import Path
 
 import pandas as pd
 
+# Run as a script from the repo root (python tests/validate_outputs.py): make `src` importable
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.post_publish_check import newer_edition_message  # noqa: E402
+
 OUTPUTS_DIR = Path(__file__).parent.parent / "outputs"
 CACHE_DIR = Path(__file__).parent.parent / "data"
 STATUS_FILE = "source_status.json"
@@ -268,14 +272,17 @@ def expected_eli_edition(now=None):
 
 
 def check_eli(eli, now=None):
-    """Newer ELI edition (warn), calendar backstop (warn), blind probe (fail)."""
+    """Newer ELI edition (warn here; src.post_publish_check fails the lane after publishing),
+    calendar backstop (warn), blind probe (fail)."""
     if not eli:
         print("  WARN: no ELI record in source_status.json (the run did not refresh ELI)")
         return
     edition, newer = eli.get("edition"), eli.get("newer_edition_available")
     if newer:
-        print(f"  WARN: ELI {(edition or 0) + 1} has been published "
-              f"({eli.get('probed_url')}); the dashboard still uses ELI {edition}")
+        # Decision 6(b): the lane goes red, but only after this run has published its other
+        # updates (MLF, actuals, generator list); failing here would hold them back
+        print(f"  WARN: {newer_edition_message(eli)}. The lane fails after publishing "
+              "(python -m src.post_publish_check) until this is done")
     elif newer is None:
         print(f"  WARN: could not check for a newer ELI edition ({eli.get('error')})")
     else:

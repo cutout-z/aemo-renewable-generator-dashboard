@@ -10,6 +10,15 @@ COMMIT_MESSAGE_PREFIX="${COMMIT_MESSAGE_PREFIX:-Update renewable generator dashb
 
 cd "${APP_DIR}"
 
+# Every normal exit path ends here (a failed step exits earlier, under set -e). Checks that
+# must turn the lane red without holding back this run's publish (a confirmed newer ELI
+# edition, decision 6(b)) run after any push.
+finish() {
+  local rc=0
+  "${PYTHON}" -m src.post_publish_check || rc=$?
+  exit "${rc}"
+}
+
 git fetch origin main
 git checkout main
 if ! git pull --ff-only origin main; then
@@ -34,13 +43,13 @@ if [[ -s "${before_summary}" ]] && cmp -s "${before_summary}" outputs/summary.cs
   git restore --staged --worktree -- outputs/ data/*.feather
   rm -f "${before_summary}"
   echo "No canonical summary.csv changes; skipping workbook/cache-only publish noise."
-  exit 0
+  finish
 fi
 rm -f "${before_summary}"
 
 if git diff --cached --quiet; then
   echo "No publishable output changes."
-  exit 0
+  finish
 fi
 
 git config user.name "${GIT_AUTHOR_NAME:-aemo-nas-bot}"
@@ -52,3 +61,5 @@ if [[ "${PUSH_CHANGES}" == "1" ]]; then
 else
   echo "PUSH_CHANGES=0; commit created but not pushed."
 fi
+
+finish

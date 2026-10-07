@@ -40,6 +40,11 @@ then read from the cache (if parsing or the first download fails, the last
 fetched by the lane at all, but come from the committed `rez_*.feather` files
 built by hand with `python -m src.eli_appendix`.
 
+Every normal exit of `deploy/run-update.sh` (after the push, and on the no-change exits)
+runs `python -m src.post_publish_check` last. It exits non-zero while the ELI probe has
+confirmed a newer edition than the one wired in, so the lane is red but the run's other
+updates are still published; its message says how to wire the edition in.
+
 ## Env
 
 `deploy/env.example` documents the settings the lane injects (`APP_DIR`,
