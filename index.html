@@ -145,7 +145,10 @@
   <div class="card-head">
     <div>
       <h2 class="card-title">Generators</h2>
-      <p class="card-sub max-w-[90ch]">One row per generator. The three curtailment families measure different things and are not comparable with each other. <strong class="font-medium text-ink">Actual</strong> is this unit's measured shortfall against the availability it offered, over a full financial year, and includes output it withheld at negative prices (economic curtailment). <strong class="font-medium text-ink">ELI</strong> is AEMO's modelled curtailment of a hypothetical new 300 MW project at the same connection point, from network, system-security and demand limits, with no price-driven bidding. <strong class="font-medium text-ink">ISP</strong> is the 2024 ISP's forecast for the whole REZ: curtailment by transmission congestion, and economic offloading (output reduced on price) separately. <strong class="font-medium text-ink">MLF</strong> is the share of the regional price a generator receives. Hover a column group for its definition; click a column to sort.</p>
+      <p class="card-sub max-w-[90ch]">One row per generator. The three curtailment families measure different things and are not comparable with each other. <strong class="font-medium text-ink">Actual</strong> is this unit's measured shortfall against the availability it offered, over a full financial year, and includes output it withheld at negative prices (economic curtailment). <strong class="font-medium text-ink">ELI</strong> is AEMO's modelled curtailment of a hypothetical new 300 MW project at the same connection point, from network, system-security and demand limits, with no price-driven bidding. <strong class="font-medium text-ink">ISP</strong> is the <span data-isp-edition>2024 ISP</span>'s forecast for the whole REZ: curtailment by transmission congestion, and economic offloading (output reduced on price) separately. <strong class="font-medium text-ink">MLF</strong> is the share of the regional price a generator receives. Hover a column group for its definition; click a column to sort.</p>
+      <!-- Shown while the data's ISP_EDITION is one AEMO has since replaced (ISP_SUPERSEDED below); the
+           served HTML carries it so the shell and the loaded page have the same height. -->
+      <p class="card-sub mt-2 max-w-[90ch]" id="ispNote"><strong class="font-medium text-ink">ISP forecasts superseded.</strong> The ISP columns are the <span data-isp-edition>2024 ISP</span>'s forecasts, superseded by <span data-isp-superseded-by>AEMO's 2026 ISP (published 25 June 2026)</span>. These figures come from the <span data-eli-edition>2025</span> ELI regional appendices and change only when a new ELI edition republishes them.</p>
     </div>
   </div>
   <div class="flex flex-wrap gap-x-8 gap-y-3 px-5 pb-3 pt-3" id="legends">
@@ -225,13 +228,40 @@ const GROUP_NOTES = {
 };
 // The ISP forecasts are the Final 2024 ISP's (Step Change), made in 2024 for 2025-26 to 2027-28. A year
 // that has ended keeps its forecast value; its header's tooltip says the year has ended so it is not read as an outcome.
-const ISP_SOURCE = '2024 ISP, Step Change scenario';
+let ISP_SOURCE = '2024 ISP, Step Change scenario';
+// ISP editions AEMO has since replaced, and by what. The forecasts reach this page only through the ELI
+// regional appendices, so they stay on an old ISP until a new ELI edition republishes them; the note says so.
+const ISP_SUPERSEDED = {'2024 ISP': "AEMO's 2026 ISP (published 25 June 2026)"};
+// Edition labels are read from the data (ELI_EDITION, ISP_EDITION in summary.csv, written by the pipeline
+// from the files themselves), so a new ELI edition relabels the page without hand edits. The literals
+// above are what the served HTML says before the data loads, and the fallback for a CSV without the columns.
+function applyEditions(rows) {
+  const pick = (k) => { const r = rows.find(r => String(r[k] || '').trim()); return r ? String(r[k]).trim() : null; };
+  const eli = pick('ELI_EDITION') || '2025';
+  const isp = pick('ISP_EDITION') || '2024 ISP';
+  const tag = ISP_SUPERSEDED[isp] ? `${isp}, superseded` : isp;   // the group header sits on the columns
+  GROUP_LABELS['isp-c'] = `ISP curtailment forecast (${tag})`;
+  GROUP_LABELS['isp-o'] = `ISP offloading forecast (${tag})`;
+  GROUP_NOTES.eli = GROUP_NOTES.eli.replace(/\(\d{4} ELI report\)/, `(${eli} ELI report)`);
+  const was = ISP_SUPERSEDED[isp] ? ` Superseded by ${ISP_SUPERSEDED[isp]}; these figures change only when a new ELI edition republishes them.` : '';
+  ['isp-c', 'isp-o'].forEach(g => {
+    GROUP_NOTES[g] = GROUP_NOTES[g].replace(/^\d{4} ISP forecast/, `${isp} forecast`).replace(/ Superseded by .*$/, '') + was;
+  });
+  ISP_SOURCE = `${isp}, Step Change scenario`;
+  document.querySelectorAll('[data-isp-edition]').forEach(e => { e.textContent = isp; });
+  document.querySelectorAll('[data-eli-edition]').forEach(e => { e.textContent = eli; });
+  const note = document.getElementById('ispNote');
+  if (ISP_SUPERSEDED[isp]) document.querySelector('[data-isp-superseded-by]').textContent = ISP_SUPERSEDED[isp];
+  note.style.display = ISP_SUPERSEDED[isp] ? '' : 'none';
+  return {eli, isp};
+}
 function fyEnded(label) {                 // '25-26' → true from 1 July 2026, 00:00 AEST (UTC+10)
   const m = /^(\d\d)-(\d\d)$/.exec(label || '');
   return !!m && Date.now() >= Date.UTC(2000 + parseInt(m[2], 10), 5, 30, 14);
 }
 
 let allData = [];
+let EDITIONS = {eli: '2025', isp: '2024 ISP'};  // replaced from the data on load (applyEditions)
 let colDefs = [];  // [{key, label, group}]
 let activeRegion = 'ALL';
 let sortCol = null;
@@ -766,6 +796,7 @@ Papa.parse('outputs/summary.csv', {
     // A 404 page or an empty file parses "successfully"; only a table with a DUID column is data.
     if (!results.data.length || !('DUID' in results.data[0])) return showLoadError();
     allData = results.data;
+    EDITIONS = applyEditions(allData);
     sortCol = 'ELI_CURTAILMENT_NEAR';
     sortDir = 'desc';
     renderAll();

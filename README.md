@@ -13,7 +13,7 @@ For every utility-scale solar and wind farm in the NEM:
 | **Actual curtailment** | Last 2 completed FYs, sourced from the credit dashboard | Monthly |
 | **ELI projected curtailment** | Near-term (2026-28) and medium-term (2030-35) projections | Annual (July) |
 | **Marginal loss factors** | Last 2 actual FYs + current year draft | Annual (July/Oct) |
-| **ISP curtailment forecast** | The Final 2024 ISP's forecast (Step Change) for 2025-26 to 2027-28 + average, by REZ | With each ELI edition (July) |
+| **ISP curtailment forecast** | The Final 2024 ISP's forecast (Step Change) for 2025-26 to 2027-28 + average, by REZ. Superseded by AEMO's 2026 ISP (25 June 2026); see below | With each ELI edition (July) |
 | **ISP economic offloading** | Same source and years | With each ELI edition (July) |
 
 ## Data sources
@@ -101,6 +101,8 @@ From the "VRE curtailment and economic offloading – ISP forecast" table in eac
 - **Economic offloading** (the ISP's "economic spill"): generation reduces output because of market price
 
 The forecasts are the Final 2024 ISP's (Step Change scenario), as the 2025 ELI appendices state; they were made in 2024 for 2025-26, 2026-27 and 2027-28. 2025-26 has since ended: its value is still the 2024 forecast, not an outcome, the page's ISP group headers say "(2024 ISP)" and an ended year's column header has a tooltip saying so (the Actual columns carry outcomes). The values are not relabelled or replaced; they change when a new ELI edition republishes newer ISP forecasts.
+
+**The 2024 ISP has been superseded.** AEMO published the 2026 ISP on 25 June 2026. These figures come from the 2025 ELI regional appendices and change only when a new ELI edition republishes them; the dashboard does not read the ISP itself (ingesting the 2026 ISP directly would be a new source). The page says so in a note above the table and marks the ISP group headers "(2024 ISP, superseded)". The note is driven by `ISP_SUPERSEDED` in `index.html` and the data's `ISP_EDITION`, so it disappears once the data carries a newer ISP edition.
 
 These are forecast at the REZ level and mapped to individual farms by REZ membership
 (joined on `REZ_NAME`). Units outside a REZ, or whose REZ is unknown, show N/A.
