@@ -43,7 +43,31 @@ def fetch_curtailment_by_fy(generator_duids: set[str], now=None) -> pd.DataFrame
     resp.raise_for_status()
     df = pd.read_csv(StringIO(resp.text))
     logger.info(f"Fetched {len(df)} DUID×FY rows from credit dashboard")
-    return reshape(df, generator_duids, select_fys(df, now=now))
+    result = reshape(df, generator_duids, select_fys(df, now=now))
+    # How current the upstream content is (a fetch can succeed while the credit pipeline has
+    # stalled and Pages keeps serving an old CSV); src/main.py records it in source_status.json
+    result.attrs["upstream_last_month"] = upstream_last_month(df)
+    return result
+
+
+def upstream_last_month(df: pd.DataFrame) -> str | None:
+    """The newest month the rollup has data for, as 'YYYY-MM' (None if it cannot tell).
+
+    Read from the rollup's last_month column; failing that, from the latest FY's
+    largest months_covered (a FY starts in July).
+    """
+    if "last_month" in df.columns:
+        months = df["last_month"].dropna().astype(str).str.strip()
+        months = months[months.str.fullmatch(r"\d{4}-\d{2}")]
+        if len(months):
+            return months.max()
+    if {"fy_start", "months_covered"} <= set(df.columns) and len(df):
+        fy = int(df["fy_start"].max())
+        covered = int(df.loc[df["fy_start"] == fy, "months_covered"].max())
+        if covered >= 1:
+            index = 6 + covered - 1          # July = month index 6 (0-based)
+            return f"{fy + index // 12}-{index % 12 + 1:02d}"
+    return None
 
 
 def select_fys(df: pd.DataFrame, now=None, n: int = N_FYS) -> list[int]:

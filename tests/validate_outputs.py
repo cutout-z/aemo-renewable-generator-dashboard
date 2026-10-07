@@ -44,6 +44,9 @@ NEM_TZ = timezone(timedelta(hours=10))
 # Actual curtailment (the credit dashboard's FY rollup, fetched daily): a run that fell
 # back to the cached copy warns; a last good fetch older than this fails
 MAX_ACTUAL_AGE_DAYS = 35
+# The credit rollup's newest month (its own content, not our fetch): it must have ended
+# within this many days, allowing for nemweb lag plus a monthly lane (S3-4)
+MAX_UPSTREAM_MONTH_AGE_DAYS = 75
 
 errors = []
 
@@ -369,6 +372,29 @@ def check_mlf(status, now=None):
         print(f"MLF: newest final year {newest} (tracker fetched {age_txt})")
 
 
+def month_end_age_days(month, now=None):
+    """Days since the end of 'YYYY-MM' (None if unparseable)."""
+    try:
+        year, mon = (int(x) for x in str(month).split("-"))
+        end = datetime(year + mon // 12, mon % 12 + 1, 1, tzinfo=NEM_TZ)
+    except (ValueError, TypeError):
+        return None
+    return ((now or datetime.now(timezone.utc)) - end).total_seconds() / 86400
+
+
+def check_upstream_month(rec, now=None):
+    """Fail when the credit rollup's newest month ended too long ago, even if our fetch worked."""
+    month = rec.get("upstream_last_month")
+    age = month_end_age_days(month, now)
+    if age is None:
+        print("  WARN: the actual-curtailment record has no upstream newest month (run predates it)")
+        return
+    print(f"Actual curtailment upstream: data to {month} (ended {age:.0f} days ago)")
+    check(age <= MAX_UPSTREAM_MONTH_AGE_DAYS,
+          f"The credit dashboard's curtailment rollup ends at {month}, {age:.0f} days ago "
+          f"(> {MAX_UPSTREAM_MONTH_AGE_DAYS}): its pipeline has stalled, so the actuals are not current")
+
+
 def check_actual_curtailment(status):
     """Warn when this run republished cached actuals; fail when they are stale or absent."""
     rec = status.get("actual_curtailment")
@@ -376,6 +402,7 @@ def check_actual_curtailment(status):
         print("  WARN: no actual-curtailment record in source_status.json (run predates it, "
               "or the run used the cache without refreshing)")
         return
+    check_upstream_month(rec)
     age = _age_days(rec.get("fetched_at"))
     fys = ", ".join(rec.get("fys") or []) or "none"
     if not rec.get("error"):

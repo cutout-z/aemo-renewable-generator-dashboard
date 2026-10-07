@@ -75,3 +75,50 @@ def test_validator_fails_with_no_actuals_at_all(tmp_path):
 
 def test_validator_passes_a_good_refresh(tmp_path):
     assert _run(tmp_path, _summary(), _status() | {"actual_curtailment": _actual(0)}) == []
+
+
+# ── S3-4: the upstream rollup's own freshness ──────────────────────────────
+
+def _month_ago(days):
+    """'YYYY-MM' of the month that ended about `days` days ago."""
+    end = datetime.now(timezone.utc) - timedelta(days=days)
+    first = end.replace(day=1) - timedelta(days=1)   # a day in the month before `end`'s month
+    return f"{first.year}-{first.month:02d}"
+
+
+def test_success_records_the_upstream_month(tmp_path, monkeypatch):
+    def fetch(duids):
+        df = pd.DataFrame({"DUID": ["AAASF1"], "CURTAILMENT_ACTUAL_FY24-25": [0.1]})
+        df.attrs["upstream_last_month"] = "2026-08"
+        return df
+    monkeypatch.setattr(main_mod, "fetch_curtailment_by_fy", fetch)
+    main_mod.refresh_actual_curtailment(DUIDS, tmp_path, tmp_path / "a.feather")
+    assert source_status.load(tmp_path)["actual_curtailment"]["upstream_last_month"] == "2026-08"
+    # a later failure keeps the last known upstream month
+    monkeypatch.setattr(main_mod, "fetch_curtailment_by_fy", _boom)
+    main_mod.refresh_actual_curtailment(DUIDS, tmp_path, tmp_path / "a.feather")
+    assert source_status.load(tmp_path)["actual_curtailment"]["upstream_last_month"] == "2026-08"
+
+
+def test_month_end_age():
+    now = datetime(2026, 10, 7, tzinfo=timezone.utc)
+    assert round(vo.month_end_age_days("2026-08", now)) == 36   # August ended 1 Sep 00:00 AEST
+    assert round(vo.month_end_age_days("2025-12", now)) == 279  # December rolls the year
+    assert vo.month_end_age_days(None, now) is None
+
+
+def test_validator_passes_a_current_upstream(tmp_path):
+    rec = _actual(0) | {"upstream_last_month": _month_ago(40)}
+    assert _run(tmp_path, _summary(), _status() | {"actual_curtailment": rec}) == []
+
+
+def test_validator_fails_a_stalled_upstream_even_when_the_fetch_worked(tmp_path):
+    month = _month_ago(100)
+    rec = _actual(0) | {"upstream_last_month": month}
+    errs = _run(tmp_path, _summary(), _status() | {"actual_curtailment": rec})
+    assert any(f"rollup ends at {month}" in e for e in errs), errs
+
+
+def test_validator_warns_without_an_upstream_month(tmp_path, capsys):
+    assert _run(tmp_path, _summary(), _status() | {"actual_curtailment": _actual(0)}) == []
+    assert "no upstream newest month" in capsys.readouterr().out
