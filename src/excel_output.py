@@ -129,7 +129,7 @@ def _write_heatmap(wb: Workbook, data: pd.DataFrame, region_name: str):
     # Get numeric columns for heatmap
     value_cols = [c for c in data.columns
                   if c.startswith(("MLF_", "ELI_", "CURTAILMENT_ACTUAL_", "ISP_"))
-                  and not c.endswith("_SOURCE")]
+                  and not c.endswith(("_SOURCE", "_EDITION"))]
     if not value_cols:
         ws.cell(row=1, column=1, value="No numeric data available")
         return

@@ -7,7 +7,7 @@ before committing to the repository. Exits non-zero on any failure.
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -22,7 +22,8 @@ REGION_NAMES = {"NSW1": "NSW", "QLD1": "QLD", "VIC1": "VIC", "SA1": "SA", "TAS1"
 # REZ / ELI output contract
 REZ_VALUES = {"Y", "N", ""}
 REZ_SOURCES = {"geninfo", "eli", "eli-station", "seed", ""}
-ELI_SOURCES = {"per-DUID", "location", "location-name", ""}
+# "per-DUID" (the hand-seeded 2025 values) is gone: every ELI value comes from AEMO's location table
+ELI_SOURCES = {"location", "location-name", ""}
 NON_REZ = "Non-REZ"
 
 # Source freshness: the lane runs daily, so a list this old means refreshes keep failing
@@ -30,9 +31,22 @@ MAX_REGISTRATION_AGE_DAYS = 30
 # Recently registered GENERATOR DUIDs (DUDETAILSUMMARY) the Registration List may lack
 MAX_UNLISTED_RECENT_GENERATORS = 3
 GEN_INFO_STALE_DAYS = 122
+# MLFs (the aemo-mlf-tracker summary.csv): a run that republished the cached copy fails
+# when its last good fetch is older than this
+MAX_MLF_AGE_DAYS = 35
+# ELI edition probe: it must have had a yes/no answer (not a 403 or network error)
+# within this many days, or the newer-edition check is blind
+MAX_ELI_PROBE_AGE_DAYS = 60
+ELI_PAGE_URL = ("https://www.aemo.com.au/energy-systems/electricity/national-electricity-market-nem/"
+                "nem-forecasting-and-planning/forecasting-and-planning-data/enhanced-locational-information")
+# NEM market time (AEST, no daylight saving), as src/config.py
+NEM_TZ = timezone(timedelta(hours=10))
 # Actual curtailment (the credit dashboard's FY rollup, fetched daily): a run that fell
 # back to the cached copy warns; a last good fetch older than this fails
 MAX_ACTUAL_AGE_DAYS = 35
+# The credit rollup's newest month (its own content, not our fetch): it must have ended
+# within this many days, allowing for nemweb lag plus a monthly lane (S3-4)
+MAX_UPSTREAM_MONTH_AGE_DAYS = 75
 
 errors = []
 
@@ -49,7 +63,7 @@ def validate(outputs_dir: Path = OUTPUTS_DIR):
     summary_path = outputs_dir / "summary.csv"
     check(summary_path.exists(), "summary.csv does not exist")
     if not summary_path.exists():
-        return
+        return None
 
     df = pd.read_csv(summary_path)
     print(f"summary.csv: {len(df)} rows, {len(df.columns)} columns")
@@ -105,6 +119,7 @@ def validate(outputs_dir: Path = OUTPUTS_DIR):
 
     check_rez(df)
     check_eli_source(df)
+    check_editions(df)
 
     # --- TECHNOLOGY is the descriptor, not the Registration List's "Renewable" ---
     if "TECHNOLOGY" in df.columns and len(df):
@@ -115,6 +130,7 @@ def validate(outputs_dir: Path = OUTPUTS_DIR):
     for region_id, name in REGION_NAMES.items():
         xlsx_path = outputs_dir / f"{name}_curtailment.xlsx"
         check(xlsx_path.exists(), f"{xlsx_path.name} does not exist")
+    return df
 
 
 def _text(df, col):
@@ -162,6 +178,29 @@ def check_eli_source(df):
     check(n == 0, f"{n} row(s) have an ELI_SOURCE but no ELI value")
 
 
+def _single(df, col):
+    """The one non-blank value of `col`, or None; a mixed column fails."""
+    if df is None or col not in df.columns:
+        return None
+    values = sorted(set(df[col].dropna().astype(str).str.strip()) - {""})
+    check(len(values) <= 1, f"{col} has more than one value: {values}")
+    return values[0] if len(values) == 1 else None
+
+
+def check_editions(df):
+    """ELI and ISP values say which edition they come from (S2-3)."""
+    eli_cols = [c for c in ("ELI_CURTAILMENT_NEAR", "ELI_CURTAILMENT_MED") if c in df.columns]
+    isp_cols = [c for c in df.columns if c.startswith("ISP_") and not c.endswith(("_LABEL", "_EDITION"))]
+    if eli_cols and df[eli_cols].notna().any().any():
+        check("ELI_EDITION" in df.columns and _single(df, "ELI_EDITION") is not None,
+              "ELI values carry no ELI_EDITION (chart data parsed before editions were recorded: "
+              "rerun with --full-refresh)")
+    if isp_cols and df[isp_cols].notna().any().any():
+        check("ISP_EDITION" in df.columns and _single(df, "ISP_EDITION") is not None,
+              "ISP values carry no ISP_EDITION (REZ feathers predate editions: rerun "
+              "python -m src.eli_appendix)")
+
+
 def _age_days(iso):
     if not iso:
         return None
@@ -174,8 +213,9 @@ def _age_days(iso):
     return (datetime.now(timezone.utc) - then).total_seconds() / 86400
 
 
-def validate_sources(cache_dir: Path):
-    """Fail when the generator spine has stopped refreshing or is visibly missing units."""
+def validate_sources(cache_dir: Path, df=None):
+    """Fail when a source has stopped refreshing, is visibly missing units, or the
+    published editions disagree. `df` is the summary validate() read (or None)."""
     path = Path(cache_dir) / STATUS_FILE
     check(path.exists(), f"{path} missing: run the pipeline (it records source freshness)")
     if not path.exists():
@@ -214,15 +254,145 @@ def validate_sources(cache_dir: Path):
         print(f"NEM Generation Information edition: {edition}")
 
     check_actual_curtailment(status)
+    check_mlf(status)
 
-    eli = status.get("eli", {})
-    if eli.get("newer_edition_available"):
-        print(f"  WARN: ELI {eli.get('edition', 0) + 1} has been published "
-              f"({eli.get('probed_url')}); the dashboard still uses ELI {eli.get('edition')}")
-    elif eli.get("newer_edition_available") is None and eli:
+    check_eli(status.get("eli", {}))
+
+    check_edition_match(status, df)
+
+
+def expected_eli_edition(now=None):
+    """The newest ELI edition that should be out by `now`: Y from 1 October of year Y (NEM time)."""
+    now = (now or datetime.now(timezone.utc)).astimezone(NEM_TZ)
+    return now.year if now.month >= 10 else now.year - 1
+
+
+def check_eli(eli, now=None):
+    """Newer ELI edition (warn), calendar backstop (warn), blind probe (fail)."""
+    if not eli:
+        print("  WARN: no ELI record in source_status.json (the run did not refresh ELI)")
+        return
+    edition, newer = eli.get("edition"), eli.get("newer_edition_available")
+    if newer:
+        print(f"  WARN: ELI {(edition or 0) + 1} has been published "
+              f"({eli.get('probed_url')}); the dashboard still uses ELI {edition}")
+    elif newer is None:
         print(f"  WARN: could not check for a newer ELI edition ({eli.get('error')})")
-    elif eli:
-        print(f"ELI edition: {eli.get('edition')} (latest; checked {eli.get('checked_at')})")
+    else:
+        print(f"ELI edition: {edition} (no newer chart data found; checked {eli.get('checked_at')})")
+
+    # S2-1 calendar backstop: the probe guesses one file name; after the usual
+    # publication month, "not found" is a reason to look, not an all-clear
+    expected = expected_eli_edition(now)
+    if edition is not None and edition < expected and not newer:
+        print(f"  WARN: ELI {expected} not found at the expected URL ({eli.get('probed_url')}), "
+              f"although each edition so far was out by July. It may be published under another "
+              f"file name: check AEMO's ELI page {ELI_PAGE_URL}")
+
+    # S3-3: a probe that keeps getting 403 / network errors is blind; fail after a while.
+    # Records written before last_conclusive_check existed count their own conclusive check.
+    last = eli.get("last_conclusive_check") or (eli.get("checked_at") if newer is not None else None)
+    age = _age_days(last)
+    if check(age is not None, "The ELI newer-edition probe has never had a yes/no answer "
+                              f"({eli.get('error')}); check AEMO's ELI page {ELI_PAGE_URL}"):
+        check(age <= MAX_ELI_PROBE_AGE_DAYS,
+              f"The ELI newer-edition probe last had a yes/no answer {age:.0f} days ago "
+              f"(> {MAX_ELI_PROBE_AGE_DAYS}; latest: {eli.get('error')}); a new edition would go "
+              f"unnoticed: check AEMO's ELI page {ELI_PAGE_URL}")
+
+
+def check_edition_match(status, df=None):
+    """The REZ/ISP appendix files must be the same ELI edition as the chart data (S2-3).
+
+    Bumping config.ELI_* to a new year without rerunning `python -m src.eli_appendix`
+    (or republishing an older cached chart-data feather) would otherwise publish a mix
+    of editions under one label.
+    """
+    rez = status.get("rez")
+    if not rez:
+        print("  WARN: no rez record in source_status.json (run predates it)")
+        return
+    published = _single(df, "ELI_EDITION") if df is not None else None
+    chart = {str(v) for v in (status.get("eli", {}).get("edition"), published) if v is not None}
+    for key, what in (("forecasts_eli_edition", "rez_forecasts.feather"),
+                      ("membership_eli_edition", "rez_membership.feather")):
+        appendix = rez.get(key)
+        if not check(appendix is not None,
+                     f"{what} records no ELI edition: rerun python -m src.eli_appendix"):
+            continue
+        check(not chart or chart == {str(appendix)},
+              f"{what} is from the ELI {appendix} appendices but the ELI chart data is "
+              f"{', '.join(sorted(chart))}: rerun python -m src.eli_appendix for the new edition")
+    check(len(chart) <= 1, f"ELI chart-data editions disagree: configured/probed "
+                           f"{status.get('eli', {}).get('edition')}, published {published}")
+    print(f"ELI appendices {rez.get('forecasts_eli_edition')}, ISP forecasts "
+          f"{rez.get('isp_edition')}, chart data {', '.join(sorted(chart)) or 'unknown'}")
+
+
+def current_fy_start(now=None):
+    """Start year of the current financial year in NEM time (FY26-27 → 2026)."""
+    now = (now or datetime.now(timezone.utc)).astimezone(NEM_TZ)
+    return now.year if now.month >= 7 else now.year - 1
+
+
+def _fy_start(label):
+    """'FY26-27' → 2026; None if not a FY label."""
+    text = str(label or "")
+    if len(text) >= 4 and text.startswith("FY") and text[2:4].isdigit():
+        return 2000 + int(text[2:4])
+    return None
+
+
+def check_mlf(status, now=None):
+    """Fail when MLFs come from a stale cache or the newest final MLF year is behind (S2-4)."""
+    rec = status.get("mlf")
+    if not rec:
+        print("  WARN: no MLF record in source_status.json (run predates it, or the run used "
+              "the MLF cache without refreshing)")
+        return
+    if rec.get("error") and not rec.get("used_cache"):
+        check(False, f"MLF fetch failed and there is no cached copy, so the summary has no MLF "
+                     f"columns: {rec.get('error')}")
+        return
+    age = _age_days(rec.get("fetched_at"))
+    age_txt = f"{age:.0f} days old" if age is not None else "of unknown age"
+    if rec.get("used_cache"):
+        print(f"  WARN: MLF refresh failed ({rec.get('error')}); this run republished the cached "
+              f"tracker CSV, {age_txt}")
+        check(age is not None and age <= MAX_MLF_AGE_DAYS,
+              f"MLF cache is {age_txt} (> {MAX_MLF_AGE_DAYS} days) and the MLF tracker fetch keeps "
+              f"failing: {rec.get('error')}")
+    newest, current = rec.get("newest_fy"), current_fy_start(now)
+    start = _fy_start(newest)
+    current_label = f"FY{current % 100:02d}-{(current + 1) % 100:02d}"
+    if check(start is not None, "The MLF tracker CSV has no final FY column"):
+        check(start >= current,
+              f"Newest final MLF year is {newest}, older than the current financial year "
+              f"{current_label}: the MLF tracker has not published this year's MLFs")
+        print(f"MLF: newest final year {newest} (tracker fetched {age_txt})")
+
+
+def month_end_age_days(month, now=None):
+    """Days since the end of 'YYYY-MM' (None if unparseable)."""
+    try:
+        year, mon = (int(x) for x in str(month).split("-"))
+        end = datetime(year + mon // 12, mon % 12 + 1, 1, tzinfo=NEM_TZ)
+    except (ValueError, TypeError):
+        return None
+    return ((now or datetime.now(timezone.utc)) - end).total_seconds() / 86400
+
+
+def check_upstream_month(rec, now=None):
+    """Fail when the credit rollup's newest month ended too long ago, even if our fetch worked."""
+    month = rec.get("upstream_last_month")
+    age = month_end_age_days(month, now)
+    if age is None:
+        print("  WARN: the actual-curtailment record has no upstream newest month (run predates it)")
+        return
+    print(f"Actual curtailment upstream: data to {month} (ended {age:.0f} days ago)")
+    check(age <= MAX_UPSTREAM_MONTH_AGE_DAYS,
+          f"The credit dashboard's curtailment rollup ends at {month}, {age:.0f} days ago "
+          f"(> {MAX_UPSTREAM_MONTH_AGE_DAYS}): its pipeline has stalled, so the actuals are not current")
 
 
 def check_actual_curtailment(status):
@@ -232,6 +402,7 @@ def check_actual_curtailment(status):
         print("  WARN: no actual-curtailment record in source_status.json (run predates it, "
               "or the run used the cache without refreshing)")
         return
+    check_upstream_month(rec)
     age = _age_days(rec.get("fetched_at"))
     fys = ", ".join(rec.get("fys") or []) or "none"
     if not rec.get("error"):
@@ -258,8 +429,8 @@ def main(argv=None):
                         help="Pipeline cache directory holding source_status.json (default: data/)")
     args = parser.parse_args(argv)
     print("Validating AEMO Renewable Generator Dashboard outputs...")
-    validate(Path(args.outputs_dir))
-    validate_sources(Path(args.cache_dir))
+    df = validate(Path(args.outputs_dir))
+    validate_sources(Path(args.cache_dir), df)
     if errors:
         print(f"\n{len(errors)} validation error(s) found — aborting.")
         sys.exit(1)

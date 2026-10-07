@@ -88,6 +88,12 @@ ELI_BASE_URL = (
     "https://www.aemo.com.au/-/media/files/electricity/nem/"
     "planning_and_forecasting/enhanced-locational-information/"
 )
+# AEMO's ELI page, where a new edition is announced; scripts get 403 from it, so the
+# pipeline probes a guessed file name instead and points people here when it finds nothing
+ELI_PAGE_URL = (
+    "https://www.aemo.com.au/energy-systems/electricity/national-electricity-market-nem/"
+    "nem-forecasting-and-planning/forecasting-and-planning-data/enhanced-locational-information"
+)
 # ELI projected-curtailment horizons, as AEMO's 2025 ELI report states them (executive
 # summary: "near-term (2026 to 2028), and medium-term (2030 to 2035) horizons"; Table 2
 # calls the conditions representative of 2026-2029 and 2031-2035, depending on the speed
@@ -119,8 +125,10 @@ ISP_FORECAST_EDITION = "2024 ISP"
 ISP_FORECAST_SCENARIO = "Step Change"
 
 # Actual curtailment: consolidated FY rollup from the credit dashboard pipeline.
-# The credit dashboard computes monthly curtailment per DUID from
-# INTERMITTENT_GEN_SCADA and publishes the FY rollup via GitHub Pages.
+# The credit dashboard computes monthly curtailment per DUID from AEMO dispatch
+# data (DISPATCH_UNIT_SCADA output against the bid-in AVAILABILITY in DISPATCHLOAD;
+# INTERMITTENT_GEN_SCADA quality flags from Dec 2024) and publishes the FY rollup
+# via GitHub Pages.
 CREDIT_CURTAILMENT_URL = (
     "https://cutout-z.github.io/aemo-generator-credit-dashboard/"
     "data/curtailment_by_fy.csv"

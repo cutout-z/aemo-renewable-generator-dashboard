@@ -23,12 +23,12 @@ def _summary():
             "NAMEPLATE_MW": 100.0,
             "REZ": "", "REZ_NAME": "", "REZ_SOURCE": "",
             "ELI_CURTAILMENT_NEAR": float("nan"), "ELI_CURTAILMENT_MED": float("nan"),
-            "ELI_SOURCE": "",
+            "ELI_SOURCE": "", "ELI_EDITION": 2025, "ISP_EDITION": "2024 ISP",
         })
     df = pd.DataFrame(rows)
     df.loc[0, ["REZ", "REZ_NAME", "REZ_SOURCE"]] = ["Y", "Darling Downs", "seed"]
     df.loc[2, ["REZ", "REZ_NAME", "REZ_SOURCE"]] = ["N", "Non-REZ", "seed"]
-    df.loc[0, ["ELI_CURTAILMENT_NEAR", "ELI_CURTAILMENT_MED", "ELI_SOURCE"]] = [0.2, 0.1, "per-DUID"]
+    df.loc[0, ["ELI_CURTAILMENT_NEAR", "ELI_CURTAILMENT_MED", "ELI_SOURCE"]] = [0.2, 0.1, "location-name"]
     df.loc[1, ["ELI_CURTAILMENT_NEAR", "ELI_CURTAILMENT_MED", "ELI_SOURCE"]] = [0.3, 0.1, "location"]
     return df
 
@@ -40,6 +40,8 @@ def _status(reg_age_days=1, missing=()):
         "dudetailsummary": {"month": "2026-08", "missing_from_registration":
                             [{"DUID": d} for d in missing]},
         "gen_info": {"edition": "2026-07", "edition_age_days": 96},
+        "rez": {"forecasts_eli_edition": 2025, "membership_eli_edition": 2025,
+                "isp_edition": "2024 ISP"},
     }
 
 
@@ -53,8 +55,8 @@ def _run(tmp_path, df, status):
     if status is not None:
         (cache / vo.STATUS_FILE).write_text(json.dumps(status))
     vo.errors.clear()
-    vo.validate(out)
-    vo.validate_sources(cache)
+    summary = vo.validate(out)
+    vo.validate_sources(cache, summary)
     found = list(vo.errors)
     vo.errors.clear()
     return found
@@ -81,6 +83,8 @@ def _mutate(df, idx, **cols):
     (dict(REZ_SOURCE="guess"), "REZ_SOURCE has unexpected"),
     (dict(ELI_CURTAILMENT_NEAR=0.4), "ELI value but no ELI_SOURCE"),
     (dict(ELI_SOURCE="nearby"), "ELI_SOURCE has unexpected"),
+    # the hand-seeded per-DUID values are no longer a source (S2-2)
+    (dict(ELI_CURTAILMENT_NEAR=0.4, ELI_SOURCE="per-DUID"), "ELI_SOURCE has unexpected"),
     (dict(TECHNOLOGY="Renewable"), None),  # one row is fine
 ])
 def test_contract_violations_fail(tmp_path, change, expected):

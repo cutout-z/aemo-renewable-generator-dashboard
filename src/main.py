@@ -119,6 +119,12 @@ def run(full_refresh: bool = False, cache_dir: str | None = None,
     # ── Step 8: Generate Excel workbooks ─────────────────────────────────
     generate_all_workbooks(summary, output_dir)
 
+    # ── Step 9: Publish source editions and fetch dates for the page footer ──
+    # (a trimmed copy of data/source_status.json; deploy/run-update.sh commits it with
+    # outputs/, so it only moves when summary.csv changes)
+    status_path = source_status.publish(cache_root, output_root)
+    logger.info(f"Published {status_path.name}")
+
     logger.info("Done.")
 
 
@@ -136,6 +142,7 @@ def refresh_actual_curtailment(all_duids: set[str], cache_root: Path,
     previous = source_status.load(cache_root).get(ACTUAL_STATUS_KEY, {})
     record = {"attempted_at": source_status.now_iso(), "refreshed": False, "error": None,
               "fetched_at": previous.get("fetched_at"), "fys": previous.get("fys", []),
+              "upstream_last_month": previous.get("upstream_last_month"),
               "used_cache": False}
     try:
         actual = fetch_curtailment_by_fy(all_duids)
@@ -145,7 +152,8 @@ def refresh_actual_curtailment(all_duids: set[str], cache_root: Path,
         curt_cache.parent.mkdir(parents=True, exist_ok=True)
         actual.reset_index(drop=True).to_feather(curt_cache)
         record.update(refreshed=True, fetched_at=record["attempted_at"],
-                      fys=[c.replace("CURTAILMENT_ACTUAL_", "") for c in value_cols])
+                      fys=[c.replace("CURTAILMENT_ACTUAL_", "") for c in value_cols],
+                      upstream_last_month=actual.attrs.get("upstream_last_month"))
     except Exception as e:
         record["error"] = str(e)
         if curt_cache.exists():

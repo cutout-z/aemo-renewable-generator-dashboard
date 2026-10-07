@@ -27,15 +27,18 @@ runs this repo's `deploy/run-update.sh` (renamed from the retired VPS-era
 
 | Lane | `PIPELINE_ARGS` | Purpose |
 | --- | --- | --- |
-| Renewable generator source monitor | `--full-refresh` | Check for updated generator listing, MLF feed, ELI/REZ data, or actual curtailment rollup, and publish only when canonical summary data changes. |
+| Renewable generator source monitor | `--full-refresh` | Check for updated generator listing, MLF feed, a newer ELI edition, or actual curtailment rollup, and publish only when canonical summary data changes. |
 
 The lane registry, cadence windows and report paths live in
 `tools/nas-runner/configs/brain-ops.nas.toml` (the NAS runner tooling).
 `deploy/run-update.sh` runs the full test suite and commits/pushes only when
 `outputs/` changed, and the script self-heals a rewritten `main`: if
 `git pull --ff-only` is impossible it resets onto the fetched remote instead
-of exiting 128. If AEMO ELI/REZ workbook URLs fail, the pipeline falls back
-to cached source snapshots rather than dropping columns.
+of exiting 128. The ELI chart-data workbook is downloaded once per edition and
+then read from the cache (if parsing or the first download fails, the last
+`eli_curtailment.feather` is reused); the REZ forecasts and membership are not
+fetched by the lane at all, but come from the committed `rez_*.feather` files
+built by hand with `python -m src.eli_appendix`.
 
 ## Env
 

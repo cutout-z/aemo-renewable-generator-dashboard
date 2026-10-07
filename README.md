@@ -11,18 +11,18 @@ For every utility-scale solar and wind farm in the NEM:
 | Category | Columns | Update frequency |
 |----------|---------|-----------------|
 | **Actual curtailment** | Last 2 completed FYs, sourced from the credit dashboard | Monthly |
-| **ELI projected curtailment** | Near-term (2026-28) and medium-term (2030-35) projections | Annual (July) |
-| **Marginal loss factors** | Last 2 actual FYs + current year draft | Annual (July/Oct) |
-| **ISP curtailment forecast** | The Final 2024 ISP's forecast (Step Change) for 2025-26 to 2027-28 + average, by REZ | With each ELI edition (July) |
-| **ISP economic offloading** | Same source and years | With each ELI edition (July) |
+| **ELI projected curtailment** | Near-term (2026-28) and medium-term (2030-35) projections | 2025 edition; updated by hand (config plus `python -m src.eli_appendix`) when AEMO publishes a new one |
+| **Marginal loss factors** | Final MLFs for the latest two FYs the MLF tracker publishes (it has no draft column; today FY25-26 and FY26-27) | AEMO publishes final MLFs by about 1 April for the next FY, with occasional mid-year revisions; read via the MLF tracker |
+| **ISP curtailment forecast** | The Final 2024 ISP's forecast (Step Change) for 2025-26 to 2027-28 + average, by REZ. Superseded by AEMO's 2026 ISP (25 June 2026); see below | 2024 ISP via the 2025 ELI appendices; changes only when a new ELI edition republishes ISP figures (the ISP itself is every two years) |
+| **ISP economic offloading** | Same source and years | As above |
 
 ## Data sources
 
 | Data | Source | URL |
 |------|--------|-----|
 | Generator listing | AEMO NEM Registration and Exemption List (re-downloaded every run), cross-checked against MMSDM DUDETAILSUMMARY | [NEM-Registration-and-Exemption-List.xls](https://www.aemo.com.au/-/media/Files/Electricity/NEM/Participant_Information/NEM-Registration-and-Exemption-List.xls), [nemweb MMSDM](https://nemweb.com.au/Data_Archive/Wholesale_Electricity/MMSDM/) |
-| Projected curtailment | AEMO Enhanced Locational Information (ELI) Report | [aemo.com.au/.../inputs-assumptions-methodologies](https://aemo.com.au/energy-systems/electricity/national-electricity-market-nem/nem-forecasting-and-planning/forecasting-and-planning-data/inputs-assumptions-and-methodologies) |
-| REZ forecasts | Appendices to AEMO ELI Report | Same as above |
+| Projected curtailment | AEMO Enhanced Locational Information (ELI) Report | [aemo.com.au/.../enhanced-locational-information](https://www.aemo.com.au/energy-systems/electricity/national-electricity-market-nem/nem-forecasting-and-planning/forecasting-and-planning-data/enhanced-locational-information) |
+| REZ forecasts | Regional appendices to AEMO's ELI Report (forecasts from the ISP named in them) | Same as above |
 | MLFs | AEMO MLF Tracker (via [cutout-z/aemo-mlf-tracker](https://github.com/cutout-z/aemo-mlf-tracker)) | [cutout-z.github.io/aemo-mlf-tracker](https://cutout-z.github.io/aemo-mlf-tracker/) |
 | Actual curtailment | AEMO Generator Credit Dashboard ([cutout-z/aemo-generator-credit-dashboard](https://github.com/cutout-z/aemo-generator-credit-dashboard)) | [cutout-z.github.io/aemo-generator-credit-dashboard/data/curtailment_by_fy.csv](https://cutout-z.github.io/aemo-generator-credit-dashboard/data/curtailment_by_fy.csv) |
 
@@ -72,20 +72,26 @@ These are the horizons the 2025 ELI report's executive summary gives; its Table 
 
 These are projections, not actuals. They indicate the *risk* of curtailment for a new connection at each location.
 
-Each unit takes its seeded per-DUID value where there is one (`ELI_SOURCE` =
-`per-DUID`). Otherwise it is filled from the location table (`ELI_SOURCE` =
-`location`): same `LOCATION` in the unit's own region, the row at the unit's
-connection voltage if there is one, else the location's only row (several voltages
-and none matching = left empty); wind farms take the Wind columns, solar farms the
-Solar columns. `ELI_SOURCE` is empty where there is no value. On the seeded solar
-farms this rule reproduces the per-DUID values for 101/104 (near) and 102/104
-(medium). No AEMO table maps a DUID to an ELI location, so a unit with no
-`LOCATION` (every wind farm, and the unseeded solar farms) is matched by name
-instead (`ELI_SOURCE` = `location-name`): the one ELI location in its region
-named as a whole word in its project name (Ararat Wind Farm → Ararat), same
-voltage rules. On the 21 seeded solar farms the rule fires for, it picks the
-seeded location for 20 (the 21st, Stubbo, now has its own ELI location). Today
-it fills 6 wind farms and 4 solar farms; the other wind farms stay empty.
+Every unit is filled from AEMO's location table (`ELI_SOURCE` = `location`):
+same `LOCATION` in the unit's own region, the row at the unit's connection voltage
+if there is one, else the location's only row (several voltages and none matching =
+left empty); wind farms take the Wind columns, solar farms the Solar columns.
+`ELI_SOURCE` is empty where there is no value. No AEMO table maps a DUID to an ELI
+location, so a unit with no `LOCATION` (every wind farm, and the unseeded solar
+farms) is matched by name instead (`ELI_SOURCE` = `location-name`): the one ELI
+location in its region named as a whole word in its project name (Ararat Wind Farm
+→ Ararat), same voltage rules. On the 21 seeded solar farms the name rule fires
+for, it picks the seeded location for 20 (the 21st, Stubbo, now has its own ELI
+location). Today 104 solar farms are filled by location and 10 farms (6 wind, 4
+solar) by name; the other wind farms stay empty.
+
+Until 2026-10 the 104 seeded solar farms took hand-seeded per-DUID values
+(`data/eli_per_duid.feather`, `ELI_SOURCE` = `per-DUID`) ahead of the location
+table. That file carries no edition and nothing rebuilds it, so a new ELI edition
+would have left those units on the 2025 seed. The pipeline no longer reads it; the
+switch moved five published cells by under 0.2 percentage points (Metz and White
+Rock near term 23.10% → 22.91%, Wollar near term 15.87% → 15.85%, New England 1
+and 2 medium term 5.08% → 5.15%), where the seed differed from AEMO's table.
 
 ### ISP curtailment & economic offloading forecasts
 
@@ -95,6 +101,8 @@ From the "VRE curtailment and economic offloading – ISP forecast" table in eac
 - **Economic offloading** (the ISP's "economic spill"): generation reduces output because of market price
 
 The forecasts are the Final 2024 ISP's (Step Change scenario), as the 2025 ELI appendices state; they were made in 2024 for 2025-26, 2026-27 and 2027-28. 2025-26 has since ended: its value is still the 2024 forecast, not an outcome, the page's ISP group headers say "(2024 ISP)" and an ended year's column header has a tooltip saying so (the Actual columns carry outcomes). The values are not relabelled or replaced; they change when a new ELI edition republishes newer ISP forecasts.
+
+**The 2024 ISP has been superseded.** AEMO published the 2026 ISP on 25 June 2026. These figures come from the 2025 ELI regional appendices and change only when a new ELI edition republishes them; the dashboard does not read the ISP itself (ingesting the 2026 ISP directly would be a new source). The page says so in a note above the table and marks the ISP group headers "(2024 ISP, superseded)". The note is driven by `ISP_SUPERSEDED` in `index.html` and the data's `ISP_EDITION`, so it disappears once the data carries a newer ISP edition.
 
 These are forecast at the REZ level and mapped to individual farms by REZ membership
 (joined on `REZ_NAME`). Units outside a REZ, or whose REZ is unknown, show N/A.
@@ -125,7 +133,17 @@ When a new ELI edition is published, rebuild both reference files:
 
 ```
 python -m src.eli_appendix          # downloads the five appendix PDFs; needs pdftotext (poppler)
+python -m src.eli_appendix --isp-edition "2026 ISP"   # when the text cites more than one ISP
 ```
+
+Both files record the editions they hold (`ELI_EDITION`, the appendix year;
+`ISP_EDITION`, the ISP the forecasts come from, read from the appendix text), and so
+does the ELI chart data. `summary.csv` carries them as `ELI_EDITION` and
+`ISP_EDITION`, and the page's "2025 ELI" / "(2024 ISP)" labels are read from those
+columns. Validation fails when the appendix files' ELI edition differs from the
+chart-data edition, so bumping `config.ELI_*` without this rebuild cannot publish a
+mix of editions under one label. (The files committed before 2026-10-07 were stamped
+ELI 2025 / 2024 ISP by hand, from what they already held, not re-parsed.)
 
 ### Generator listing
 
@@ -136,7 +154,7 @@ logs `REGISTRATION LIST REFRESH FAILED` with that copy's age. The newest MMSDM
 DUDETAILSUMMARY on nemweb is then checked: every GENERATOR DUID whose registration
 took effect in the last 24 months but is absent from the list is logged as a warning
 (DUDETAILSUMMARY has no fuel type, so such units are reported, never added).
-Each run records what it fetched in `data/source_status.json` (not committed).
+Each run records what it fetched in `data/source_status.json` (not committed), and publishes a trimmed copy, `outputs/source_status.json` (per source: edition, fetch dates, whether this run refreshed it, any error), which the page footer shows as "Sources at the last publish". The lane commits it with `outputs/` only when `summary.csv` changes, so its dates are those of the last run that changed values, not of the last run.
 
 NEM Generation Information is republished about quarterly under a new file name, so
 it is not pinned: each run reads the edition links off AEMO's Generation Information
@@ -197,7 +215,7 @@ Production updates run on the **NAS runner** (QNAP `ai-wif-runner` container) vi
 
 - A QNAP scheduled task fires the lane daily after the upstream Credit Dashboard and MLF Tracker lanes have had time to publish.
 - The lane refreshes generator listing, MLF feed, ELI/REZ source data, and the Credit Dashboard curtailment rollup.
-- If AEMO ELI/REZ workbook URLs fail, the pipeline falls back to cached source snapshots rather than dropping projected-curtailment or REZ forecast columns.
+- The ELI chart-data workbook is downloaded once per edition and then read from `data/` (a corrected re-issue under the same URL is not picked up); if parsing or the first download fails, the last `eli_curtailment.feather` is reused. REZ forecasts and membership are not fetched in the lane at all: they come from the committed `rez_*.feather` files that `python -m src.eli_appendix` builds by hand.
 - The lane commits as `aemo-nas-bot` and publishes only when canonical `outputs/summary.csv` changes, so daily workbook/cache regeneration does not create noisy commits.
 - GitHub Actions is kept as a manual verification/fallback runner. Its `full_refresh` input defaults to `true`, matching the NAS lane (`PIPELINE_ARGS` defaults to `--full-refresh`); set it to `false` only to rebuild outputs from the committed caches.
 - GitHub Pages deploys on those pushes.
@@ -217,11 +235,13 @@ After the pipeline runs and before committing, an automated validation step (`te
 - Curtailment values in [0, 1]
 - All 5 regional Excel workbooks exist
 - REZ contract: `REZ` in {`Y`, `N`, empty}; `Non-REZ` only with `REZ` = `N`; every `Y`/`N` has a `REZ_SOURCE`; `Y` has a zone name
-- `ELI_SOURCE` in {`per-DUID`, `location`, `location-name`, empty}, empty exactly when there is no ELI value
+- `ELI_SOURCE` in {`location`, `location-name`, empty}, empty exactly when there is no ELI value (`per-DUID`, the retired hand seed, fails)
+- Editions: ELI values carry one `ELI_EDITION` and ISP values one `ISP_EDITION`; the REZ appendix files (`rez` in `data/source_status.json`) record an ELI edition, and it equals the chart-data edition (configured and published)
 - `TECHNOLOGY` is not "Renewable" for every row
 - Source freshness (`data/source_status.json`, written by the run): the Registration List's last good fetch is at most 30 days old, and at most 3 GENERATOR DUIDs registered in the last 24 months (per DUDETAILSUMMARY) are missing from it; a stale Generation Information edition is reported as a warning
-- ELI edition (`eli` in `data/source_status.json`): each refresh probes next year's chart-data file on AEMO (one-byte Range request; a missing file redirects to /404) and a published newer edition is printed as a warning, not a failure
-- Actual curtailment (`actual_curtailment` in `data/source_status.json`): a run whose upstream fetch failed and republished the cached rollup prints a warning; it fails when that cache's last good fetch is more than 35 days old, or when there was no cache and the summary has no actual columns
+- ELI edition (`eli` in `data/source_status.json`): each refresh probes next year's chart-data file on AEMO (one-byte Range request; a missing file redirects to /404) and a published newer edition is printed as a warning, not a failure. The probe guesses one file name, so from 1 October of year Y (each edition so far was out by July) an edition older than Y with nothing found prints a warning to check [AEMO's ELI page](https://www.aemo.com.au/energy-systems/electricity/national-electricity-market-nem/nem-forecasting-and-planning/forecasting-and-planning-data/enhanced-locational-information). Validation fails when the probe's last yes/no answer (`last_conclusive_check`; a 403 or network error is no answer) is more than 60 days old
+- MLFs (`mlf` in `data/source_status.json`: last good fetch, this run's error, whether the cached tracker CSV was republished, newest final FY column): a republished cache prints a warning and fails when its last good fetch is more than 35 days old; it also fails when the newest final MLF year is older than the current financial year (NEM time), e.g. still FY26-27 on 1 July 2027
+- Actual curtailment (`actual_curtailment` in `data/source_status.json`): a run whose upstream fetch failed and republished the cached rollup prints a warning; it fails when that cache's last good fetch is more than 35 days old, or when there was no cache and the summary has no actual columns. It also records the upstream rollup's newest month (`upstream_last_month`) and fails when that month ended more than 75 days ago: the credit pipeline has stalled even if the fetch itself works
 
 If any check fails, the NAS lane or manual fallback workflow exits before committing — preventing bad data from reaching the dashboard.
 
@@ -230,6 +250,7 @@ If any check fails, the NAS lane or manual fallback workflow exits before commit
 | File | Description |
 |------|-------------|
 | `outputs/summary.csv` | All generators, all columns — loaded by the dashboard |
+| `outputs/source_status.json` | Each source's edition and fetch dates at the last publish — the page footer |
 | `outputs/NSW_curtailment.xlsx` | NSW generators — summary table + heatmap sheets |
 | `outputs/QLD_curtailment.xlsx` | QLD generators |
 | `outputs/VIC_curtailment.xlsx` | VIC generators |

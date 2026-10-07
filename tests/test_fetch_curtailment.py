@@ -87,3 +87,23 @@ def test_months_covered_travels_with_each_year():
     assert pd.isna(out.loc["CCCSF1", "CURTAILMENT_ACTUAL_FY24-25"])
     assert pd.isna(out.loc["BBBWF1", "ACTUAL_MONTHS_FY24-25"])
     assert out.loc["AAASF1", "ACTUAL_MONTHS_FY24-25"] == 12
+
+
+# ── S3-4: how current the upstream content is ──────────────────────────────
+
+def test_upstream_last_month_from_the_rollup_column():
+    df = _early_july_rollup().assign(last_month="2026-06")
+    df.loc[df["fy_start"] == 2026, "last_month"] = "2026-07"
+    assert fc.upstream_last_month(df) == "2026-07"
+
+
+def test_upstream_last_month_from_months_covered_when_the_column_is_absent():
+    # FY26-27 with 1 month = July 2026; a FY with 12 months ends in June of the next year
+    assert fc.upstream_last_month(_early_july_rollup()) == "2026-07"
+    full = _rollup([("AAASF1", 2024, "FY24-25", 0.1, "2.0-proxy", 1.0, 12)])
+    assert fc.upstream_last_month(full) == "2025-06"
+
+
+def test_fetch_carries_the_upstream_month(monkeypatch):
+    out = _fetch(monkeypatch, _early_july_rollup(), EARLY_JULY)
+    assert out.attrs["upstream_last_month"] == "2026-07"

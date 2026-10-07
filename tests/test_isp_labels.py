@@ -28,3 +28,21 @@ def test_readme_names_the_source_and_the_ended_year():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     assert "Final 2024 ISP" in readme and "has since ended" in readme
     assert "Next 3 FY forecasts" not in readme
+
+
+def test_superseded_isp_is_said_next_to_the_columns():
+    # S1-1 interim: the 2024 ISP was superseded by the 2026 ISP (25 June 2026); the page says so
+    note = re.search(r'<p[^>]*id="ispNote"[^>]*>(.*?)</p>', PAGE, re.S).group(1)
+    text = re.sub(r"<[^>]+>", "", note)
+    assert "superseded by AEMO's 2026 ISP (published 25 June 2026)" in text
+    assert "2025 ELI regional appendices" in text
+    assert "change only when a new ELI edition republishes them" in text
+    assert "const ISP_SUPERSEDED = {'2024 ISP': \"AEMO's 2026 ISP (published 25 June 2026)\"}" in PAGE
+    assert "${isp}, superseded" in PAGE   # the group headers carry it too
+
+
+def test_edition_labels_come_from_the_data():
+    # S2-3: ELI_EDITION / ISP_EDITION columns relabel the page; no hand edits per edition
+    assert "function applyEditions" in PAGE and "applyEditions(allData)" in PAGE
+    assert "pick('ELI_EDITION')" in PAGE and "pick('ISP_EDITION')" in PAGE
+    assert PAGE.count("data-isp-edition") >= 2 and "data-eli-edition" in PAGE
