@@ -88,6 +88,12 @@ ELI_BASE_URL = (
     "https://www.aemo.com.au/-/media/files/electricity/nem/"
     "planning_and_forecasting/enhanced-locational-information/"
 )
+# AEMO's ELI page, where a new edition is announced; scripts get 403 from it, so the
+# pipeline probes a guessed file name instead and points people here when it finds nothing
+ELI_PAGE_URL = (
+    "https://www.aemo.com.au/energy-systems/electricity/national-electricity-market-nem/"
+    "nem-forecasting-and-planning/forecasting-and-planning-data/enhanced-locational-information"
+)
 # ELI projected-curtailment horizons, as AEMO's 2025 ELI report states them (executive
 # summary: "near-term (2026 to 2028), and medium-term (2030 to 2035) horizons"; Table 2
 # calls the conditions representative of 2026-2029 and 2031-2035, depending on the speed

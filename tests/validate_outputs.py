@@ -7,7 +7,7 @@ before committing to the repository. Exits non-zero on any failure.
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -31,6 +31,13 @@ MAX_REGISTRATION_AGE_DAYS = 30
 # Recently registered GENERATOR DUIDs (DUDETAILSUMMARY) the Registration List may lack
 MAX_UNLISTED_RECENT_GENERATORS = 3
 GEN_INFO_STALE_DAYS = 122
+# ELI edition probe: it must have had a yes/no answer (not a 403 or network error)
+# within this many days, or the newer-edition check is blind
+MAX_ELI_PROBE_AGE_DAYS = 60
+ELI_PAGE_URL = ("https://www.aemo.com.au/energy-systems/electricity/national-electricity-market-nem/"
+                "nem-forecasting-and-planning/forecasting-and-planning-data/enhanced-locational-information")
+# NEM market time (AEST, no daylight saving), as src/config.py
+NEM_TZ = timezone(timedelta(hours=10))
 # Actual curtailment (the credit dashboard's FY rollup, fetched daily): a run that fell
 # back to the cached copy warns; a last good fetch older than this fails
 MAX_ACTUAL_AGE_DAYS = 35
@@ -242,16 +249,49 @@ def validate_sources(cache_dir: Path, df=None):
 
     check_actual_curtailment(status)
 
-    eli = status.get("eli", {})
-    if eli.get("newer_edition_available"):
-        print(f"  WARN: ELI {eli.get('edition', 0) + 1} has been published "
-              f"({eli.get('probed_url')}); the dashboard still uses ELI {eli.get('edition')}")
-    elif eli.get("newer_edition_available") is None and eli:
-        print(f"  WARN: could not check for a newer ELI edition ({eli.get('error')})")
-    elif eli:
-        print(f"ELI edition: {eli.get('edition')} (latest; checked {eli.get('checked_at')})")
+    check_eli(status.get("eli", {}))
 
     check_edition_match(status, df)
+
+
+def expected_eli_edition(now=None):
+    """The newest ELI edition that should be out by `now`: Y from 1 October of year Y (NEM time)."""
+    now = (now or datetime.now(timezone.utc)).astimezone(NEM_TZ)
+    return now.year if now.month >= 10 else now.year - 1
+
+
+def check_eli(eli, now=None):
+    """Newer ELI edition (warn), calendar backstop (warn), blind probe (fail)."""
+    if not eli:
+        print("  WARN: no ELI record in source_status.json (the run did not refresh ELI)")
+        return
+    edition, newer = eli.get("edition"), eli.get("newer_edition_available")
+    if newer:
+        print(f"  WARN: ELI {(edition or 0) + 1} has been published "
+              f"({eli.get('probed_url')}); the dashboard still uses ELI {edition}")
+    elif newer is None:
+        print(f"  WARN: could not check for a newer ELI edition ({eli.get('error')})")
+    else:
+        print(f"ELI edition: {edition} (no newer chart data found; checked {eli.get('checked_at')})")
+
+    # S2-1 calendar backstop: the probe guesses one file name; after the usual
+    # publication month, "not found" is a reason to look, not an all-clear
+    expected = expected_eli_edition(now)
+    if edition is not None and edition < expected and not newer:
+        print(f"  WARN: ELI {expected} not found at the expected URL ({eli.get('probed_url')}), "
+              f"although each edition so far was out by July. It may be published under another "
+              f"file name: check AEMO's ELI page {ELI_PAGE_URL}")
+
+    # S3-3: a probe that keeps getting 403 / network errors is blind; fail after a while.
+    # Records written before last_conclusive_check existed count their own conclusive check.
+    last = eli.get("last_conclusive_check") or (eli.get("checked_at") if newer is not None else None)
+    age = _age_days(last)
+    if check(age is not None, "The ELI newer-edition probe has never had a yes/no answer "
+                              f"({eli.get('error')}); check AEMO's ELI page {ELI_PAGE_URL}"):
+        check(age <= MAX_ELI_PROBE_AGE_DAYS,
+              f"The ELI newer-edition probe last had a yes/no answer {age:.0f} days ago "
+              f"(> {MAX_ELI_PROBE_AGE_DAYS}; latest: {eli.get('error')}); a new edition would go "
+              f"unnoticed: check AEMO's ELI page {ELI_PAGE_URL}")
 
 
 def check_edition_match(status, df=None):

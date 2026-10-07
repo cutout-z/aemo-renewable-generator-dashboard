@@ -72,9 +72,30 @@ def probe_newer_edition(edition: int, session=None) -> dict:
     return record
 
 
-def check_newer_edition(cache_dir: str | Path, edition: int, session=None) -> dict:
-    """Probe for the next ELI edition, log a warning if it exists, record it in source_status.json."""
+def expected_edition(now=None) -> int:
+    """The newest ELI edition that should be out by `now` (NEM time).
+
+    AEMO published the 2024 edition in June 2024 and the 2025 edition in July 2025,
+    so from 1 October of year Y (three months' slack) edition Y is expected.
+    """
+    now = now or config.nem_now()
+    if now.tzinfo is not None:
+        now = now.astimezone(config.NEM_TZ)
+    return now.year if now.month >= 10 else now.year - 1
+
+
+def check_newer_edition(cache_dir: str | Path, edition: int, session=None, now=None) -> dict:
+    """Probe for the next ELI edition, log a warning if it exists, record it in source_status.json.
+
+    The record keeps `last_conclusive_check`, the last time the probe got a yes/no
+    answer (a 403 or network error carries the previous one forward), so the
+    validator can fail when the probe has been blind for too long.
+    """
+    previous = source_status.load(cache_dir).get(STATUS_KEY, {})
     record = probe_newer_edition(edition, session=session)
+    record["last_conclusive_check"] = (record["checked_at"]
+                                       if record["newer_edition_available"] is not None
+                                       else previous.get("last_conclusive_check"))
     if record["newer_edition_available"]:
         logger.warning("!" * 72)
         logger.warning(f"A NEWER ELI EDITION ({edition + 1}) IS PUBLISHED: {record['probed_url']}. "
@@ -85,6 +106,13 @@ def check_newer_edition(cache_dir: str | Path, edition: int, session=None) -> di
         logger.info(f"Could not tell whether ELI {edition + 1} is out: {record['error']}")
     else:
         logger.info(f"ELI {edition} is the latest edition (no {edition + 1} chart data yet)")
+    expected = expected_edition(now)
+    if edition < expected and not record["newer_edition_available"]:
+        # Calendar backstop: the probe guesses one file name, and AEMO has moved the ELI
+        # files before, so "not found" after the usual publication month is not an all-clear
+        logger.warning(f"ELI {expected} NOT FOUND at the expected URL ({record['probed_url']}), "
+                       f"although each edition so far was out by July; it may be published under "
+                       f"another name: check AEMO's ELI page {config.ELI_PAGE_URL}")
     source_status.update(cache_dir, STATUS_KEY, record)
     return record
 

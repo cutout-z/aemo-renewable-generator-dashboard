@@ -1,12 +1,15 @@
 """A newer ELI edition is noticed: probed, logged and recorded, and the validator warns."""
 
 import logging
+from datetime import datetime, timedelta, timezone
 
 import pandas as pd
+import pytest
 import requests
 
 from src import download_eli, source_status
 from fixtures import FakeResponse
+import validate_outputs as vo
 from test_validate_outputs import _run, _status, _summary
 
 
@@ -67,7 +70,93 @@ def test_fetch_records_a_newer_edition_and_warns(tmp_path, caplog):
 
 
 def test_validator_warns_but_does_not_fail(tmp_path, capsys):
+    # fail-vs-warn on a confirmed newer edition is Zalen's call; it stays a warning for now
     status = _status() | {"eli": {"edition": 2025, "newer_edition_available": True,
+                                  "checked_at": source_status.now_iso(),
                                   "probed_url": "https://x/2026/2026-eli-report-chart-data.xlsx"}}
     assert _run(tmp_path, _summary(), status) == []
     assert "WARN: ELI 2026 has been published" in capsys.readouterr().out
+
+
+# ── S2-1 calendar backstop ────────────────────────────────────────────────
+
+AEST = timezone(timedelta(hours=10))
+
+
+@pytest.mark.parametrize("when, expected", [
+    (datetime(2026, 9, 30, 23, 59, tzinfo=AEST), 2025),
+    (datetime(2026, 10, 1, 0, 0, tzinfo=AEST), 2026),
+    (datetime(2026, 9, 30, 14, 0, tzinfo=timezone.utc), 2026),   # = 1 Oct 00:00 AEST
+    (datetime(2027, 3, 1, tzinfo=AEST), 2026),
+])
+def test_expected_edition_turns_over_on_1_october(when, expected):
+    assert download_eli.expected_edition(when) == expected
+    assert vo.expected_eli_edition(when) == expected
+
+
+def test_probe_finding_nothing_after_september_warns_with_the_eli_page(tmp_path, caplog):
+    missing = FakeResponse(302, headers={"Location": "https://aemo.com.au/404"})
+    with caplog.at_level(logging.WARNING):
+        download_eli.check_newer_edition(tmp_path, 2025, session=FakeSession(missing),
+                                         now=datetime(2026, 10, 7, tzinfo=AEST))
+    msgs = " ".join(r.getMessage() for r in caplog.records)
+    assert "ELI 2026 NOT FOUND at the expected URL" in msgs and "enhanced-locational-information" in msgs
+    caplog.clear()
+    with caplog.at_level(logging.WARNING):
+        download_eli.check_newer_edition(tmp_path, 2025, session=FakeSession(missing),
+                                         now=datetime(2026, 8, 1, tzinfo=AEST))
+    assert not caplog.records  # before October a missing 2026 edition is not overdue
+
+
+def _eli(edition, newer=False, last_check_days=1, **extra):
+    when = (datetime.now(timezone.utc) - timedelta(days=last_check_days)).isoformat()
+    return {"edition": edition, "newer_edition_available": newer, "checked_at": when,
+            "probed_url": f"https://x/{edition + 1}/{edition + 1}-eli-report-chart-data.xlsx"} | extra
+
+
+def test_validator_backstop_warns_when_an_edition_is_overdue(tmp_path, capsys):
+    overdue = datetime.now(timezone.utc).year - 2   # always older than the expected edition
+    df = _summary().assign(ELI_EDITION=overdue)
+    rez = {"forecasts_eli_edition": overdue, "membership_eli_edition": overdue, "isp_edition": "x"}
+    assert _run(tmp_path, df, _status() | {"eli": _eli(overdue), "rez": rez}) == []
+    out = capsys.readouterr().out
+    assert "not found at the expected URL" in out and vo.ELI_PAGE_URL in out
+
+
+def test_validator_backstop_is_quiet_for_a_current_edition(tmp_path, capsys):
+    current = datetime.now(timezone.utc).year + 1   # never older than the expected edition
+    df = _summary().assign(ELI_EDITION=current)
+    rez = {"forecasts_eli_edition": current, "membership_eli_edition": current, "isp_edition": "x"}
+    assert _run(tmp_path, df, _status() | {"eli": _eli(current), "rez": rez}) == []
+    assert "not found at the expected URL" not in capsys.readouterr().out
+
+
+# ── S3-3 a blind probe ────────────────────────────────────────────────────
+
+def test_a_blocked_probe_keeps_the_last_conclusive_check(tmp_path):
+    ok = FakeResponse(302, headers={"Location": "https://aemo.com.au/404"})
+    first = download_eli.check_newer_edition(tmp_path, 2025, session=FakeSession(ok))
+    assert first["last_conclusive_check"] == first["checked_at"]
+    blocked = download_eli.check_newer_edition(tmp_path, 2025, session=FakeSession(FakeResponse(403)))
+    assert blocked["newer_edition_available"] is None
+    assert blocked["last_conclusive_check"] == first["checked_at"]
+
+
+def test_validator_fails_when_the_probe_has_been_blind_too_long(tmp_path):
+    old = (datetime.now(timezone.utc) - timedelta(days=61)).isoformat()
+    eli = _eli(2025, newer=None, error="HTTP 403", last_conclusive_check=old)
+    errs = _run(tmp_path, _summary(), _status() | {"eli": eli})
+    assert any("last had a yes/no answer 61 days ago" in e for e in errs), errs
+
+
+def test_validator_fails_when_the_probe_never_answered(tmp_path):
+    eli = _eli(2025, newer=None, error="HTTP 403")
+    errs = _run(tmp_path, _summary(), _status() | {"eli": eli})
+    assert any("never had a yes/no answer" in e for e in errs), errs
+
+
+def test_validator_passes_a_recently_blocked_probe(tmp_path, capsys):
+    recent = (datetime.now(timezone.utc) - timedelta(days=20)).isoformat()
+    eli = _eli(2025, newer=None, error="HTTP 403", last_conclusive_check=recent)
+    assert _run(tmp_path, _summary(), _status() | {"eli": eli}) == []
+    assert "could not check for a newer ELI edition" in capsys.readouterr().out
