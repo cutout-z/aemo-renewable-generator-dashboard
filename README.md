@@ -11,18 +11,18 @@ For every utility-scale solar and wind farm in the NEM:
 | Category | Columns | Update frequency |
 |----------|---------|-----------------|
 | **Actual curtailment** | Last 2 completed FYs, sourced from the credit dashboard | Monthly |
-| **ELI projected curtailment** | Near-term (2026-28) and medium-term (2030-35) projections | Annual (July) |
-| **Marginal loss factors** | Last 2 actual FYs + current year draft | Annual (July/Oct) |
-| **ISP curtailment forecast** | The Final 2024 ISP's forecast (Step Change) for 2025-26 to 2027-28 + average, by REZ. Superseded by AEMO's 2026 ISP (25 June 2026); see below | With each ELI edition (July) |
-| **ISP economic offloading** | Same source and years | With each ELI edition (July) |
+| **ELI projected curtailment** | Near-term (2026-28) and medium-term (2030-35) projections | 2025 edition; updated by hand (config plus `python -m src.eli_appendix`) when AEMO publishes a new one |
+| **Marginal loss factors** | Final MLFs for the latest two FYs the MLF tracker publishes (it has no draft column; today FY25-26 and FY26-27) | AEMO publishes final MLFs by about 1 April for the next FY, with occasional mid-year revisions; read via the MLF tracker |
+| **ISP curtailment forecast** | The Final 2024 ISP's forecast (Step Change) for 2025-26 to 2027-28 + average, by REZ. Superseded by AEMO's 2026 ISP (25 June 2026); see below | 2024 ISP via the 2025 ELI appendices; changes only when a new ELI edition republishes ISP figures (the ISP itself is every two years) |
+| **ISP economic offloading** | Same source and years | As above |
 
 ## Data sources
 
 | Data | Source | URL |
 |------|--------|-----|
 | Generator listing | AEMO NEM Registration and Exemption List (re-downloaded every run), cross-checked against MMSDM DUDETAILSUMMARY | [NEM-Registration-and-Exemption-List.xls](https://www.aemo.com.au/-/media/Files/Electricity/NEM/Participant_Information/NEM-Registration-and-Exemption-List.xls), [nemweb MMSDM](https://nemweb.com.au/Data_Archive/Wholesale_Electricity/MMSDM/) |
-| Projected curtailment | AEMO Enhanced Locational Information (ELI) Report | [aemo.com.au/.../inputs-assumptions-methodologies](https://aemo.com.au/energy-systems/electricity/national-electricity-market-nem/nem-forecasting-and-planning/forecasting-and-planning-data/inputs-assumptions-and-methodologies) |
-| REZ forecasts | Appendices to AEMO ELI Report | Same as above |
+| Projected curtailment | AEMO Enhanced Locational Information (ELI) Report | [aemo.com.au/.../enhanced-locational-information](https://www.aemo.com.au/energy-systems/electricity/national-electricity-market-nem/nem-forecasting-and-planning/forecasting-and-planning-data/enhanced-locational-information) |
+| REZ forecasts | Regional appendices to AEMO's ELI Report (forecasts from the ISP named in them) | Same as above |
 | MLFs | AEMO MLF Tracker (via [cutout-z/aemo-mlf-tracker](https://github.com/cutout-z/aemo-mlf-tracker)) | [cutout-z.github.io/aemo-mlf-tracker](https://cutout-z.github.io/aemo-mlf-tracker/) |
 | Actual curtailment | AEMO Generator Credit Dashboard ([cutout-z/aemo-generator-credit-dashboard](https://github.com/cutout-z/aemo-generator-credit-dashboard)) | [cutout-z.github.io/aemo-generator-credit-dashboard/data/curtailment_by_fy.csv](https://cutout-z.github.io/aemo-generator-credit-dashboard/data/curtailment_by_fy.csv) |
 
@@ -215,7 +215,7 @@ Production updates run on the **NAS runner** (QNAP `ai-wif-runner` container) vi
 
 - A QNAP scheduled task fires the lane daily after the upstream Credit Dashboard and MLF Tracker lanes have had time to publish.
 - The lane refreshes generator listing, MLF feed, ELI/REZ source data, and the Credit Dashboard curtailment rollup.
-- If AEMO ELI/REZ workbook URLs fail, the pipeline falls back to cached source snapshots rather than dropping projected-curtailment or REZ forecast columns.
+- The ELI chart-data workbook is downloaded once per edition and then read from `data/` (a corrected re-issue under the same URL is not picked up); if parsing or the first download fails, the last `eli_curtailment.feather` is reused. REZ forecasts and membership are not fetched in the lane at all: they come from the committed `rez_*.feather` files that `python -m src.eli_appendix` builds by hand.
 - The lane commits as `aemo-nas-bot` and publishes only when canonical `outputs/summary.csv` changes, so daily workbook/cache regeneration does not create noisy commits.
 - GitHub Actions is kept as a manual verification/fallback runner. Its `full_refresh` input defaults to `true`, matching the NAS lane (`PIPELINE_ARGS` defaults to `--full-refresh`); set it to `false` only to rebuild outputs from the committed caches.
 - GitHub Pages deploys on those pushes.

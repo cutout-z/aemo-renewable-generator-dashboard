@@ -462,7 +462,7 @@ function renderStats() {
   document.getElementById('statsFoot').innerHTML = '<span>' + [
     'Source: outputs/summary.csv',
     `${scope}; unweighted mean across generators with a value; filters do not apply`,
-    'Rhythms differ: actual curtailment is monthly, ELI and ISP forecasts annual (July), MLFs annual (July/Oct)',
+    `Rhythms differ: actual curtailment is monthly; ELI is the ${EDITIONS.eli} edition, updated by hand when AEMO publishes a new one; ISP is the ${EDITIONS.isp} via the ${EDITIONS.eli} ELI appendices; MLFs are AEMO's finals (published by about 1 April for the next FY, occasionally revised)`,
     'The CSV carries no publish date; it is refreshed daily and republished only when values change'
   ].join(' · ') + '</span>';
 }
@@ -854,7 +854,7 @@ Papa.parse('outputs/summary.csv', {
     document.getElementById('footer').innerHTML = '<span>' + [
       `${allData.length} generators tracked`,
       'Source: AEMO ELI Report and its regional appendices (projections, REZ membership), NEM Registration and Exemption List (generators), AEMO MLF Tracker (MLFs); actual curtailment from the Generator Credit Dashboard rollup',
-      'Two rhythms: actuals monthly (last two completed FYs), ELI and ISP annual (July), MLFs annual (July/Oct)',
+      `Rhythms: actuals monthly (last two completed FYs); ELI ${EDITIONS.eli} edition, updated by hand when AEMO publishes a new one; ISP: ${EDITIONS.isp} via the ${EDITIONS.eli} ELI appendices; MLFs: AEMO's finals, published by about 1 April for the next FY`,
       'The CSV carries no publish date; the dashboard refreshes daily and republishes only when values change'
     ].join(' · ') + '</span>';
     renderSourceStatus();

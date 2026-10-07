@@ -125,8 +125,10 @@ ISP_FORECAST_EDITION = "2024 ISP"
 ISP_FORECAST_SCENARIO = "Step Change"
 
 # Actual curtailment: consolidated FY rollup from the credit dashboard pipeline.
-# The credit dashboard computes monthly curtailment per DUID from
-# INTERMITTENT_GEN_SCADA and publishes the FY rollup via GitHub Pages.
+# The credit dashboard computes monthly curtailment per DUID from AEMO dispatch
+# data (DISPATCH_UNIT_SCADA output against the bid-in AVAILABILITY in DISPATCHLOAD;
+# INTERMITTENT_GEN_SCADA quality flags from Dec 2024) and publishes the FY rollup
+# via GitHub Pages.
 CREDIT_CURTAILMENT_URL = (
     "https://cutout-z.github.io/aemo-generator-credit-dashboard/"
     "data/curtailment_by_fy.csv"

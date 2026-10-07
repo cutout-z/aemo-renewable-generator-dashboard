@@ -1,8 +1,9 @@
 """Fetch per-DUID FY curtailment from the credit dashboard.
 
 The credit dashboard (aemo-generator-credit-dashboard) already computes monthly
-per-DUID curtailment from AEMO's INTERMITTENT_GEN_SCADA (with quality flags
-splitting grid vs mechanical from Dec 2024+). It publishes a generation-weighted
+per-DUID curtailment from AEMO dispatch data: DISPATCH_UNIT_SCADA output against
+the unit's bid-in AVAILABILITY in DISPATCHLOAD, with INTERMITTENT_GEN_SCADA
+quality flags splitting grid vs mechanical from Dec 2024+. It publishes a generation-weighted
 FY rollup to its GitHub Pages site. We fetch that here rather than re-run our own
 NEMOSIS pipeline — one source of truth, incremental on the credit side.
 """
