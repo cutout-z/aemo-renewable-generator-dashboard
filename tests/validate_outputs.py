@@ -12,6 +12,10 @@ from pathlib import Path
 
 import pandas as pd
 
+# Run as a script from the repo root (python tests/validate_outputs.py): make `src` importable
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.post_publish_check import newer_edition_message  # noqa: E402
+
 OUTPUTS_DIR = Path(__file__).parent.parent / "outputs"
 CACHE_DIR = Path(__file__).parent.parent / "data"
 STATUS_FILE = "source_status.json"
@@ -268,20 +272,17 @@ def expected_eli_edition(now=None):
 
 
 def check_eli(eli, now=None):
-    """Newer ELI edition (fail), calendar backstop (warn), blind probe (fail)."""
+    """Newer ELI edition (warn here; src.post_publish_check fails the lane after publishing),
+    calendar backstop (warn), blind probe (fail)."""
     if not eli:
         print("  WARN: no ELI record in source_status.json (the run did not refresh ELI)")
         return
     edition, newer = eli.get("edition"), eli.get("newer_edition_available")
     if newer:
-        # Decision 6(b): a confirmed newer edition turns the lane red until it is wired in
-        new = (edition or 0) + 1
-        check(False, f"ELI {new} has been published ({eli.get('probed_url')}) but the dashboard "
-                     f"still uses ELI {edition}. To wire it in: (1) in src/config.py add {new} to "
-                     f"ELI_CHART_DATA_URLS and ELI_REGIONAL_APPENDIX_URLS (the newest key is the "
-                     f"edition used), with the file names on AEMO's ELI page {ELI_PAGE_URL}; "
-                     f"(2) rerun python -m src.eli_appendix on the new appendix PDFs; "
-                     f"(3) regenerate with python -m src.main --full-refresh and rerun this check")
+        # Decision 6(b): the lane goes red, but only after this run has published its other
+        # updates (MLF, actuals, generator list); failing here would hold them back
+        print(f"  WARN: {newer_edition_message(eli)}. The lane fails after publishing "
+              "(python -m src.post_publish_check) until this is done")
     elif newer is None:
         print(f"  WARN: could not check for a newer ELI edition ({eli.get('error')})")
     else:
