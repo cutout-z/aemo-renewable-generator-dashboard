@@ -1,0 +1,32 @@
+{
+  "actual_curtailment": {
+    "error": null,
+    "fetched_at": "2026-10-06T01:42:50+00:00",
+    "fys": [
+      "FY24-25",
+      "FY25-26"
+    ],
+    "refreshed": true,
+    "used_cache": false
+  },
+  "eli": {
+    "checked_at": "2026-10-06T01:42:48+00:00",
+    "edition": 2025,
+    "error": null,
+    "newer_edition_available": false
+  },
+  "gen_info": {
+    "edition": "2026-07",
+    "fetched_at": "2026-10-05T07:34:54+00:00"
+  },
+  "registration_list": {
+    "error": null,
+    "fetched_at": "2026-10-06T01:42:44+00:00",
+    "refreshed": true
+  },
+  "rez": {
+    "forecasts_eli_edition": 2025,
+    "isp_edition": "2024 ISP",
+    "membership_eli_edition": 2025
+  }
+}
