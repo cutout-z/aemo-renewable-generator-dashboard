@@ -32,12 +32,14 @@ GROUPS = ["Actual Curtailment", "ELI Projected", "Marginal Loss Factor",
 CSV = ROOT / "outputs" / "summary.csv"
 
 # The table's shape comes from the data file, not a count frozen on the day the gate was written.
-# Metric columns are every csv column the page groups (actual, ELI, MLF, ISP), labels excluded.
+# Metric columns are every csv column the page groups (actual, ELI, MLF, ISP, the ISP's own A3
+# figures), labels excluded.
 with CSV.open() as _fh:
     _reader = csv.DictReader(_fh)
     N_GEN = sum(1 for _ in _reader)
     METRIC_COLS = [k for k in _reader.fieldnames or []
-                   if k.startswith(("CURTAILMENT_ACTUAL_", "ELI_CURTAILMENT_", "MLF_", "ISP_CURTAILMENT_", "ISP_OFFLOADING_"))
+                   if k.startswith(("CURTAILMENT_ACTUAL_", "ELI_CURTAILMENT_", "MLF_", "ISP_CURTAILMENT_", "ISP_OFFLOADING_",
+                                 "ISPA3_TRANSMISSION_Y", "ISPA3_SPILL_Y"))
                    and not k.endswith("_LABEL")]
 
 fails: list[str] = []

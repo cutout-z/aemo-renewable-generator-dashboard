@@ -82,6 +82,9 @@ def columns(scope: str) -> list[tuple[str, str]]:
     for pre, grp in (("ISP_CURTAILMENT_", "isp-c"), ("ISP_OFFLOADING_", "isp-o")):
         cols += [(k, grp) for k in sorted(k for k in KEYS if k.startswith(pre + "FY") and not k.endswith("_LABEL"))]
         cols.append((pre + "AVG", grp))
+    # The ISP's own A3 figures: three years per measure, no average (the years are a decade apart)
+    for m, grp in (("TRANSMISSION", "a3-t"), ("SPILL", "a3-s")):
+        cols += [(f"ISPA3_{m}_Y{i}", grp) for i in (1, 2, 3)]
     return [(k, g) for k, g in cols if k in KEYS]
 
 
@@ -189,7 +192,14 @@ with sync_playwright() as pw:
     # ISP year headers come from the first row that carries a label (blank-REZ rows carry none)
     labels = {k: next((r[k] for r in rows if r[k].strip()), "") for k in KEYS if k.endswith("_LABEL")}
     heads = dict(pg.eval_on_selector_all("#thead th[data-col]", "e => e.map(x => [x.dataset.col, x.innerText.trim()])"))
-    bad_heads = {k[:-6]: (heads.get(k[:-6]), v) for k, v in labels.items() if v and heads.get(k[:-6]) != v}
+    # ISPA3_Y<i>_LABEL heads both A3 measures' Y<i> columns; every other label heads its own column
+    labelled = {}
+    for k, v in labels.items():
+        col = k[:-6]
+        targets = ([f"ISPA3_{m}_{col[6:]}" for m in ("TRANSMISSION", "SPILL") if f"ISPA3_{m}_{col[6:]}" in KEYS]
+                   if col.startswith("ISPA3_Y") else [col])
+        labelled.update({t: v for t in targets})
+    bad_heads = {c: (heads.get(c), v) for c, v in labelled.items() if v and heads.get(c) != v}
     check(labels and not bad_heads, "the ISP year headers read the data's FY labels", f"{bad_heads}")
 
     print("tabs")
@@ -268,7 +278,9 @@ with sync_playwright() as pw:
     # (the table's short labels — "FY25-26", "FY1", "Avg" — repeat across groups).
     xl = openpyxl.load_workbook(io.BytesIO(pathlib.Path(dl.value.path()).read_bytes()), read_only=True)
     xl_heads = [c.value for c in next(xl.active.iter_rows(max_row=1))]
-    groups = ("Actual curtailment", "ELI projected", "Marginal loss factor", "ISP curtailment forecast", "ISP offloading forecast")
+    a3_edition = next((r["ISPA3_EDITION"] for r in rows if r.get("ISPA3_EDITION", "").strip()), None)
+    groups = ("Actual curtailment", "ELI projected", "Marginal loss factor", "ISP curtailment forecast",
+              "ISP offloading forecast") + ((a3_edition,) if a3_edition else ())
     metric_heads = xl_heads[len([k for k, g in columns("ALL") if g == "meta"]):]
     dup = sorted({h for h in xl_heads if xl_heads.count(h) > 1})
     unnamed = [h for h in metric_heads if not str(h).startswith(groups)]
