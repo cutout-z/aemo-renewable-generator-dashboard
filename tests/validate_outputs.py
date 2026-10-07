@@ -22,7 +22,8 @@ REGION_NAMES = {"NSW1": "NSW", "QLD1": "QLD", "VIC1": "VIC", "SA1": "SA", "TAS1"
 # REZ / ELI output contract
 REZ_VALUES = {"Y", "N", ""}
 REZ_SOURCES = {"geninfo", "eli", "eli-station", "seed", ""}
-ELI_SOURCES = {"per-DUID", "location", "location-name", ""}
+# "per-DUID" (the hand-seeded 2025 values) is gone: every ELI value comes from AEMO's location table
+ELI_SOURCES = {"location", "location-name", ""}
 NON_REZ = "Non-REZ"
 
 # Source freshness: the lane runs daily, so a list this old means refreshes keep failing

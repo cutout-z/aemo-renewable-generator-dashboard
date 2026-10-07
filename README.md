@@ -72,20 +72,26 @@ These are the horizons the 2025 ELI report's executive summary gives; its Table 
 
 These are projections, not actuals. They indicate the *risk* of curtailment for a new connection at each location.
 
-Each unit takes its seeded per-DUID value where there is one (`ELI_SOURCE` =
-`per-DUID`). Otherwise it is filled from the location table (`ELI_SOURCE` =
-`location`): same `LOCATION` in the unit's own region, the row at the unit's
-connection voltage if there is one, else the location's only row (several voltages
-and none matching = left empty); wind farms take the Wind columns, solar farms the
-Solar columns. `ELI_SOURCE` is empty where there is no value. On the seeded solar
-farms this rule reproduces the per-DUID values for 101/104 (near) and 102/104
-(medium). No AEMO table maps a DUID to an ELI location, so a unit with no
-`LOCATION` (every wind farm, and the unseeded solar farms) is matched by name
-instead (`ELI_SOURCE` = `location-name`): the one ELI location in its region
-named as a whole word in its project name (Ararat Wind Farm → Ararat), same
-voltage rules. On the 21 seeded solar farms the rule fires for, it picks the
-seeded location for 20 (the 21st, Stubbo, now has its own ELI location). Today
-it fills 6 wind farms and 4 solar farms; the other wind farms stay empty.
+Every unit is filled from AEMO's location table (`ELI_SOURCE` = `location`):
+same `LOCATION` in the unit's own region, the row at the unit's connection voltage
+if there is one, else the location's only row (several voltages and none matching =
+left empty); wind farms take the Wind columns, solar farms the Solar columns.
+`ELI_SOURCE` is empty where there is no value. No AEMO table maps a DUID to an ELI
+location, so a unit with no `LOCATION` (every wind farm, and the unseeded solar
+farms) is matched by name instead (`ELI_SOURCE` = `location-name`): the one ELI
+location in its region named as a whole word in its project name (Ararat Wind Farm
+→ Ararat), same voltage rules. On the 21 seeded solar farms the name rule fires
+for, it picks the seeded location for 20 (the 21st, Stubbo, now has its own ELI
+location). Today 104 solar farms are filled by location and 10 farms (6 wind, 4
+solar) by name; the other wind farms stay empty.
+
+Until 2026-10 the 104 seeded solar farms took hand-seeded per-DUID values
+(`data/eli_per_duid.feather`, `ELI_SOURCE` = `per-DUID`) ahead of the location
+table. That file carries no edition and nothing rebuilds it, so a new ELI edition
+would have left those units on the 2025 seed. The pipeline no longer reads it; the
+switch moved five published cells by under 0.2 percentage points (Metz and White
+Rock near term 23.10% → 22.91%, Wollar near term 15.87% → 15.85%, New England 1
+and 2 medium term 5.08% → 5.15%), where the seed differed from AEMO's table.
 
 ### ISP curtailment & economic offloading forecasts
 
@@ -217,7 +223,7 @@ After the pipeline runs and before committing, an automated validation step (`te
 - Curtailment values in [0, 1]
 - All 5 regional Excel workbooks exist
 - REZ contract: `REZ` in {`Y`, `N`, empty}; `Non-REZ` only with `REZ` = `N`; every `Y`/`N` has a `REZ_SOURCE`; `Y` has a zone name
-- `ELI_SOURCE` in {`per-DUID`, `location`, `location-name`, empty}, empty exactly when there is no ELI value
+- `ELI_SOURCE` in {`location`, `location-name`, empty}, empty exactly when there is no ELI value (`per-DUID`, the retired hand seed, fails)
 - `TECHNOLOGY` is not "Renewable" for every row
 - Source freshness (`data/source_status.json`, written by the run): the Registration List's last good fetch is at most 30 days old, and at most 3 GENERATOR DUIDs registered in the last 24 months (per DUDETAILSUMMARY) are missing from it; a stale Generation Information edition is reported as a warning
 - ELI edition (`eli` in `data/source_status.json`): each refresh probes next year's chart-data file on AEMO (one-byte Range request; a missing file redirects to /404) and a published newer edition is printed as a warning, not a failure

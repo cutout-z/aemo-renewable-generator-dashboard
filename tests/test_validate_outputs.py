@@ -28,7 +28,7 @@ def _summary():
     df = pd.DataFrame(rows)
     df.loc[0, ["REZ", "REZ_NAME", "REZ_SOURCE"]] = ["Y", "Darling Downs", "seed"]
     df.loc[2, ["REZ", "REZ_NAME", "REZ_SOURCE"]] = ["N", "Non-REZ", "seed"]
-    df.loc[0, ["ELI_CURTAILMENT_NEAR", "ELI_CURTAILMENT_MED", "ELI_SOURCE"]] = [0.2, 0.1, "per-DUID"]
+    df.loc[0, ["ELI_CURTAILMENT_NEAR", "ELI_CURTAILMENT_MED", "ELI_SOURCE"]] = [0.2, 0.1, "location-name"]
     df.loc[1, ["ELI_CURTAILMENT_NEAR", "ELI_CURTAILMENT_MED", "ELI_SOURCE"]] = [0.3, 0.1, "location"]
     return df
 
@@ -81,6 +81,8 @@ def _mutate(df, idx, **cols):
     (dict(REZ_SOURCE="guess"), "REZ_SOURCE has unexpected"),
     (dict(ELI_CURTAILMENT_NEAR=0.4), "ELI value but no ELI_SOURCE"),
     (dict(ELI_SOURCE="nearby"), "ELI_SOURCE has unexpected"),
+    # the hand-seeded per-DUID values are no longer a source (S2-2)
+    (dict(ELI_CURTAILMENT_NEAR=0.4, ELI_SOURCE="per-DUID"), "ELI_SOURCE has unexpected"),
     (dict(TECHNOLOGY="Renewable"), None),  # one row is fine
 ])
 def test_contract_violations_fail(tmp_path, change, expected):

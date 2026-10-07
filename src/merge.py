@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 import re
-from pathlib import Path
 
 import pandas as pd
 
@@ -26,10 +25,14 @@ def build_summary(
     Merge strategy:
     1. Generators (spine) LEFT JOIN MLF on DUID
     2. LEFT JOIN actual curtailment on DUID
-    3. ELI projected curtailment: per-DUID values first; units without one are
-       filled from the location table (LOCATION + region, voltage when it
-       picks one row), fuel-matched. ELI_SOURCE records which.
+    3. ELI projected curtailment from AEMO's location table for every unit
+       (LOCATION + region, voltage when it picks one row; by project name when
+       there is no LOCATION), fuel-matched. ELI_SOURCE records which rule.
+       The hand-seeded eli_per_duid.feather is not read: it carries no edition
+       and nothing rebuilds it, so it would pin 2025 values over a new edition.
     4. LEFT JOIN REZ forecasts on REZ_NAME
+
+    `cache_dir` is accepted for callers' compatibility and no longer read.
 
     Returns wide-format DataFrame sorted by FUEL_TYPE → STATE → PROJECT_NAME.
     """
@@ -51,13 +54,8 @@ def build_summary(
     else:
         logger.warning("No actual curtailment data to merge")
 
-    # 3. Merge ELI projected curtailment
-    # Per-DUID values (seeded workbook) first; the rest from the location table
-    if cache_dir is None:
-        cache_dir = str(Path(__file__).resolve().parent.parent / config.DATA_DIR)
-    eli_duid_path = Path(cache_dir) / "eli_per_duid.feather"
-    eli_duid = pd.read_feather(eli_duid_path) if eli_duid_path.exists() else pd.DataFrame()
-    summary = _merge_eli_per_duid(summary, eli_duid)
+    # 3. ELI projected curtailment, all from the location table
+    summary = _init_eli(summary)
     if not eli_curtailment.empty:
         summary = _fill_eli_from_location(summary, eli_curtailment)
     else:
@@ -89,16 +87,12 @@ ELI_TERMS = ("NEAR", "MED")
 ELI_COLS = [f"ELI_CURTAILMENT_{t}" for t in ELI_TERMS]
 
 
-def _merge_eli_per_duid(summary: pd.DataFrame, eli_duid: pd.DataFrame) -> pd.DataFrame:
-    """Join the seeded per-DUID ELI values; ELI_SOURCE = "per-DUID" where present."""
+def _init_eli(summary: pd.DataFrame) -> pd.DataFrame:
+    """Empty ELI columns and ELI_SOURCE = "" for every unit; the location fill sets them."""
     result = summary.copy()
-    if not eli_duid.empty:
-        cols = ["DUID"] + [c for c in ELI_COLS if c in eli_duid.columns]
-        result = result.merge(eli_duid[cols].drop_duplicates(subset="DUID"), on="DUID", how="left")
     for col in ELI_COLS:
-        if col not in result.columns:
-            result[col] = float("nan")
-    result["ELI_SOURCE"] = result[ELI_COLS].notna().any(axis=1).map({True: "per-DUID", False: ""})
+        result[col] = float("nan")
+    result["ELI_SOURCE"] = ""
     return result
 
 
@@ -115,7 +109,7 @@ def _norm_volt(value):
 
 
 def _fill_eli_from_location(summary: pd.DataFrame, eli: pd.DataFrame) -> pd.DataFrame:
-    """Fill ELI for units without a per-DUID value from the location-based table.
+    """Fill ELI for every unit from the location-based table.
 
     A unit matches ELI rows with the same LOCATION (case-insensitive) in its own
     region. If its connection voltage equals one of those rows' voltage, that row

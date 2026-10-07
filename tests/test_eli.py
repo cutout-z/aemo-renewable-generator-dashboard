@@ -1,4 +1,4 @@
-"""ELI: per-DUID first, then the location table (fuel-matched), with ELI_SOURCE."""
+"""ELI: every unit from the location table (fuel-matched), with ELI_SOURCE; the per-DUID seed is ignored."""
 
 import pandas as pd
 
@@ -45,16 +45,17 @@ def test_wind_gets_wind_columns_and_solar_solar_columns(tmp_path):
     assert set(out["ELI_SOURCE"]) == {"location"}
 
 
-def test_per_duid_value_wins_and_is_labelled(tmp_path):
+def test_the_hand_seeded_per_duid_file_is_ignored(tmp_path):
+    # eli_per_duid.feather carries no edition and nothing rebuilds it; reading it would
+    # pin the 2025 seed over a new ELI edition (S2-2). The location table decides.
     per_duid = pd.DataFrame({"DUID": ["ARSF1"], "ELI_CURTAILMENT_NEAR": [0.12],
                              "ELI_CURTAILMENT_MED": [0.02]})
     out = _summary(_gens([
         ("ARSF1", "Solar", "Ararat", 220, "VIC"),
         ("ARWF1", "Wind", "Ararat", 220, "VIC"),
     ]), tmp_path, per_duid)
-    assert out.loc["ARSF1", "ELI_CURTAILMENT_NEAR"] == 0.12
-    assert out.loc["ARSF1", "ELI_SOURCE"] == "per-DUID"
-    assert out.loc["ARWF1", "ELI_SOURCE"] == "location"
+    assert out.loc["ARSF1", "ELI_CURTAILMENT_NEAR"] == 0.46
+    assert set(out["ELI_SOURCE"]) == {"location"}
 
 
 def test_voltage_is_not_truncated_to_int(tmp_path):
@@ -81,7 +82,7 @@ def test_location_must_be_in_the_units_region(tmp_path):
     assert out.loc["FINLYSF1", "ELI_CURTAILMENT_NEAR"] == 0.70
     assert pd.isna(out.loc["ODD1", "ELI_CURTAILMENT_NEAR"])
     assert out.loc["NOLOC1", "ELI_SOURCE"] == ""
-    assert set(out["ELI_SOURCE"]) <= {"per-DUID", "location", ""}
+    assert set(out["ELI_SOURCE"]) <= {"location", ""}
 
 
 def test_combine_terms_does_not_split_a_location_across_regions():
