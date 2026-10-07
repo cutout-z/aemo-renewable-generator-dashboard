@@ -1,4 +1,4 @@
-"""A newer ELI edition is noticed: probed, logged and recorded, and the validator warns."""
+"""A newer ELI edition is noticed: probed, logged and recorded, and the validator fails."""
 
 import logging
 from datetime import datetime, timedelta, timezone
@@ -69,13 +69,40 @@ def test_fetch_records_a_newer_edition_and_warns(tmp_path, caplog):
     assert any("NEWER ELI EDITION (2026)" in r.getMessage() for r in caplog.records)
 
 
-def test_validator_warns_but_does_not_fail(tmp_path, capsys):
-    # fail-vs-warn on a confirmed newer edition is Zalen's call; it stays a warning for now
+def test_validator_fails_on_a_confirmed_newer_edition(tmp_path, capsys):
+    # Zalen's decision 6(b): a confirmed newer edition turns the lane red until it is wired in
     status = _status() | {"eli": {"edition": 2025, "newer_edition_available": True,
                                   "checked_at": source_status.now_iso(),
                                   "probed_url": "https://x/2026/2026-eli-report-chart-data.xlsx"}}
-    assert _run(tmp_path, _summary(), status) == []
-    assert "WARN: ELI 2026 has been published" in capsys.readouterr().out
+    errs = _run(tmp_path, _summary(), status)
+    assert len(errs) == 1, errs
+    msg = errs[0]
+    assert "ELI 2026 has been published" in msg and "still uses ELI 2025" in msg
+    # says exactly what to do: bump the config edition, rebuild the appendices, regenerate
+    assert "ELI_CHART_DATA_URLS" in msg and "ELI_REGIONAL_APPENDIX_URLS" in msg
+    assert "python -m src.eli_appendix" in msg and "python -m src.main --full-refresh" in msg
+    assert "FAIL: ELI 2026 has been published" in capsys.readouterr().out
+
+
+def test_validator_fails_on_a_newer_edition_even_when_the_backstop_is_quiet(tmp_path, capsys):
+    # the newer-edition failure stands on its own; the calendar backstop warning is not printed
+    # alongside it (the probe did find the edition)
+    overdue = datetime.now(timezone.utc).year - 2
+    df = _summary().assign(ELI_EDITION=overdue)
+    rez = {"forecasts_eli_edition": overdue, "membership_eli_edition": overdue, "isp_edition": "x"}
+    eli = _eli(overdue, newer=True)
+    errs = _run(tmp_path, df, _status() | {"eli": eli, "rez": rez})
+    assert any(f"ELI {overdue + 1} has been published" in e for e in errs), errs
+    assert "not found at the expected URL" not in capsys.readouterr().out
+
+
+def test_validator_passes_when_no_newer_edition_is_found(tmp_path, capsys):
+    current = datetime.now(timezone.utc).year + 1
+    df = _summary().assign(ELI_EDITION=current)
+    rez = {"forecasts_eli_edition": current, "membership_eli_edition": current, "isp_edition": "x"}
+    assert _run(tmp_path, df, _status() | {"eli": _eli(current, newer=False), "rez": rez}) == []
+    out = capsys.readouterr().out
+    assert "has been published" not in out and f"ELI edition: {current}" in out
 
 
 # ── S2-1 calendar backstop ────────────────────────────────────────────────

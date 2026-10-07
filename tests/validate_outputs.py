@@ -268,14 +268,20 @@ def expected_eli_edition(now=None):
 
 
 def check_eli(eli, now=None):
-    """Newer ELI edition (warn), calendar backstop (warn), blind probe (fail)."""
+    """Newer ELI edition (fail), calendar backstop (warn), blind probe (fail)."""
     if not eli:
         print("  WARN: no ELI record in source_status.json (the run did not refresh ELI)")
         return
     edition, newer = eli.get("edition"), eli.get("newer_edition_available")
     if newer:
-        print(f"  WARN: ELI {(edition or 0) + 1} has been published "
-              f"({eli.get('probed_url')}); the dashboard still uses ELI {edition}")
+        # Decision 6(b): a confirmed newer edition turns the lane red until it is wired in
+        new = (edition or 0) + 1
+        check(False, f"ELI {new} has been published ({eli.get('probed_url')}) but the dashboard "
+                     f"still uses ELI {edition}. To wire it in: (1) in src/config.py add {new} to "
+                     f"ELI_CHART_DATA_URLS and ELI_REGIONAL_APPENDIX_URLS (the newest key is the "
+                     f"edition used), with the file names on AEMO's ELI page {ELI_PAGE_URL}; "
+                     f"(2) rerun python -m src.eli_appendix on the new appendix PDFs; "
+                     f"(3) regenerate with python -m src.main --full-refresh and rerun this check")
     elif newer is None:
         print(f"  WARN: could not check for a newer ELI edition ({eli.get('error')})")
     else:

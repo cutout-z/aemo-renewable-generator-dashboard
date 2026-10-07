@@ -129,7 +129,10 @@ appendices use the same REZ boundaries as the ISP forecasts above, and agree wit
 the seed on all 97 units both cover. Today: wind 66 in a REZ, 17 outside, 25 unknown
 (units the 2025 appendices don't list, mostly small non-scheduled or newer farms).
 
-When a new ELI edition is published, rebuild both reference files:
+When a new ELI edition is published, add its year to `ELI_CHART_DATA_URLS` and
+`ELI_REGIONAL_APPENDIX_URLS` in `src/config.py`, then rebuild both reference files
+(validation fails from the first run whose probe finds the new edition until this is
+done; see Output Validation):
 
 ```
 python -m src.eli_appendix          # downloads the five appendix PDFs; needs pdftotext (poppler)
@@ -239,7 +242,7 @@ After the pipeline runs and before committing, an automated validation step (`te
 - Editions: ELI values carry one `ELI_EDITION` and ISP values one `ISP_EDITION`; the REZ appendix files (`rez` in `data/source_status.json`) record an ELI edition, and it equals the chart-data edition (configured and published)
 - `TECHNOLOGY` is not "Renewable" for every row
 - Source freshness (`data/source_status.json`, written by the run): the Registration List's last good fetch is at most 30 days old, and at most 3 GENERATOR DUIDs registered in the last 24 months (per DUDETAILSUMMARY) are missing from it; a stale Generation Information edition is reported as a warning
-- ELI edition (`eli` in `data/source_status.json`): each refresh probes next year's chart-data file on AEMO (one-byte Range request; a missing file redirects to /404) and a published newer edition is printed as a warning, not a failure. The probe guesses one file name, so from 1 October of year Y (each edition so far was out by July) an edition older than Y with nothing found prints a warning to check [AEMO's ELI page](https://www.aemo.com.au/energy-systems/electricity/national-electricity-market-nem/nem-forecasting-and-planning/forecasting-and-planning-data/enhanced-locational-information). Validation fails when the probe's last yes/no answer (`last_conclusive_check`; a 403 or network error is no answer) is more than 60 days old
+- ELI edition (`eli` in `data/source_status.json`): each refresh probes next year's chart-data file on AEMO (one-byte Range request; a missing file redirects to /404) and a published newer edition fails validation, so the lane stays red (and publishes nothing) until it is wired in: add the new year to `ELI_CHART_DATA_URLS` and `ELI_REGIONAL_APPENDIX_URLS` in `src/config.py` (the newest key is the edition used), rerun `python -m src.eli_appendix` on the new appendix PDFs, then regenerate with `python -m src.main --full-refresh`. The probe guesses one file name, so from 1 October of year Y (each edition so far was out by July) an edition older than Y with nothing found prints a warning to check [AEMO's ELI page](https://www.aemo.com.au/energy-systems/electricity/national-electricity-market-nem/nem-forecasting-and-planning/forecasting-and-planning-data/enhanced-locational-information). Validation fails when the probe's last yes/no answer (`last_conclusive_check`; a 403 or network error is no answer) is more than 60 days old
 - MLFs (`mlf` in `data/source_status.json`: last good fetch, this run's error, whether the cached tracker CSV was republished, newest final FY column): a republished cache prints a warning and fails when its last good fetch is more than 35 days old; it also fails when the newest final MLF year is older than the current financial year (NEM time), e.g. still FY26-27 on 1 July 2027
 - Actual curtailment (`actual_curtailment` in `data/source_status.json`): a run whose upstream fetch failed and republished the cached rollup prints a warning; it fails when that cache's last good fetch is more than 35 days old, or when there was no cache and the summary has no actual columns. It also records the upstream rollup's newest month (`upstream_last_month`) and fails when that month ended more than 75 days ago: the credit pipeline has stalled even if the fetch itself works
 
