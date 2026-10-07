@@ -31,6 +31,9 @@ MAX_REGISTRATION_AGE_DAYS = 30
 # Recently registered GENERATOR DUIDs (DUDETAILSUMMARY) the Registration List may lack
 MAX_UNLISTED_RECENT_GENERATORS = 3
 GEN_INFO_STALE_DAYS = 122
+# MLFs (the aemo-mlf-tracker summary.csv): a run that republished the cached copy fails
+# when its last good fetch is older than this
+MAX_MLF_AGE_DAYS = 35
 # ELI edition probe: it must have had a yes/no answer (not a 403 or network error)
 # within this many days, or the newer-edition check is blind
 MAX_ELI_PROBE_AGE_DAYS = 60
@@ -248,6 +251,7 @@ def validate_sources(cache_dir: Path, df=None):
         print(f"NEM Generation Information edition: {edition}")
 
     check_actual_curtailment(status)
+    check_mlf(status)
 
     check_eli(status.get("eli", {}))
 
@@ -320,6 +324,49 @@ def check_edition_match(status, df=None):
                            f"{status.get('eli', {}).get('edition')}, published {published}")
     print(f"ELI appendices {rez.get('forecasts_eli_edition')}, ISP forecasts "
           f"{rez.get('isp_edition')}, chart data {', '.join(sorted(chart)) or 'unknown'}")
+
+
+def current_fy_start(now=None):
+    """Start year of the current financial year in NEM time (FY26-27 → 2026)."""
+    now = (now or datetime.now(timezone.utc)).astimezone(NEM_TZ)
+    return now.year if now.month >= 7 else now.year - 1
+
+
+def _fy_start(label):
+    """'FY26-27' → 2026; None if not a FY label."""
+    text = str(label or "")
+    if len(text) >= 4 and text.startswith("FY") and text[2:4].isdigit():
+        return 2000 + int(text[2:4])
+    return None
+
+
+def check_mlf(status, now=None):
+    """Fail when MLFs come from a stale cache or the newest final MLF year is behind (S2-4)."""
+    rec = status.get("mlf")
+    if not rec:
+        print("  WARN: no MLF record in source_status.json (run predates it, or the run used "
+              "the MLF cache without refreshing)")
+        return
+    if rec.get("error") and not rec.get("used_cache"):
+        check(False, f"MLF fetch failed and there is no cached copy, so the summary has no MLF "
+                     f"columns: {rec.get('error')}")
+        return
+    age = _age_days(rec.get("fetched_at"))
+    age_txt = f"{age:.0f} days old" if age is not None else "of unknown age"
+    if rec.get("used_cache"):
+        print(f"  WARN: MLF refresh failed ({rec.get('error')}); this run republished the cached "
+              f"tracker CSV, {age_txt}")
+        check(age is not None and age <= MAX_MLF_AGE_DAYS,
+              f"MLF cache is {age_txt} (> {MAX_MLF_AGE_DAYS} days) and the MLF tracker fetch keeps "
+              f"failing: {rec.get('error')}")
+    newest, current = rec.get("newest_fy"), current_fy_start(now)
+    start = _fy_start(newest)
+    current_label = f"FY{current % 100:02d}-{(current + 1) % 100:02d}"
+    if check(start is not None, "The MLF tracker CSV has no final FY column"):
+        check(start >= current,
+              f"Newest final MLF year is {newest}, older than the current financial year "
+              f"{current_label}: the MLF tracker has not published this year's MLFs")
+        print(f"MLF: newest final year {newest} (tracker fetched {age_txt})")
 
 
 def check_actual_curtailment(status):
