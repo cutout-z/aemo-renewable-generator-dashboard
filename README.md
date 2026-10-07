@@ -15,6 +15,7 @@ For every utility-scale solar and wind farm in the NEM:
 | **Marginal loss factors** | Final MLFs for the latest two FYs the MLF tracker publishes (it has no draft column; today FY25-26 and FY26-27) | AEMO publishes final MLFs by about 1 April for the next FY, with occasional mid-year revisions; read via the MLF tracker |
 | **ISP curtailment forecast** | The Final 2024 ISP's forecast (Step Change) for 2025-26 to 2027-28 + average, by REZ. Superseded by AEMO's 2026 ISP (25 June 2026); see below | 2024 ISP via the 2025 ELI appendices; changes only when a new ELI edition republishes ISP figures (the ISP itself is every two years) |
 | **ISP economic offloading** | Same source and years | As above |
+| **2026 ISP transmission curtailment and economic spill** | The 2026 ISP's own REZ appendix (A3), Step Change, for 2029-30, 2039-40 and 2049-50, by REZ | Read by hand once per ISP (every two years) with `python -m src.isp_rez_appendix` |
 
 ## Data sources
 
@@ -23,6 +24,7 @@ For every utility-scale solar and wind farm in the NEM:
 | Generator listing | AEMO NEM Registration and Exemption List (re-downloaded every run), cross-checked against MMSDM DUDETAILSUMMARY | [NEM-Registration-and-Exemption-List.xls](https://www.aemo.com.au/-/media/Files/Electricity/NEM/Participant_Information/NEM-Registration-and-Exemption-List.xls), [nemweb MMSDM](https://nemweb.com.au/Data_Archive/Wholesale_Electricity/MMSDM/) |
 | Projected curtailment | AEMO Enhanced Locational Information (ELI) Report | [aemo.com.au/.../enhanced-locational-information](https://www.aemo.com.au/energy-systems/electricity/national-electricity-market-nem/nem-forecasting-and-planning/forecasting-and-planning-data/enhanced-locational-information) |
 | REZ forecasts | Regional appendices to AEMO's ELI Report (forecasts from the ISP named in them) | Same as above |
+| 2026 ISP REZ curtailment | AEMO 2026 ISP, Appendix A3 Renewable Energy Zones (PDF, "VRE curtailment" table per REZ) | [a3-renewable-energy-zones.pdf](https://www.aemo.com.au/-/media/files/major-publications/isp/2026/appendices/a3-renewable-energy-zones.pdf) |
 | MLFs | AEMO MLF Tracker (via [cutout-z/aemo-mlf-tracker](https://github.com/cutout-z/aemo-mlf-tracker)) | [cutout-z.github.io/aemo-mlf-tracker](https://cutout-z.github.io/aemo-mlf-tracker/) |
 | Actual curtailment | AEMO Generator Credit Dashboard ([cutout-z/aemo-generator-credit-dashboard](https://github.com/cutout-z/aemo-generator-credit-dashboard)) | [cutout-z.github.io/aemo-generator-credit-dashboard/data/curtailment_by_fy.csv](https://cutout-z.github.io/aemo-generator-credit-dashboard/data/curtailment_by_fy.csv) |
 
@@ -37,7 +39,7 @@ things and are not comparable with each other:
 |--------|-----------|----------|----------|
 | **Actual** | Measured, this unit, a full FY: 1 − energy generated ÷ the availability the unit offered into dispatch | every reason output fell short of offered availability: network and system-security constraints **and economic curtailment** (output withheld at negative prices) | outages already taken out of the offered availability |
 | **ELI** | Modelled by AEMO: share of a hypothetical **new 300 MW** solar or wind project's energy at the unit's ELI location that would not be dispatched | transmission (thermal or stability) limits, minimum synchronous units for system security (near term only), limited regional demand or export | negative-price (economic) bidding, outages, maintenance |
-| **ISP** | Forecast by the 2024 ISP (Step Change) for the **whole REZ**, as two figures | curtailment: output reduced by transmission congestion; economic offloading: output reduced on market price | anything unit-specific |
+| **ISP** | Forecast by the 2024 ISP (via the ELI appendices) and, in separate columns, the 2026 ISP (its Appendix A3), Step Change, for the **whole REZ**, as two figures | curtailment: output reduced by transmission congestion; economic offloading: output reduced on market price | anything unit-specific |
 
 So an actual figure above the ELI or ISP figure is not by itself a sign the
 projection was wrong: the actual includes economic curtailment, which ELI leaves
@@ -102,10 +104,63 @@ From the "VRE curtailment and economic offloading – ISP forecast" table in eac
 
 The forecasts are the Final 2024 ISP's (Step Change scenario), as the 2025 ELI appendices state; they were made in 2024 for 2025-26, 2026-27 and 2027-28. 2025-26 has since ended: its value is still the 2024 forecast, not an outcome, the page's ISP group headers say "(2024 ISP)" and an ended year's column header has a tooltip saying so (the Actual columns carry outcomes). The values are not relabelled or replaced; they change when a new ELI edition republishes newer ISP forecasts.
 
-**The 2024 ISP has been superseded.** AEMO published the 2026 ISP on 25 June 2026. These figures come from the 2025 ELI regional appendices and change only when a new ELI edition republishes them; the dashboard does not read the ISP itself (ingesting the 2026 ISP directly would be a new source). The page says so in a note above the table and marks the ISP group headers "(2024 ISP, superseded)". The note is driven by `ISP_SUPERSEDED` in `index.html` and the data's `ISP_EDITION`, so it disappears once the data carries a newer ISP edition.
+**The 2024 ISP has been superseded.** AEMO published the 2026 ISP on 25 June 2026. These figures come from the 2025 ELI regional appendices and change only when a new ELI edition republishes them. The 2026 ISP's own figures are read separately, from its REZ appendix, into their own columns (next section); they do not replace these. The page says so in a note above the table and marks the ISP group headers "(2024 ISP, superseded)". The note is driven by `ISP_SUPERSEDED` in `index.html` and the data's `ISP_EDITION`, so it disappears once the data carries a newer ISP edition.
 
 These are forecast at the REZ level and mapped to individual farms by REZ membership
 (joined on `REZ_NAME`). Units outside a REZ, or whose REZ is unknown, show N/A.
+
+### 2026 ISP transmission curtailment and economic spill (Appendix A3)
+
+The 2026 ISP's Appendix A3 "Renewable Energy Zones" has, per REZ, a "VRE curtailment" table:
+transmission curtailment and economic spill for 2029-30, 2039-40 and 2049-50, under Slower
+Growth, Step Change and Accelerated Transition. `python -m src.isp_rez_appendix` reads every
+table (all three scenarios) into `data/isp_rez_curtailment.feather`, with `ISP_EDITION` "2026
+ISP"; a "-" (no VRE projected there) is stored empty, not 0. It fails, writing nothing, when a
+section's table does not parse, or a section has none and does not say why (T4 North Tasmania
+Coast has none: A3 says no VRE is projected there). It leaves the ELI appendix files alone.
+The page shows Step Change (`config.ISP_A3_SCENARIO`) as two column groups, "2026 ISP (Step
+Change): transmission curtailment" and "...: economic spill", labelled from the data's
+`ISPA3_EDITION`, `ISPA3_SCENARIO` and `ISPA3_Y1..3_LABEL` columns. There are no averages: the
+three years are a decade apart.
+
+**Definitions.** A3's glossary defines *network curtailment* (the tables call it transmission
+curtailment) as generation reducing output because of transmission network congestion, and
+*economic spill* as generation reducing output because of market price, both as a percentage of
+the REZ's VRE energy, from the capacity outlook model, rounded to 1%. The ELI appendices' table
+headings are "Curtailment" and "Economic offloading" and they define neither; they take them
+from the 2024 ISP, whose Appendix 3 defines them as transmission curtailment and economic spill
+in the same words (see above). So the 2026 measures are the same quantities as the existing ISP
+columns, but from a newer model run, for other years and partly other REZ boundaries: they sit
+in their own columns and are not a continuation of the 2024 figures, and the history file keeps
+each source's own measure names (`curtailment` / `offloading` vs `transmission_curtailment` /
+`economic_spill`).
+
+**REZ crosswalk.** The page joins on the ELI appendices' REZ names (2024 ISP zones). The 2026
+ISP renames, renumbers and redraws some of them and adds others, so
+`data/isp_rez_crosswalk.csv` maps each A3 zone to an ELI-appendix REZ and marks the pair
+`exact`, `renamed` (same zone, other id or name, e.g. Q2 North Queensland Clean Energy Hub →
+Hughenden Hub, SA and VIC renumbering) or `no one-to-one match`. Only exact and renamed pairs
+carry values; a REZ that was split, merged or moved stays blank rather than borrowing a
+neighbour's figure. Today that is Isaac (moved south; Q10 Collinsville took its northern part),
+Murray River (V1 North West was part of it), Western Victoria (now V2 Central Highlands plus
+V3/V4 Western Victoria), and the 2024 zones A3 no longer has (Ovens Murray, Leigh Creek, South
+East South Australia Coast); North Tasmania Coast maps exactly but A3 gives it no table. New A3
+zones (N13 South Cobar, Q10 Collinsville, the Dubbo, Yass and Marulan distribution zones) have
+no page REZ. `summary.csv` carries the match per unit (`ISPA3_REZ_ID`, `ISPA3_REZ_NAME`,
+`ISPA3_MATCH`). REZ membership itself is unchanged (see below).
+
+**Edition history.** `data/rez_forecast_history.csv` holds every edition's REZ figures in long
+format (`source, eli_edition, isp_edition, rez_id, rez_name, state, scenario, fy, measure, value,
+crosswalk_key, crosswalk_match, retrieved_at`), each with its own REZ ids and names plus the
+page REZ it maps to. The page does not read it; it is there to analyse how forecasts move between
+editions. It is append-only: an edition already held with the same figures is skipped, one held
+with different figures is refused, and earlier rows are never rewritten. Today it holds the 2024
+ISP figures via the 2025 ELI appendices and the 2026 ISP A3 figures.
+
+When the next ISP is published, add it to `config.ISP_A3_URLS`, add its zones to the crosswalk
+(the build refuses while any zone or ELI-appendix REZ is missing from it), and run
+`python -m src.isp_rez_appendix` (or pass it the PDF), which also appends the edition to the
+history file.
 
 ### REZ membership
 
@@ -137,7 +192,12 @@ until this is done; see Output Validation):
 ```
 python -m src.eli_appendix          # downloads the five appendix PDFs; needs pdftotext (poppler)
 python -m src.eli_appendix --isp-edition "2026 ISP"   # when the text cites more than one ISP
+python -m src.rez_history eli       # append the new edition to data/rez_forecast_history.csv
 ```
+
+and add the new ELI edition's REZ names to `data/isp_rez_crosswalk.csv` (rows with that
+`eli_edition`): validation fails while a REZ in `rez_forecasts.feather` is not in the crosswalk,
+or the history file lacks an edition the page shows.
 
 Both files record the editions they hold (`ELI_EDITION`, the appendix year;
 `ISP_EDITION`, the ISP the forecasts come from, read from the appendix text), and so
@@ -185,6 +245,7 @@ DUDETAILSUMMARY       → dudetail.py            → warns about registered unit
 MLF Tracker CSV       → download_mlf.py        → MLF columns
 ELI Chart Data        → download_eli.py        → projected curtailment
 ELI Appendices        → download_rez.py        → REZ forecasts
+ISP Appendix A3       → isp_rez_appendix.py    → 2026 ISP REZ curtailment and spill (built by hand)
 Credit Dashboard CSV  → fetch_curtailment.py   → actual curtailment
                     ↓
                 merge.py → summary.csv → index.html (dashboard)
@@ -241,6 +302,7 @@ After the pipeline runs and before committing, an automated validation step (`te
 - `ELI_SOURCE` in {`location`, `location-name`, empty}, empty exactly when there is no ELI value (`per-DUID`, the retired hand seed, fails)
 - Editions: ELI values carry one `ELI_EDITION` and ISP values one `ISP_EDITION`; the REZ appendix files (`rez` in `data/source_status.json`) record an ELI edition, and it equals the chart-data edition (configured and published)
 - `TECHNOLOGY` is not "Renewable" for every row
+- ISP A3 (`data/isp_rez_curtailment.feather`): every A3 zone and every REZ in `rez_forecasts.feather` is in the crosswalk, with a known match type and no A3 zone joined twice; the REZs without A3 values are printed (the explicit not-in-A3 list: the crosswalk's `no one-to-one match` rows and zones A3 gives no table); `ISPA3_EDITION`, scenario and year labels equal the A3 file's, `ISP_EDITION` equals `rez_forecasts.feather`'s; `ISPA3_*` values are in [0, 1]; and `data/rez_forecast_history.csv` holds both editions the page shows
 - Source freshness (`data/source_status.json`, written by the run): the Registration List's last good fetch is at most 30 days old, and at most 3 GENERATOR DUIDs registered in the last 24 months (per DUDETAILSUMMARY) are missing from it; a stale Generation Information edition is reported as a warning
 - ELI edition (`eli` in `data/source_status.json`): each refresh probes next year's chart-data file on AEMO (one-byte Range request; a missing file redirects to /404) and a published newer edition prints a warning here, so the run still commits and pushes its other updates (MLF, actuals, generator list). The lane then goes red: `deploy/run-update.sh` ends every run, after any push and on its no-change exits too, with `python -m src.post_publish_check`, which exits non-zero while `data/source_status.json` records a confirmed newer edition. It stays red until the edition is wired in: add the new year to `ELI_CHART_DATA_URLS` and `ELI_REGIONAL_APPENDIX_URLS` in `src/config.py` (the newest key is the edition used), rerun `python -m src.eli_appendix` on the new appendix PDFs, then regenerate with `python -m src.main --full-refresh`. The probe guesses one file name, so from 1 October of year Y (each edition so far was out by July) an edition older than Y with nothing found prints a warning to check [AEMO's ELI page](https://www.aemo.com.au/energy-systems/electricity/national-electricity-market-nem/nem-forecasting-and-planning/forecasting-and-planning-data/enhanced-locational-information). Validation fails when the probe's last yes/no answer (`last_conclusive_check`; a 403 or network error is no answer) is more than 60 days old
 - MLFs (`mlf` in `data/source_status.json`: last good fetch, this run's error, whether the cached tracker CSV was republished, newest final FY column): a republished cache prints a warning and fails when its last good fetch is more than 35 days old; it also fails when the newest final MLF year is older than the current financial year (NEM time), e.g. still FY26-27 on 1 July 2027

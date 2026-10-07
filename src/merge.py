@@ -17,6 +17,8 @@ def build_summary(
     rez_forecasts: pd.DataFrame,
     actual_curtailment: pd.DataFrame,
     cache_dir: str | None = None,
+    isp_a3: pd.DataFrame | None = None,
+    isp_crosswalk: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """Join all data sources into the master summary.
 
@@ -32,6 +34,9 @@ def build_summary(
     5. ELI_EDITION (chart-data edition) and ISP_EDITION (the ISP the REZ forecasts
        are from), one value for every row, read from the tables themselves so the
        page and the validator see what was actually merged
+    6. The ISP's own REZ appendix (A3) figures for one scenario, joined through the
+       crosswalk onto REZ_NAME (ISPA3_* columns, appended after the existing ones);
+       a REZ the crosswalk does not map one-to-one gets blanks, never a neighbour's
 
     `cache_dir` is accepted for callers' compatibility and no longer read.
 
@@ -71,6 +76,13 @@ def build_summary(
 
     # 5. Editions the ELI and ISP columns come from
     summary = _add_editions(summary, eli_curtailment, rez_forecasts)
+
+    # 6. ISP A3 REZ figures (transmission curtailment, economic spill), last so the
+    #    existing columns keep their positions
+    if isp_a3 is not None and not isp_a3.empty:
+        summary = _merge_isp_a3(summary, isp_a3, isp_crosswalk, rez_forecasts)
+    else:
+        logger.warning("No ISP A3 REZ table to merge; run python -m src.isp_rez_appendix")
 
     # Sort: Fuel Type → State → Project Name
     sort_cols = []
@@ -263,4 +275,61 @@ def _merge_rez(summary: pd.DataFrame, rez: pd.DataFrame) -> pd.DataFrame:
     matched = result[isp_cols[0]].notna().sum() if isp_cols else 0
     logger.info(f"Merged REZ forecasts ({matched}/{len(result)} matched)")
 
+    return result
+
+
+ISPA3_PREFIX = "ISPA3_"
+
+
+def isp_a3_columns(labels: int = 3) -> list[str]:
+    """The ISPA3_* summary columns, in order."""
+    values = [f"ISPA3_{m}_Y{i}" for m in ("TRANSMISSION", "SPILL") for i in range(1, labels + 1)]
+    return (["ISPA3_REZ_ID", "ISPA3_REZ_NAME", "ISPA3_MATCH"] + values
+            + [f"ISPA3_Y{i}_LABEL" for i in range(1, labels + 1)] + ["ISPA3_SCENARIO", "ISPA3_EDITION"])
+
+
+def _merge_isp_a3(summary: pd.DataFrame, table: pd.DataFrame, crosswalk: pd.DataFrame | None,
+                  rez_forecasts: pd.DataFrame) -> pd.DataFrame:
+    """ISPA3_* columns: the A3 zone each unit's REZ maps to (crosswalk), how it maps, and its
+    figures for config.ISP_A3_SCENARIO. Units outside a REZ or of unknown REZ get blanks, and so
+    does a REZ whose crosswalk match is not exact or renamed (split, merged, moved, gone).
+    Year labels, scenario and edition are on every row, for the page headers."""
+    from . import config, eli_appendix, isp_rez_appendix as ia
+
+    result = summary.copy()
+    scenario = config.ISP_A3_SCENARIO
+    rows = table[table["SCENARIO"] == scenario]
+    edition = ia.edition(table) or ""
+    eli_ed = eli_appendix.editions(rez_forecasts)["eli_edition"] if rez_forecasts is not None else None
+    cw = crosswalk if crosswalk is not None else pd.DataFrame(columns=ia.CROSSWALK_COLUMNS)
+    mapping = ia.page_mapping(cw, edition, eli_ed)
+    by_zone = {(r["REZ_ID"], r["REZ_NAME"]): r for _, r in rows.iterrows()}
+
+    cols = isp_a3_columns()
+    for col in cols:
+        result[col] = float("nan") if col.endswith(tuple(f"_Y{i}" for i in (1, 2, 3))) else ""
+    in_rez = (result.get("REZ", pd.Series("", index=result.index)).fillna("") == "Y")
+    names = result.get("REZ_NAME", pd.Series("", index=result.index)).fillna("").astype(str).str.strip()
+    joined = unmapped = 0
+    for idx in result.index[in_rez]:
+        rez_id, isp_name, match = mapping.get(names[idx].lower(), ("", "", "not in the crosswalk"))
+        result.at[idx, "ISPA3_MATCH"] = match
+        if match not in ia.JOINED_MATCHES:
+            unmapped += 1
+            continue
+        result.at[idx, "ISPA3_REZ_ID"], result.at[idx, "ISPA3_REZ_NAME"] = rez_id, isp_name
+        zone = by_zone.get((rez_id, isp_name))
+        if zone is None:
+            continue
+        for m in ("TRANSMISSION", "SPILL"):
+            for i in (1, 2, 3):
+                result.at[idx, f"ISPA3_{m}_Y{i}"] = zone[f"{m}_Y{i}"]
+        joined += 1
+    labels = rows[[f"Y{i}_LABEL" for i in (1, 2, 3)]].drop_duplicates()
+    for i in (1, 2, 3):
+        result[f"ISPA3_Y{i}_LABEL"] = labels.iloc[0][f"Y{i}_LABEL"] if len(labels) == 1 else ""
+    result["ISPA3_SCENARIO"] = scenario
+    result["ISPA3_EDITION"] = edition
+    logger.info(f"Merged {edition} A3 REZ figures ({scenario}) for {joined} unit(s); "
+                f"{unmapped} unit(s) in a REZ with no one-to-one {edition} zone")
     return result

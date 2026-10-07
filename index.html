@@ -27,6 +27,9 @@
   .fam-mlf    { --fam: var(--good); }
   .fam-isp-c  { --fam: var(--warn); }
   .fam-isp-o  { --fam: var(--neutral); }
+  /* The ISP's own A3 figures measure the same two things as the ISP pair above, so they take the same tokens */
+  .fam-a3-t   { --fam: var(--warn); }
+  .fam-a3-s   { --fam: var(--neutral); }
   .fam-dot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 9999px; background: var(--fam); vertical-align: 0; }
 
   /* The served shell's skeleton is sized in CSS, not in utility classes: it has to land on the same
@@ -149,6 +152,9 @@
       <!-- Shown while the data's ISP_EDITION is one AEMO has since replaced (ISP_SUPERSEDED below); the
            served HTML carries it so the shell and the loaded page have the same height. -->
       <p class="card-sub mt-2 max-w-[90ch]" id="ispNote"><strong class="font-medium text-ink">ISP forecasts superseded.</strong> The ISP columns are the <span data-isp-edition>2024 ISP</span>'s forecasts, superseded by <span data-isp-superseded-by>AEMO's 2026 ISP (published 25 June 2026)</span>. These figures come from the <span data-eli-edition>2025</span> ELI regional appendices and change only when a new ELI edition republishes them.</p>
+      <!-- The ISP's own REZ appendix (ISPA3_* columns): what the columns are and why some REZs are N/A.
+           Edition, scenario and years are filled from the data (applyEditions). -->
+      <p class="card-sub mt-2 max-w-[90ch]" id="ispA3Note"><strong class="font-medium text-ink"><span data-isp-a3-edition>2026 ISP</span> columns.</strong> Read directly from the <span data-isp-a3-edition>2026 ISP</span>'s Appendix A3 (<span data-isp-a3-scenario>Step Change</span>, <span data-isp-a3-years>2029-30, 2039-40 and 2049-50</span>): transmission curtailment and economic spill, the same two measures as the ISP columns above but a newer model run, other years and some redrawn REZs. A REZ the new ISP split, merged or moved shows N/A there rather than a neighbouring zone's figure.</p>
     </div>
   </div>
   <div class="flex flex-wrap gap-x-8 gap-y-3 px-5 pb-3 pt-3" id="legends">
@@ -215,7 +221,8 @@
 <script>
 const STATES = {NSW1:'NSW',QLD1:'QLD',VIC1:'VIC',SA1:'SA',TAS1:'TAS'};
 const EXCEL_FILES = {NSW1:'NSW_curtailment.xlsx',QLD1:'QLD_curtailment.xlsx',VIC1:'VIC_curtailment.xlsx',SA1:'SA_curtailment.xlsx',TAS1:'TAS_curtailment.xlsx'};
-const GROUP_LABELS = {actual:'Actual curtailment', eli:'ELI projected', mlf:'Marginal loss factor', 'isp-c':'ISP curtailment forecast (2024 ISP)', 'isp-o':'ISP offloading forecast (2024 ISP)'};
+const GROUP_LABELS = {actual:'Actual curtailment', eli:'ELI projected', mlf:'Marginal loss factor', 'isp-c':'ISP curtailment forecast (2024 ISP)', 'isp-o':'ISP offloading forecast (2024 ISP)',
+  'a3-t':'2026 ISP (Step Change): transmission curtailment', 'a3-s':'2026 ISP (Step Change): economic spill'};
 // What each family measures (the group header's tooltip). Actual, ELI and ISP are all "curtailment" but
 // three different quantities: a measured shortfall incl. economic curtailment, a modelled marginal-project
 // figure with no price-driven bidding, and a REZ-wide forecast split into congestion and price.
@@ -224,7 +231,11 @@ const GROUP_NOTES = {
   eli: 'Modelled by AEMO (2025 ELI report): the share of a hypothetical new 300 MW solar or wind project\'s energy at this connection point that would not be dispatched, because of transmission limits, minimum synchronous units for system security (near term only) and limited demand or export. Excludes negative-price bidding, outages and maintenance. A signal for new connections, not a forecast for this unit.',
   mlf: 'Marginal loss factor: the share of the regional reference price this generator receives after network losses.',
   'isp-c': '2024 ISP forecast (Step Change) for the whole REZ: transmission curtailment, the share of the REZ\'s wind and solar energy reduced because of transmission congestion. A REZ figure, not this unit.',
-  'isp-o': '2024 ISP forecast (Step Change) for the whole REZ: economic offloading, the share of the REZ\'s wind and solar energy reduced because of market price (low or negative prices). A REZ figure, not this unit.'
+  'isp-o': '2024 ISP forecast (Step Change) for the whole REZ: economic offloading, the share of the REZ\'s wind and solar energy reduced because of market price (low or negative prices). A REZ figure, not this unit.',
+  // The ISP A3 glossary defines both as the ISP pair above is defined; the figures are a newer model run, for
+  // other years and partly other REZ boundaries, so they sit beside the 2024 columns rather than continue them.
+  'a3-t': '2026 ISP forecast (Step Change) for the whole REZ, from the ISP\'s Appendix A3: transmission curtailment (A3\'s glossary: network curtailment), the share of the REZ\'s wind and solar energy reduced because of transmission network congestion, rounded to 1%. Defined as the ISP curtailment columns are, but a newer model run, so not a continuation of them. Shown only where the A3 zone is this unit\'s REZ (same zone, possibly renamed or renumbered). A REZ figure, not this unit.',
+  'a3-s': '2026 ISP forecast (Step Change) for the whole REZ, from the ISP\'s Appendix A3: economic spill, the share of the REZ\'s wind and solar energy reduced because of market price, rounded to 1%. Defined as the ISP offloading columns are, but a newer model run, so not a continuation of them. Shown only where the A3 zone is this unit\'s REZ (same zone, possibly renamed or renumbered). A REZ figure, not this unit.'
 };
 // The ISP forecasts are the Final 2024 ISP's (Step Change), made in 2024 for 2025-26 to 2027-28. A year
 // that has ended keeps its forecast value; its header's tooltip says the year has ended so it is not read as an outcome.
@@ -253,7 +264,24 @@ function applyEditions(rows) {
   const note = document.getElementById('ispNote');
   if (ISP_SUPERSEDED[isp]) document.querySelector('[data-isp-superseded-by]').textContent = ISP_SUPERSEDED[isp];
   note.style.display = ISP_SUPERSEDED[isp] ? '' : 'none';
-  return {eli, isp};
+  // The ISP's own A3 figures: edition, scenario and years from the data (ISPA3_EDITION, ISPA3_SCENARIO,
+  // ISPA3_Y1..3_LABEL); no ISPA3 columns, no note and no columns
+  const a3 = pick('ISPA3_EDITION');
+  const a3Scenario = pick('ISPA3_SCENARIO') || 'Step Change';
+  const years = [1, 2, 3].map(i => pick(`ISPA3_Y${i}_LABEL`)).filter(Boolean);
+  if (a3) {
+    GROUP_LABELS['a3-t'] = `${a3} (${a3Scenario}): transmission curtailment`;
+    GROUP_LABELS['a3-s'] = `${a3} (${a3Scenario}): economic spill`;
+    ['a3-t', 'a3-s'].forEach(g => {
+      GROUP_NOTES[g] = GROUP_NOTES[g].replace(/^\d{4} ISP forecast \([^)]*\)/, `${a3} forecast (${a3Scenario})`);
+    });
+    document.querySelectorAll('[data-isp-a3-edition]').forEach(e => { e.textContent = a3; });
+    document.querySelector('[data-isp-a3-scenario]').textContent = a3Scenario;
+    if (years.length) document.querySelector('[data-isp-a3-years]').textContent =
+      years.length > 1 ? `${years.slice(0, -1).join(', ')} and ${years[years.length - 1]}` : years[0];
+  }
+  document.getElementById('ispA3Note').style.display = a3 ? '' : 'none';
+  return {eli, isp, a3};
 }
 function fyEnded(label) {                 // '25-26' → true from 1 July 2026, 00:00 AEST (UTC+10)
   const m = /^(\d\d)-(\d\d)$/.exec(label || '');
@@ -261,7 +289,7 @@ function fyEnded(label) {                 // '25-26' → true from 1 July 2026, 
 }
 
 let allData = [];
-let EDITIONS = {eli: '2025', isp: '2024 ISP'};  // replaced from the data on load (applyEditions)
+let EDITIONS = {eli: '2025', isp: '2024 ISP', a3: null};  // replaced from the data on load (applyEditions)
 let colDefs = [];  // [{key, label, group}]
 let activeRegion = 'ALL';
 let sortCol = null;
@@ -374,6 +402,15 @@ function detectColumns(keys, showRegion = activeRegion === 'ALL') {
     }
   });
   if (keys.includes('ISP_OFFLOADING_AVG')) defs.push({key:'ISP_OFFLOADING_AVG', label:'Avg', group:'isp-o'});
+
+  // The ISP's own A3 figures (one scenario): year labels from ISPA3_Y<i>_LABEL. No averages: the
+  // three years are a decade apart, not a run of years.
+  [['TRANSMISSION', 'a3-t'], ['SPILL', 'a3-s']].forEach(([m, g]) => {
+    [1, 2, 3].forEach(i => {
+      const labelKey = `ISPA3_Y${i}_LABEL`;
+      defs.push({key:`ISPA3_${m}_Y${i}`, label:`Y${i}`, group:g, labelKey: keys.includes(labelKey) ? labelKey : null});
+    });
+  });
 
   return defs.filter(d => keys.includes(d.key));
 }
@@ -531,6 +568,16 @@ function naReason(row, d) {
     return row.REZ === 'N' ? 'N/A: ISP forecasts are made per Renewable Energy Zone and this generator is outside one'
          : !isKnownRez(row) ? 'N/A: ISP forecasts are made per Renewable Energy Zone and no REZ is known for this generator in the data'
                             : 'N/A: no ISP forecast in outputs/summary.csv for this generator';
+  if (d.group === 'a3-t' || d.group === 'a3-s') {
+    const ed = EDITIONS.a3 || 'ISP';
+    if (row.REZ === 'N') return `N/A: ${ed} forecasts are made per Renewable Energy Zone and this generator is outside one`;
+    if (!isKnownRez(row)) return `N/A: ${ed} forecasts are made per Renewable Energy Zone and no REZ is known for this generator in the data`;
+    if (row.ISPA3_MATCH === 'no one-to-one match')
+      return `N/A: the ${ed} redrew ${row.REZ_NAME} (split, merged or moved), so no ${ed} zone is the same zone and no neighbouring zone's figure is borrowed`;
+    if (row.ISPA3_REZ_ID || row.ISPA3_REZ_NAME)
+      return `N/A: the ${ed}'s Appendix A3 gives no figure for ${row.ISPA3_REZ_ID} ${row.ISPA3_REZ_NAME} in ${d.label} ("-": no wind or solar projected there)`;
+    return `N/A: no ${ed} figure in outputs/summary.csv for this generator`;
+  }
   if (d.group === 'eli') return 'N/A: no ELI projection in outputs/summary.csv for this generator';
   if (d.group === 'mlf') return 'N/A: no MLF in outputs/summary.csv for this generator';
   return actualNaReason(row, d.label);
@@ -717,7 +764,8 @@ function exportHeaders(defs) {
   const META = {NAMEPLATE_MW: 'Nameplate (MW)', REZ: 'In a REZ (Y = yes, N = no, blank = unknown)'};
   return defs.map(d => {
     if (d.group === 'meta') return META[d.key] || d.label;
-    let label = d.labelKey && firstLabel(d.labelKey) ? `FY${firstLabel(d.labelKey)}` : d.label;
+    const fy = d.labelKey && firstLabel(d.labelKey);
+    let label = fy ? (/^\d{4}-/.test(fy) ? fy : `FY${fy}`) : d.label;
     if (label === 'Avg') label = 'average of the forecast years';
     const unit = d.group === 'mlf' ? '' : ' (share of energy)';
     return `${GROUP_LABELS[d.group]} ${label}${unit}`;
@@ -853,8 +901,8 @@ Papa.parse('outputs/summary.csv', {
     renderDownloads();
     document.getElementById('footer').innerHTML = '<span>' + [
       `${allData.length} generators tracked`,
-      'Source: AEMO ELI Report and its regional appendices (projections, REZ membership), NEM Registration and Exemption List (generators), AEMO MLF Tracker (MLFs); actual curtailment from the Generator Credit Dashboard rollup',
-      `Rhythms: actuals monthly (last two completed FYs); ELI ${EDITIONS.eli} edition, updated by hand when AEMO publishes a new one; ISP: ${EDITIONS.isp} via the ${EDITIONS.eli} ELI appendices; MLFs: AEMO's finals, published by about 1 April for the next FY`,
+      'Source: AEMO ELI Report and its regional appendices (projections, REZ membership), AEMO ISP Appendix A3 (REZ curtailment and spill), NEM Registration and Exemption List (generators), AEMO MLF Tracker (MLFs); actual curtailment from the Generator Credit Dashboard rollup',
+      `Rhythms: actuals monthly (last two completed FYs); ELI ${EDITIONS.eli} edition, updated by hand when AEMO publishes a new one; ISP: ${EDITIONS.isp} via the ${EDITIONS.eli} ELI appendices` + (EDITIONS.a3 ? `, and the ${EDITIONS.a3} read from its Appendix A3 by hand once per ISP` : '') + `; MLFs: AEMO's finals, published by about 1 April for the next FY`,
       'The CSV carries no publish date; the dashboard refreshes daily and republishes only when values change'
     ].join(' · ') + '</span>';
     renderSourceStatus();
