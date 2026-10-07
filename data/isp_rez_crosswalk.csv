@@ -1,0 +1,50 @@
+isp_edition,isp_rez_id,isp_rez_name,eli_edition,eli_rez_id,eli_rez_name,state,match,note
+2026 ISP,N1,North West New South Wales,2025,N1,Northwest New South Wales,NSW,renamed,same id; spelling only (North West / Northwest)
+2026 ISP,N2,New England,2025,N2,New England,NSW,exact,
+2026 ISP,N3,Central-West Orana,2025,N3,Central West Orana,NSW,renamed,same id; hyphen only
+2026 ISP,,Dubbo distribution,,,,NSW,no one-to-one match,"distribution-project zone new in the 2026 ISP, modelled separately from Central-West Orana; no 2024 ISP REZ"
+2026 ISP,N4,Broken Hill,2025,N4,Broken Hill,NSW,exact,
+2026 ISP,N5,South West New South Wales,2025,N5,South West New South Wales,NSW,exact,
+2026 ISP,N6,Wagga Wagga,2025,N6,Wagga Wagga,NSW,exact,
+2026 ISP,N7,Tumut,2025,N7,Tumut,NSW,exact,
+2026 ISP,N8,Cooma-Monaro,2025,N8,Cooma-Monaro,NSW,exact,
+2026 ISP,N9,Hunter-Central Coast,2025,N9,Hunter-Central Coast,NSW,exact,
+2026 ISP,N10,Hunter Coast,2025,N10,Hunter Coast,NSW,exact,
+2026 ISP,N11,Illawarra Coast,2025,N11,Illawarra Coast,NSW,exact,
+2026 ISP,N12,Illawarra,2025,N12,Illawarra,NSW,exact,
+2026 ISP,N13,South Cobar,,,,NSW,no one-to-one match,A3: a new candidate REZ proposed in the 2026 ISP
+2026 ISP,,Yass distribution,,,,NSW,no one-to-one match,distribution-project zone new in the 2026 ISP; no 2024 ISP REZ
+2026 ISP,,Marulan distribution,,,,NSW,no one-to-one match,distribution-project zone new in the 2026 ISP; no 2024 ISP REZ
+2026 ISP,Q1,Far North Queensland,2025,Q1,Far North Queensland,QLD,exact,
+2026 ISP,Q2,Hughenden Hub,2025,Q2,North Queensland Clean Energy Hub,QLD,renamed,"same id; A3 places it at the north-western end of Powerlink's network (Hughenden, CopperString), where its 2025 ELI members sit (Kennedy Energy Park, Kidston); A3 does not state the rename"
+2026 ISP,Q3,Northern Queensland,2025,Q3,Northern Queensland,QLD,exact,
+2026 ISP,Q4,Isaac,2025,Q4,Isaac,QLD,no one-to-one match,"A3: Isaac is now placed further south, between Mackay and Rockhampton; the area it covered around Collinsville and Mackay is now Q10 Collinsville"
+2026 ISP,Q5,Barcaldine,2025,Q5,Barcaldine,QLD,exact,
+2026 ISP,Q6,Fitzroy,2025,Q6,Fitzroy,QLD,exact,
+2026 ISP,Q7,Wide Bay,2025,Q7,Wide Bay,QLD,exact,
+2026 ISP,Q8,Darling Downs,2025,Q8,Darling Downs,QLD,exact,
+2026 ISP,Q9,Banana,2025,Q9,Banana,QLD,exact,
+2026 ISP,Q10,Collinsville,2025,Q4,Isaac,QLD,no one-to-one match,A3: carved from the 2024 Isaac REZ (the region previously covered by Collinsville and Mackay)
+2026 ISP,S1,South East,2025,S1,South East South Australia,SA,renamed,same id; A3's text calls it the South East SA REZ
+2026 ISP,S2,Riverland,2025,S2,Riverland,SA,exact,
+2026 ISP,S3,Mid-North,2025,S3,Mid-North South Australia,SA,renamed,same id; A3's text calls it the Mid-North South Australia REZ
+2026 ISP,S4,Yorke Peninsula,2025,S4,Yorke Peninsula,SA,exact,
+2026 ISP,S5,Northern South Australia,2025,S5,Northern South Australia,SA,exact,
+2026 ISP,,,2025,S6,Leigh Creek,SA,no one-to-one match,no Leigh Creek REZ in the 2026 ISP A3
+2026 ISP,S6,Roxby Downs,2025,S7,Roxby Downs,SA,renamed,renumbered S7 -> S6
+2026 ISP,S7,Eastern Eyre Peninsula,2025,S8,Eastern Eyre Peninsula,SA,renamed,renumbered S8 -> S7
+2026 ISP,S8,Western Eyre Peninsula,2025,S9,Western Eyre Peninsula,SA,renamed,renumbered S9 -> S8
+2026 ISP,,,2025,S10,South East South Australia Coast,SA,no one-to-one match,no South East South Australia Coast REZ in the 2026 ISP A3
+2026 ISP,T1,North East Tasmania,2025,T1,North East Tasmania,TAS,exact,
+2026 ISP,T2,North West Tasmania,2025,T2,North West Tasmania,TAS,exact,
+2026 ISP,T3,Central Highlands,2025,T3,Central Highlands,TAS,exact,
+2026 ISP,T4,North Tasmania Coast,2025,T4,North Tasmania Coast,TAS,exact,A3 has no VRE curtailment table: no VRE projected in this REZ in any scenario
+2026 ISP,,,2025,V1,Ovens Murray,VIC,no one-to-one match,no Ovens Murray REZ in the 2026 ISP; Victoria's 2026 ISP REZs follow the 2025 Victorian Transmission Plan
+2026 ISP,V1,North West,2025,V2,Murray River,VIC,no one-to-one match,A3: North West was part of V2 Murray River in previous ISPs
+2026 ISP,V2,Central Highlands,2025,V3,Western Victoria,VIC,no one-to-one match,A3: Central Highlands was part of V3 Western Victoria in previous ISPs
+2026 ISP,"V3,V4",Western Victoria,2025,V3,Western Victoria,VIC,no one-to-one match,"A3: the Victorian Transmission Plan's Western Victoria REZ, the ISP REZs V3 Wimmera Grampians and V4 Wimmera Southern Mallee; the 2024 Western Victoria also covered Central Highlands"
+2026 ISP,V5,South West,2025,V4,South West Victoria,VIC,renamed,"renumbered V4 -> V5; Victorian REZs follow the 2025 Victorian Transmission Plan and the May 2026 declarations, A3 says these differ slightly"
+2026 ISP,V6,Gippsland Onshore,2025,V5,Gippsland,VIC,renamed,renumbered V5 -> V6; boundary caveat as South West
+2026 ISP,V7,Central North,2025,V6,Central North Victoria,VIC,renamed,renumbered V6 -> V7; not declared in May 2026 but modelled in the 2026 ISP
+2026 ISP,V8,Gippsland Offshore,2025,V7,Gippsland Coast,VIC,renamed,renumbered V7 -> V8 (offshore wind)
+2026 ISP,V9,Southern Ocean,2025,V8,Southern Ocean,VIC,renamed,renumbered V8 -> V9 (offshore wind)

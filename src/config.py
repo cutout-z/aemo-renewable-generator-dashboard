@@ -124,6 +124,19 @@ ELI_REGIONAL_APPENDIX_URLS = {
 ISP_FORECAST_EDITION = "2024 ISP"
 ISP_FORECAST_SCENARIO = "Step Change"
 
+# The ISP's own REZ appendix (Appendix A3 "Renewable Energy Zones"), read directly: per REZ, a
+# "VRE curtailment" table (transmission curtailment and economic spill, three scenarios, three
+# years a decade apart). Read by `python -m src.isp_rez_appendix` once per ISP (every two years);
+# the pipeline uses the data/isp_rez_curtailment.feather it writes. The newest key is the edition
+# used. AEMO serves the PDF to a browser user agent.
+ISP_A3_URLS = {
+    "2026 ISP": "https://www.aemo.com.au/-/media/files/major-publications/isp/2026/appendices/"
+                "a3-renewable-energy-zones.pdf",
+}
+ISP_A3_SOURCE = "Appendix A3"   # history source label: "<edition> Appendix A3"
+# The scenario the page shows (the file keeps all three)
+ISP_A3_SCENARIO = "Step Change"
+
 # Actual curtailment: consolidated FY rollup from the credit dashboard pipeline.
 # The credit dashboard computes monthly curtailment per DUID from AEMO dispatch
 # data (DISPATCH_UNIT_SCADA output against the bid-in AVAILABILITY in DISPATCHLOAD;
@@ -146,6 +159,12 @@ MLF_CACHE = "data/mlf_tracker.feather"
 ELI_CURTAILMENT_CACHE = "data/eli_curtailment.feather"
 REZ_FORECAST_CACHE = "data/rez_forecasts.feather"
 CURTAILMENT_CACHE = "data/actual_curtailment.feather"
+# Reference files built by hand (committed): the ISP A3 table, the crosswalk from its REZ ids and
+# names to the ELI appendices' REZ names the page joins on, and every edition's REZ forecasts in
+# long format (never shown; kept so movements between editions can be analysed)
+ISP_A3_FILE = "isp_rez_curtailment.feather"
+ISP_REZ_CROSSWALK_FILE = "isp_rez_crosswalk.csv"
+REZ_HISTORY_FILE = "rez_forecast_history.csv"
 
 # ─── Network ────────────────────────────────────────────────────────────────
 
@@ -153,3 +172,5 @@ MAX_RETRIES = 3
 RETRY_BACKOFF = 5  # seconds
 REQUEST_TIMEOUT = 60
 USER_AGENT = "Mozilla/5.0 AEMO-Solar-Curtailment-Dashboard"
+BROWSER_USER_AGENT = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 "
+                      "(KHTML, like Gecko) Chrome/126.0 Safari/537.36")
