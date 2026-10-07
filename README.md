@@ -131,7 +131,17 @@ When a new ELI edition is published, rebuild both reference files:
 
 ```
 python -m src.eli_appendix          # downloads the five appendix PDFs; needs pdftotext (poppler)
+python -m src.eli_appendix --isp-edition "2026 ISP"   # when the text cites more than one ISP
 ```
+
+Both files record the editions they hold (`ELI_EDITION`, the appendix year;
+`ISP_EDITION`, the ISP the forecasts come from, read from the appendix text), and so
+does the ELI chart data. `summary.csv` carries them as `ELI_EDITION` and
+`ISP_EDITION`, and the page's "2025 ELI" / "(2024 ISP)" labels are read from those
+columns. Validation fails when the appendix files' ELI edition differs from the
+chart-data edition, so bumping `config.ELI_*` without this rebuild cannot publish a
+mix of editions under one label. (The files committed before 2026-10-07 were stamped
+ELI 2025 / 2024 ISP by hand, from what they already held, not re-parsed.)
 
 ### Generator listing
 
@@ -224,6 +234,7 @@ After the pipeline runs and before committing, an automated validation step (`te
 - All 5 regional Excel workbooks exist
 - REZ contract: `REZ` in {`Y`, `N`, empty}; `Non-REZ` only with `REZ` = `N`; every `Y`/`N` has a `REZ_SOURCE`; `Y` has a zone name
 - `ELI_SOURCE` in {`location`, `location-name`, empty}, empty exactly when there is no ELI value (`per-DUID`, the retired hand seed, fails)
+- Editions: ELI values carry one `ELI_EDITION` and ISP values one `ISP_EDITION`; the REZ appendix files (`rez` in `data/source_status.json`) record an ELI edition, and it equals the chart-data edition (configured and published)
 - `TECHNOLOGY` is not "Renewable" for every row
 - Source freshness (`data/source_status.json`, written by the run): the Registration List's last good fetch is at most 30 days old, and at most 3 GENERATOR DUIDs registered in the last 24 months (per DUDETAILSUMMARY) are missing from it; a stale Generation Information edition is reported as a warning
 - ELI edition (`eli` in `data/source_status.json`): each refresh probes next year's chart-data file on AEMO (one-byte Range request; a missing file redirects to /404) and a published newer edition is printed as a warning, not a failure

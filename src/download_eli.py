@@ -95,7 +95,7 @@ def fetch_eli_curtailment(cache_dir: str, eli_year: int | None = None,
 
     Returns DataFrame with columns:
         LOCATION, VOLTAGE_KV, REGION, SOLAR_CURTAILMENT_NEAR, WIND_CURTAILMENT_NEAR,
-        SOLAR_CURTAILMENT_MED, WIND_CURTAILMENT_MED
+        SOLAR_CURTAILMENT_MED, WIND_CURTAILMENT_MED, ELI_EDITION (the report year)
     """
     cache_path = Path(cache_dir)
     cache_path.mkdir(parents=True, exist_ok=True)
@@ -127,6 +127,9 @@ def fetch_eli_curtailment(cache_dir: str, eli_year: int | None = None,
         return pd.DataFrame()
 
     result = combine_terms(near_term, medium_term)
+    # The edition travels with the cached feather, so a fallback to an older cache is
+    # published (and validated) as that edition, not as the configured one
+    result["ELI_EDITION"] = int(eli_year)
 
     logger.info(f"Parsed ELI curtailment for {len(result)} connection points")
     return result

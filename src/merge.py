@@ -7,8 +7,6 @@ import re
 
 import pandas as pd
 
-from . import config
-
 logger = logging.getLogger(__name__)
 
 
@@ -31,6 +29,9 @@ def build_summary(
        The hand-seeded eli_per_duid.feather is not read: it carries no edition
        and nothing rebuilds it, so it would pin 2025 values over a new edition.
     4. LEFT JOIN REZ forecasts on REZ_NAME
+    5. ELI_EDITION (chart-data edition) and ISP_EDITION (the ISP the REZ forecasts
+       are from), one value for every row, read from the tables themselves so the
+       page and the validator see what was actually merged
 
     `cache_dir` is accepted for callers' compatibility and no longer read.
 
@@ -68,6 +69,9 @@ def build_summary(
     else:
         logger.warning("No REZ forecast data to merge")
 
+    # 5. Editions the ELI and ISP columns come from
+    summary = _add_editions(summary, eli_curtailment, rez_forecasts)
+
     # Sort: Fuel Type → State → Project Name
     sort_cols = []
     if "FUEL_TYPE" in summary.columns:
@@ -93,6 +97,28 @@ def _init_eli(summary: pd.DataFrame) -> pd.DataFrame:
     for col in ELI_COLS:
         result[col] = float("nan")
     result["ELI_SOURCE"] = ""
+    return result
+
+
+def _one_value(df: pd.DataFrame, col: str):
+    """The single value of `col` in `df`, or None (absent, empty or mixed)."""
+    if df is None or df.empty or col not in df.columns:
+        return None
+    values = df[col].dropna().unique()
+    return values[0] if len(values) == 1 else None
+
+
+def _add_editions(summary: pd.DataFrame, eli: pd.DataFrame, rez: pd.DataFrame) -> pd.DataFrame:
+    """ELI_EDITION / ISP_EDITION columns; empty when the table carries no edition."""
+    result = summary.copy()
+    eli_ed, isp_ed = _one_value(eli, "ELI_EDITION"), _one_value(rez, "ISP_EDITION")
+    result["ELI_EDITION"] = pd.array([int(eli_ed)] * len(result) if eli_ed is not None
+                                     else [pd.NA] * len(result), dtype="Int64")
+    result["ISP_EDITION"] = "" if isp_ed is None else str(isp_ed)
+    if eli_ed is None and not eli.empty:
+        logger.warning("ELI chart data carries no ELI_EDITION; rerun with --full-refresh")
+    if isp_ed is None and not rez.empty:
+        logger.warning("REZ forecasts carry no ISP_EDITION; rerun python -m src.eli_appendix")
     return result
 
 

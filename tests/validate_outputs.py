@@ -50,7 +50,7 @@ def validate(outputs_dir: Path = OUTPUTS_DIR):
     summary_path = outputs_dir / "summary.csv"
     check(summary_path.exists(), "summary.csv does not exist")
     if not summary_path.exists():
-        return
+        return None
 
     df = pd.read_csv(summary_path)
     print(f"summary.csv: {len(df)} rows, {len(df.columns)} columns")
@@ -106,6 +106,7 @@ def validate(outputs_dir: Path = OUTPUTS_DIR):
 
     check_rez(df)
     check_eli_source(df)
+    check_editions(df)
 
     # --- TECHNOLOGY is the descriptor, not the Registration List's "Renewable" ---
     if "TECHNOLOGY" in df.columns and len(df):
@@ -116,6 +117,7 @@ def validate(outputs_dir: Path = OUTPUTS_DIR):
     for region_id, name in REGION_NAMES.items():
         xlsx_path = outputs_dir / f"{name}_curtailment.xlsx"
         check(xlsx_path.exists(), f"{xlsx_path.name} does not exist")
+    return df
 
 
 def _text(df, col):
@@ -163,6 +165,29 @@ def check_eli_source(df):
     check(n == 0, f"{n} row(s) have an ELI_SOURCE but no ELI value")
 
 
+def _single(df, col):
+    """The one non-blank value of `col`, or None; a mixed column fails."""
+    if df is None or col not in df.columns:
+        return None
+    values = sorted(set(df[col].dropna().astype(str).str.strip()) - {""})
+    check(len(values) <= 1, f"{col} has more than one value: {values}")
+    return values[0] if len(values) == 1 else None
+
+
+def check_editions(df):
+    """ELI and ISP values say which edition they come from (S2-3)."""
+    eli_cols = [c for c in ("ELI_CURTAILMENT_NEAR", "ELI_CURTAILMENT_MED") if c in df.columns]
+    isp_cols = [c for c in df.columns if c.startswith("ISP_") and not c.endswith(("_LABEL", "_EDITION"))]
+    if eli_cols and df[eli_cols].notna().any().any():
+        check("ELI_EDITION" in df.columns and _single(df, "ELI_EDITION") is not None,
+              "ELI values carry no ELI_EDITION (chart data parsed before editions were recorded: "
+              "rerun with --full-refresh)")
+    if isp_cols and df[isp_cols].notna().any().any():
+        check("ISP_EDITION" in df.columns and _single(df, "ISP_EDITION") is not None,
+              "ISP values carry no ISP_EDITION (REZ feathers predate editions: rerun "
+              "python -m src.eli_appendix)")
+
+
 def _age_days(iso):
     if not iso:
         return None
@@ -175,8 +200,9 @@ def _age_days(iso):
     return (datetime.now(timezone.utc) - then).total_seconds() / 86400
 
 
-def validate_sources(cache_dir: Path):
-    """Fail when the generator spine has stopped refreshing or is visibly missing units."""
+def validate_sources(cache_dir: Path, df=None):
+    """Fail when a source has stopped refreshing, is visibly missing units, or the
+    published editions disagree. `df` is the summary validate() read (or None)."""
     path = Path(cache_dir) / STATUS_FILE
     check(path.exists(), f"{path} missing: run the pipeline (it records source freshness)")
     if not path.exists():
@@ -225,6 +251,36 @@ def validate_sources(cache_dir: Path):
     elif eli:
         print(f"ELI edition: {eli.get('edition')} (latest; checked {eli.get('checked_at')})")
 
+    check_edition_match(status, df)
+
+
+def check_edition_match(status, df=None):
+    """The REZ/ISP appendix files must be the same ELI edition as the chart data (S2-3).
+
+    Bumping config.ELI_* to a new year without rerunning `python -m src.eli_appendix`
+    (or republishing an older cached chart-data feather) would otherwise publish a mix
+    of editions under one label.
+    """
+    rez = status.get("rez")
+    if not rez:
+        print("  WARN: no rez record in source_status.json (run predates it)")
+        return
+    published = _single(df, "ELI_EDITION") if df is not None else None
+    chart = {str(v) for v in (status.get("eli", {}).get("edition"), published) if v is not None}
+    for key, what in (("forecasts_eli_edition", "rez_forecasts.feather"),
+                      ("membership_eli_edition", "rez_membership.feather")):
+        appendix = rez.get(key)
+        if not check(appendix is not None,
+                     f"{what} records no ELI edition: rerun python -m src.eli_appendix"):
+            continue
+        check(not chart or chart == {str(appendix)},
+              f"{what} is from the ELI {appendix} appendices but the ELI chart data is "
+              f"{', '.join(sorted(chart))}: rerun python -m src.eli_appendix for the new edition")
+    check(len(chart) <= 1, f"ELI chart-data editions disagree: configured/probed "
+                           f"{status.get('eli', {}).get('edition')}, published {published}")
+    print(f"ELI appendices {rez.get('forecasts_eli_edition')}, ISP forecasts "
+          f"{rez.get('isp_edition')}, chart data {', '.join(sorted(chart)) or 'unknown'}")
+
 
 def check_actual_curtailment(status):
     """Warn when this run republished cached actuals; fail when they are stale or absent."""
@@ -259,8 +315,8 @@ def main(argv=None):
                         help="Pipeline cache directory holding source_status.json (default: data/)")
     args = parser.parse_args(argv)
     print("Validating AEMO Renewable Generator Dashboard outputs...")
-    validate(Path(args.outputs_dir))
-    validate_sources(Path(args.cache_dir))
+    df = validate(Path(args.outputs_dir))
+    validate_sources(Path(args.cache_dir), df)
     if errors:
         print(f"\n{len(errors)} validation error(s) found — aborting.")
         sys.exit(1)

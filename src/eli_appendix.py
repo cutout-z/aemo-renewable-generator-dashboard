@@ -17,7 +17,11 @@ reference files when a new ELI edition comes out:
     python -m src.eli_appendix a3.txt ... # or parse text already extracted
 
 This writes data/rez_membership.feather and data/rez_forecasts.feather, which
-the pipeline reads (src/download_generators.py, src/main.py).
+the pipeline reads (src/download_generators.py, src/main.py). Both carry the
+editions they come from: ELI_EDITION (the appendix year, e.g. 2025) and
+ISP_EDITION (the ISP the forecasts are from, read from the appendix text, e.g.
+"2024 ISP"). tests/validate_outputs.py fails when ELI_EDITION differs from the
+chart-data edition the run used, so a config bump without a rebuild is caught.
 """
 
 from __future__ import annotations
@@ -52,6 +56,10 @@ _NAME_HINT = re.compile(r"farm|park|plant|station|project|hub|power|energy|hybri
                         r"battery|bess|range|ridge|hill|creek|rocks", re.IGNORECASE)
 _SCENARIO = re.compile(r"^\s*Step Change\s+(.*)$")
 _FY = re.compile(r"(20\d{2})-(20\d{2})")
+# "2024 ISP", "Final 2024 ISP", "2024 Integrated System Plan"
+_ISP = re.compile(r"\b(20\d{2})\s+(?:Final\s+)?(?:ISP|Integrated\s+System\s+Plan)\b")
+
+EDITION_COLS = ("ELI_EDITION", "ISP_EDITION")
 
 
 def parse_appendix_text(text: str, state: str) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -155,6 +163,40 @@ def resolve_duplicates(membership: pd.DataFrame) -> pd.DataFrame:
             .drop(columns="_non").sort_values(["STATE", "REZ_ID", "DUID"]).reset_index(drop=True))
 
 
+def parse_isp_edition(texts) -> str | None:
+    """The ISP edition the appendices cite, e.g. "2024 ISP"; None if none or several are cited.
+
+    Several years (a forecast table from one ISP, a mention of the next) are not
+    guessed between: the caller asks for --isp-edition instead.
+    """
+    years = {m.group(1) for t in texts for m in _ISP.finditer(t)}
+    if len(years) != 1:
+        logger.warning(f"ISP editions cited in the appendices: {sorted(years) or 'none'}")
+        return None
+    return f"{years.pop()} ISP"
+
+
+def stamp_editions(df: pd.DataFrame, eli_edition: int, isp_edition: str) -> pd.DataFrame:
+    """Record which ELI appendix edition and ISP edition a table comes from."""
+    out = df.copy()
+    out["ELI_EDITION"] = int(eli_edition)
+    out["ISP_EDITION"] = str(isp_edition)
+    return out
+
+
+def editions(df: pd.DataFrame | None) -> dict:
+    """{"eli_edition": 2025, "isp_edition": "2024 ISP"} from a stamped table (None where unstamped)."""
+    out = {"eli_edition": None, "isp_edition": None}
+    if df is None or df.empty:
+        return out
+    for col, key in zip(EDITION_COLS, out):
+        if col in df.columns:
+            values = df[col].dropna().unique()
+            if len(values) == 1:
+                out[key] = values[0].item() if hasattr(values[0], "item") else values[0]
+    return out
+
+
 def load_membership(cache_dir: str | Path) -> pd.DataFrame | None:
     path = Path(cache_dir) / MEMBERSHIP_FILE
     if not path.exists():
@@ -203,6 +245,9 @@ def main(argv: list[str] | None = None) -> int:
                              "(default: download the PDFs)")
     parser.add_argument("--year", type=int, default=max(config.ELI_REGIONAL_APPENDIX_URLS))
     parser.add_argument("--cache-dir", default=str(PROJECT_ROOT / config.DATA_DIR))
+    parser.add_argument("--isp-edition",
+                        help='ISP the forecasts come from, e.g. "2026 ISP" (default: read from the '
+                             "appendix text; required when the text cites more than one)")
     args = parser.parse_args(argv)
 
     if args.texts:
@@ -215,12 +260,20 @@ def main(argv: list[str] | None = None) -> int:
         logger.error(f"Missing appendices for {sorted(missing)}")
         return 1
 
+    isp_edition = args.isp_edition or parse_isp_edition(texts.values())
+    if not isp_edition:
+        logger.error("Could not tell which ISP the appendix forecasts come from; "
+                     'pass --isp-edition "<year> ISP"')
+        return 1
+
     membership, forecasts = build(texts)
+    membership = stamp_editions(membership, args.year, isp_edition)
+    forecasts = stamp_editions(forecasts, args.year, isp_edition)
     cache = Path(args.cache_dir)
     membership.to_feather(cache / MEMBERSHIP_FILE)
     forecasts.to_feather(cache / Path(config.REZ_FORECAST_CACHE).name)
     logger.info(f"Wrote {len(membership)} DUIDs in {membership['REZ_NAME'].nunique()} sections "
-                f"and {len(forecasts)} REZ forecasts (ELI {args.year})")
+                f"and {len(forecasts)} REZ forecasts (ELI {args.year}, {isp_edition})")
     return 0
 
 

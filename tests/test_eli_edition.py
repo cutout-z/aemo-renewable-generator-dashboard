@@ -60,6 +60,7 @@ def test_fetch_records_a_newer_edition_and_warns(tmp_path, caplog):
     with caplog.at_level(logging.WARNING):
         out = download_eli.fetch_eli_curtailment(str(tmp_path), session=FakeSession(FakeResponse(206)))
     assert len(out) == 1  # the 2025 data is still parsed
+    assert out["ELI_EDITION"].tolist() == [2025]  # the edition travels with the cached feather
     rec = source_status.load(tmp_path)["eli"]
     assert rec["edition"] == 2025 and rec["newer_edition_available"] is True
     assert any("NEWER ELI EDITION (2026)" in r.getMessage() for r in caplog.records)
