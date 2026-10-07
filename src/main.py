@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from . import config, source_status
+from . import config, isp_rez_appendix, source_status
 from .download_generators import fetch_generators
 from .download_mlf import fetch_mlf_data
 from .download_eli import fetch_eli_curtailment
@@ -92,6 +92,9 @@ def run(full_refresh: bool = False, cache_dir: str | None = None,
     # ── Step 4: REZ forecasts ────────────────────────────────────────────
     # Extracted from the ELI regional appendices by `python -m src.eli_appendix`
     rez_data = fetch_rez_forecasts(cache_dir)
+    # The ISP's own REZ appendix (A3), read by `python -m src.isp_rez_appendix`, and the
+    # crosswalk from its zones to the ELI appendices' REZ names
+    isp_a3, isp_crosswalk = load_isp_a3(cache_root)
 
     # ── Step 5: Actual curtailment from credit dashboard ────────────────
     curt_cache = cache_root / Path(config.CURTAILMENT_CACHE).name
@@ -109,6 +112,8 @@ def run(full_refresh: bool = False, cache_dir: str | None = None,
         rez_forecasts=rez_data,
         actual_curtailment=actual_curtailment,
         cache_dir=cache_dir,
+        isp_a3=isp_a3,
+        isp_crosswalk=isp_crosswalk,
     )
 
     # ── Step 7: Save outputs ─────────────────────────────────────────────
@@ -126,6 +131,18 @@ def run(full_refresh: bool = False, cache_dir: str | None = None,
     logger.info(f"Published {status_path.name}")
 
     logger.info("Done.")
+
+
+def load_isp_a3(cache_root: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """The ISP A3 REZ table and its crosswalk (empty frames when not built)."""
+    path = cache_root / config.ISP_A3_FILE
+    if not path.exists():
+        logger.warning(f"No ISP A3 REZ table at {path}; run python -m src.isp_rez_appendix")
+        return pd.DataFrame(), isp_rez_appendix.load_crosswalk(cache_root)
+    table = pd.read_feather(path)
+    logger.info(f"Loaded {isp_rez_appendix.edition(table) or 'ISP (edition not recorded)'} "
+                f"Appendix A3 REZ table ({len(table.drop_duplicates(['REZ_ID', 'REZ_NAME']))} zones)")
+    return table, isp_rez_appendix.load_crosswalk(cache_root)
 
 
 ACTUAL_STATUS_KEY = "actual_curtailment"

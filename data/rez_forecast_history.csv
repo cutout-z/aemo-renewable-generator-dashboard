@@ -1,0 +1,1069 @@
+source,eli_edition,isp_edition,rez_id,rez_name,state,scenario,fy,measure,value,crosswalk_key,crosswalk_match,retrieved_at
+ELI 2025 regional appendices,2025,2024 ISP,N1,Northwest New South Wales,NSW,Step Change,2025-26,curtailment,0.0,Northwest New South Wales,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N1,Northwest New South Wales,NSW,Step Change,2026-27,curtailment,0.01,Northwest New South Wales,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N1,Northwest New South Wales,NSW,Step Change,2027-28,curtailment,0.01,Northwest New South Wales,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N1,Northwest New South Wales,NSW,Step Change,2025-26,offloading,0.04,Northwest New South Wales,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N1,Northwest New South Wales,NSW,Step Change,2026-27,offloading,0.1,Northwest New South Wales,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N1,Northwest New South Wales,NSW,Step Change,2027-28,offloading,0.09,Northwest New South Wales,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N2,New England,NSW,Step Change,2025-26,curtailment,0.1,New England,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N2,New England,NSW,Step Change,2026-27,curtailment,0.15,New England,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N2,New England,NSW,Step Change,2027-28,curtailment,0.24,New England,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N2,New England,NSW,Step Change,2025-26,offloading,0.16,New England,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N2,New England,NSW,Step Change,2026-27,offloading,0.26,New England,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N2,New England,NSW,Step Change,2027-28,offloading,0.34,New England,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N3,Central West Orana,NSW,Step Change,2025-26,curtailment,0.15,Central West Orana,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N3,Central West Orana,NSW,Step Change,2026-27,curtailment,0.12,Central West Orana,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N3,Central West Orana,NSW,Step Change,2027-28,curtailment,0.16,Central West Orana,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N3,Central West Orana,NSW,Step Change,2025-26,offloading,0.21,Central West Orana,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N3,Central West Orana,NSW,Step Change,2026-27,offloading,0.19,Central West Orana,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N3,Central West Orana,NSW,Step Change,2027-28,offloading,0.22,Central West Orana,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N4,Broken Hill,NSW,Step Change,2025-26,curtailment,0.0,Broken Hill,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N4,Broken Hill,NSW,Step Change,2026-27,curtailment,0.03,Broken Hill,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N4,Broken Hill,NSW,Step Change,2027-28,curtailment,0.02,Broken Hill,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N4,Broken Hill,NSW,Step Change,2025-26,offloading,0.0,Broken Hill,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N4,Broken Hill,NSW,Step Change,2026-27,offloading,0.09,Broken Hill,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N4,Broken Hill,NSW,Step Change,2027-28,offloading,0.12,Broken Hill,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N5,South West New South Wales,NSW,Step Change,2025-26,curtailment,0.11,South West New South Wales,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N5,South West New South Wales,NSW,Step Change,2026-27,curtailment,0.09,South West New South Wales,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N5,South West New South Wales,NSW,Step Change,2027-28,curtailment,0.01,South West New South Wales,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N5,South West New South Wales,NSW,Step Change,2025-26,offloading,0.16,South West New South Wales,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N5,South West New South Wales,NSW,Step Change,2026-27,offloading,0.17,South West New South Wales,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N5,South West New South Wales,NSW,Step Change,2027-28,offloading,0.09,South West New South Wales,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N6,Wagga Wagga,NSW,Step Change,2025-26,curtailment,0.0,Wagga Wagga,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N6,Wagga Wagga,NSW,Step Change,2026-27,curtailment,0.0,Wagga Wagga,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N6,Wagga Wagga,NSW,Step Change,2027-28,curtailment,0.0,Wagga Wagga,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N6,Wagga Wagga,NSW,Step Change,2025-26,offloading,0.01,Wagga Wagga,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N6,Wagga Wagga,NSW,Step Change,2026-27,offloading,0.03,Wagga Wagga,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N6,Wagga Wagga,NSW,Step Change,2027-28,offloading,0.06,Wagga Wagga,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N7,Tumut,NSW,Step Change,2025-26,curtailment,0.0,Tumut,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N7,Tumut,NSW,Step Change,2026-27,curtailment,0.0,Tumut,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N7,Tumut,NSW,Step Change,2027-28,curtailment,0.0,Tumut,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N7,Tumut,NSW,Step Change,2025-26,offloading,0.0,Tumut,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N7,Tumut,NSW,Step Change,2026-27,offloading,0.0,Tumut,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N7,Tumut,NSW,Step Change,2027-28,offloading,0.0,Tumut,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N8,Cooma-Monaro,NSW,Step Change,2025-26,curtailment,0.0,Cooma-Monaro,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N8,Cooma-Monaro,NSW,Step Change,2026-27,curtailment,0.03,Cooma-Monaro,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N8,Cooma-Monaro,NSW,Step Change,2027-28,curtailment,0.03,Cooma-Monaro,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N8,Cooma-Monaro,NSW,Step Change,2025-26,offloading,0.0,Cooma-Monaro,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N8,Cooma-Monaro,NSW,Step Change,2026-27,offloading,0.07,Cooma-Monaro,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N8,Cooma-Monaro,NSW,Step Change,2027-28,offloading,0.1,Cooma-Monaro,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N9,Hunter-Central Coast,NSW,Step Change,2025-26,curtailment,,Hunter-Central Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N9,Hunter-Central Coast,NSW,Step Change,2026-27,curtailment,0.03,Hunter-Central Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N9,Hunter-Central Coast,NSW,Step Change,2027-28,curtailment,0.03,Hunter-Central Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N9,Hunter-Central Coast,NSW,Step Change,2025-26,offloading,,Hunter-Central Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N9,Hunter-Central Coast,NSW,Step Change,2026-27,offloading,0.05,Hunter-Central Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N9,Hunter-Central Coast,NSW,Step Change,2027-28,offloading,0.06,Hunter-Central Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N10,Hunter Coast,NSW,Step Change,2025-26,curtailment,,Hunter Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N10,Hunter Coast,NSW,Step Change,2026-27,curtailment,,Hunter Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N10,Hunter Coast,NSW,Step Change,2027-28,curtailment,,Hunter Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N10,Hunter Coast,NSW,Step Change,2025-26,offloading,,Hunter Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N10,Hunter Coast,NSW,Step Change,2026-27,offloading,,Hunter Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N10,Hunter Coast,NSW,Step Change,2027-28,offloading,,Hunter Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N11,Illawarra Coast,NSW,Step Change,2025-26,curtailment,,Illawarra Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N11,Illawarra Coast,NSW,Step Change,2026-27,curtailment,,Illawarra Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N11,Illawarra Coast,NSW,Step Change,2027-28,curtailment,,Illawarra Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N11,Illawarra Coast,NSW,Step Change,2025-26,offloading,,Illawarra Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N11,Illawarra Coast,NSW,Step Change,2026-27,offloading,,Illawarra Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N11,Illawarra Coast,NSW,Step Change,2027-28,offloading,,Illawarra Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N12,Illawarra,NSW,Step Change,2025-26,curtailment,,Illawarra,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N12,Illawarra,NSW,Step Change,2026-27,curtailment,,Illawarra,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N12,Illawarra,NSW,Step Change,2027-28,curtailment,,Illawarra,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N12,Illawarra,NSW,Step Change,2025-26,offloading,,Illawarra,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N12,Illawarra,NSW,Step Change,2026-27,offloading,,Illawarra,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,N12,Illawarra,NSW,Step Change,2027-28,offloading,,Illawarra,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q1,Far North Queensland,QLD,Step Change,2025-26,curtailment,0.0,Far North Queensland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q1,Far North Queensland,QLD,Step Change,2026-27,curtailment,0.0,Far North Queensland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q1,Far North Queensland,QLD,Step Change,2027-28,curtailment,0.0,Far North Queensland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q1,Far North Queensland,QLD,Step Change,2025-26,offloading,0.01,Far North Queensland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q1,Far North Queensland,QLD,Step Change,2026-27,offloading,0.03,Far North Queensland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q1,Far North Queensland,QLD,Step Change,2027-28,offloading,0.02,Far North Queensland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q2,North Queensland Clean Energy Hub,QLD,Step Change,2025-26,curtailment,0.0,North Queensland Clean Energy Hub,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q2,North Queensland Clean Energy Hub,QLD,Step Change,2026-27,curtailment,0.0,North Queensland Clean Energy Hub,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q2,North Queensland Clean Energy Hub,QLD,Step Change,2027-28,curtailment,0.0,North Queensland Clean Energy Hub,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q2,North Queensland Clean Energy Hub,QLD,Step Change,2025-26,offloading,0.02,North Queensland Clean Energy Hub,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q2,North Queensland Clean Energy Hub,QLD,Step Change,2026-27,offloading,0.03,North Queensland Clean Energy Hub,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q2,North Queensland Clean Energy Hub,QLD,Step Change,2027-28,offloading,0.03,North Queensland Clean Energy Hub,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q3,Northern Queensland,QLD,Step Change,2025-26,curtailment,0.0,Northern Queensland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q3,Northern Queensland,QLD,Step Change,2026-27,curtailment,0.0,Northern Queensland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q3,Northern Queensland,QLD,Step Change,2027-28,curtailment,0.0,Northern Queensland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q3,Northern Queensland,QLD,Step Change,2025-26,offloading,0.01,Northern Queensland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q3,Northern Queensland,QLD,Step Change,2026-27,offloading,0.04,Northern Queensland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q3,Northern Queensland,QLD,Step Change,2027-28,offloading,0.04,Northern Queensland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q4,Isaac,QLD,Step Change,2025-26,curtailment,0.0,Isaac,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q4,Isaac,QLD,Step Change,2026-27,curtailment,0.0,Isaac,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q4,Isaac,QLD,Step Change,2027-28,curtailment,0.0,Isaac,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q4,Isaac,QLD,Step Change,2025-26,offloading,0.01,Isaac,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q4,Isaac,QLD,Step Change,2026-27,offloading,0.03,Isaac,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q4,Isaac,QLD,Step Change,2027-28,offloading,0.03,Isaac,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q5,Barcaldine,QLD,Step Change,2025-26,curtailment,0.0,Barcaldine,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q5,Barcaldine,QLD,Step Change,2026-27,curtailment,0.0,Barcaldine,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q5,Barcaldine,QLD,Step Change,2027-28,curtailment,0.0,Barcaldine,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q5,Barcaldine,QLD,Step Change,2025-26,offloading,0.01,Barcaldine,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q5,Barcaldine,QLD,Step Change,2026-27,offloading,0.13,Barcaldine,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q5,Barcaldine,QLD,Step Change,2027-28,offloading,0.12,Barcaldine,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q6,Fitzroy,QLD,Step Change,2025-26,curtailment,0.0,Fitzroy,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q6,Fitzroy,QLD,Step Change,2026-27,curtailment,0.0,Fitzroy,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q6,Fitzroy,QLD,Step Change,2027-28,curtailment,0.0,Fitzroy,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q6,Fitzroy,QLD,Step Change,2025-26,offloading,0.01,Fitzroy,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q6,Fitzroy,QLD,Step Change,2026-27,offloading,0.04,Fitzroy,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q6,Fitzroy,QLD,Step Change,2027-28,offloading,0.02,Fitzroy,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q7,Wide Bay,QLD,Step Change,2025-26,curtailment,0.0,Wide Bay,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q7,Wide Bay,QLD,Step Change,2026-27,curtailment,0.0,Wide Bay,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q7,Wide Bay,QLD,Step Change,2027-28,curtailment,0.0,Wide Bay,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q7,Wide Bay,QLD,Step Change,2025-26,offloading,0.03,Wide Bay,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q7,Wide Bay,QLD,Step Change,2026-27,offloading,0.05,Wide Bay,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q7,Wide Bay,QLD,Step Change,2027-28,offloading,0.06,Wide Bay,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q8,Darling Downs,QLD,Step Change,2025-26,curtailment,0.0,Darling Downs,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q8,Darling Downs,QLD,Step Change,2026-27,curtailment,0.0,Darling Downs,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q8,Darling Downs,QLD,Step Change,2027-28,curtailment,0.0,Darling Downs,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q8,Darling Downs,QLD,Step Change,2025-26,offloading,0.01,Darling Downs,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q8,Darling Downs,QLD,Step Change,2026-27,offloading,0.02,Darling Downs,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q8,Darling Downs,QLD,Step Change,2027-28,offloading,0.02,Darling Downs,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q9,Banana,QLD,Step Change,2025-26,curtailment,,Banana,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q9,Banana,QLD,Step Change,2026-27,curtailment,,Banana,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q9,Banana,QLD,Step Change,2027-28,curtailment,,Banana,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q9,Banana,QLD,Step Change,2025-26,offloading,,Banana,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q9,Banana,QLD,Step Change,2026-27,offloading,,Banana,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,Q9,Banana,QLD,Step Change,2027-28,offloading,,Banana,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S1,South East South Australia,SA,Step Change,2025-26,curtailment,0.0,South East South Australia,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S1,South East South Australia,SA,Step Change,2026-27,curtailment,0.0,South East South Australia,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S1,South East South Australia,SA,Step Change,2027-28,curtailment,0.0,South East South Australia,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S1,South East South Australia,SA,Step Change,2025-26,offloading,0.1,South East South Australia,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S1,South East South Australia,SA,Step Change,2026-27,offloading,0.09,South East South Australia,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S1,South East South Australia,SA,Step Change,2027-28,offloading,0.09,South East South Australia,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S2,Riverland,SA,Step Change,2025-26,curtailment,0.0,Riverland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S2,Riverland,SA,Step Change,2026-27,curtailment,0.0,Riverland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S2,Riverland,SA,Step Change,2027-28,curtailment,0.0,Riverland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S2,Riverland,SA,Step Change,2025-26,offloading,0.16,Riverland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S2,Riverland,SA,Step Change,2026-27,offloading,0.16,Riverland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S2,Riverland,SA,Step Change,2027-28,offloading,0.16,Riverland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S3,Mid-North South Australia,SA,Step Change,2025-26,curtailment,0.0,Mid-North South Australia,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S3,Mid-North South Australia,SA,Step Change,2026-27,curtailment,0.0,Mid-North South Australia,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S3,Mid-North South Australia,SA,Step Change,2027-28,curtailment,0.0,Mid-North South Australia,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S3,Mid-North South Australia,SA,Step Change,2025-26,offloading,0.07,Mid-North South Australia,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S3,Mid-North South Australia,SA,Step Change,2026-27,offloading,0.05,Mid-North South Australia,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S3,Mid-North South Australia,SA,Step Change,2027-28,offloading,0.04,Mid-North South Australia,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S4,Yorke Peninsula,SA,Step Change,2025-26,curtailment,0.0,Yorke Peninsula,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S4,Yorke Peninsula,SA,Step Change,2026-27,curtailment,0.0,Yorke Peninsula,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S4,Yorke Peninsula,SA,Step Change,2027-28,curtailment,0.0,Yorke Peninsula,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S4,Yorke Peninsula,SA,Step Change,2025-26,offloading,0.1,Yorke Peninsula,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S4,Yorke Peninsula,SA,Step Change,2026-27,offloading,0.09,Yorke Peninsula,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S4,Yorke Peninsula,SA,Step Change,2027-28,offloading,0.09,Yorke Peninsula,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S5,Northern South Australia,SA,Step Change,2025-26,curtailment,0.0,Northern South Australia,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S5,Northern South Australia,SA,Step Change,2026-27,curtailment,0.0,Northern South Australia,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S5,Northern South Australia,SA,Step Change,2027-28,curtailment,0.0,Northern South Australia,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S5,Northern South Australia,SA,Step Change,2025-26,offloading,0.07,Northern South Australia,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S5,Northern South Australia,SA,Step Change,2026-27,offloading,0.08,Northern South Australia,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S5,Northern South Australia,SA,Step Change,2027-28,offloading,0.07,Northern South Australia,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S6,Leigh Creek,SA,Step Change,2025-26,curtailment,,Leigh Creek,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S6,Leigh Creek,SA,Step Change,2026-27,curtailment,,Leigh Creek,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S6,Leigh Creek,SA,Step Change,2027-28,curtailment,,Leigh Creek,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S6,Leigh Creek,SA,Step Change,2025-26,offloading,,Leigh Creek,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S6,Leigh Creek,SA,Step Change,2026-27,offloading,,Leigh Creek,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S6,Leigh Creek,SA,Step Change,2027-28,offloading,,Leigh Creek,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S7,Roxby Downs,SA,Step Change,2025-26,curtailment,,Roxby Downs,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S7,Roxby Downs,SA,Step Change,2026-27,curtailment,0.0,Roxby Downs,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S7,Roxby Downs,SA,Step Change,2027-28,curtailment,0.0,Roxby Downs,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S7,Roxby Downs,SA,Step Change,2025-26,offloading,,Roxby Downs,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S7,Roxby Downs,SA,Step Change,2026-27,offloading,0.27,Roxby Downs,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S7,Roxby Downs,SA,Step Change,2027-28,offloading,0.19,Roxby Downs,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S8,Eastern Eyre Peninsula,SA,Step Change,2025-26,curtailment,0.0,Eastern Eyre Peninsula,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S8,Eastern Eyre Peninsula,SA,Step Change,2026-27,curtailment,0.0,Eastern Eyre Peninsula,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S8,Eastern Eyre Peninsula,SA,Step Change,2027-28,curtailment,0.0,Eastern Eyre Peninsula,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S8,Eastern Eyre Peninsula,SA,Step Change,2025-26,offloading,0.05,Eastern Eyre Peninsula,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S8,Eastern Eyre Peninsula,SA,Step Change,2026-27,offloading,0.04,Eastern Eyre Peninsula,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S8,Eastern Eyre Peninsula,SA,Step Change,2027-28,offloading,0.06,Eastern Eyre Peninsula,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S9,Western Eyre Peninsula,SA,Step Change,2025-26,curtailment,,Western Eyre Peninsula,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S9,Western Eyre Peninsula,SA,Step Change,2026-27,curtailment,,Western Eyre Peninsula,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S9,Western Eyre Peninsula,SA,Step Change,2027-28,curtailment,,Western Eyre Peninsula,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S9,Western Eyre Peninsula,SA,Step Change,2025-26,offloading,,Western Eyre Peninsula,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S9,Western Eyre Peninsula,SA,Step Change,2026-27,offloading,,Western Eyre Peninsula,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S9,Western Eyre Peninsula,SA,Step Change,2027-28,offloading,,Western Eyre Peninsula,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S10,South East South Australia Coast,SA,Step Change,2025-26,curtailment,,South East South Australia Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S10,South East South Australia Coast,SA,Step Change,2026-27,curtailment,,South East South Australia Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S10,South East South Australia Coast,SA,Step Change,2027-28,curtailment,,South East South Australia Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S10,South East South Australia Coast,SA,Step Change,2025-26,offloading,,South East South Australia Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S10,South East South Australia Coast,SA,Step Change,2026-27,offloading,,South East South Australia Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,S10,South East South Australia Coast,SA,Step Change,2027-28,offloading,,South East South Australia Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T1,North East Tasmania,TAS,Step Change,2025-26,curtailment,0.0,North East Tasmania,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T1,North East Tasmania,TAS,Step Change,2026-27,curtailment,0.0,North East Tasmania,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T1,North East Tasmania,TAS,Step Change,2027-28,curtailment,0.0,North East Tasmania,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T1,North East Tasmania,TAS,Step Change,2025-26,offloading,0.0,North East Tasmania,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T1,North East Tasmania,TAS,Step Change,2026-27,offloading,0.02,North East Tasmania,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T1,North East Tasmania,TAS,Step Change,2027-28,offloading,0.02,North East Tasmania,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T2,North West Tasmania,TAS,Step Change,2025-26,curtailment,0.0,North West Tasmania,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T2,North West Tasmania,TAS,Step Change,2026-27,curtailment,0.0,North West Tasmania,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T2,North West Tasmania,TAS,Step Change,2027-28,curtailment,0.0,North West Tasmania,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T2,North West Tasmania,TAS,Step Change,2025-26,offloading,0.0,North West Tasmania,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T2,North West Tasmania,TAS,Step Change,2026-27,offloading,0.02,North West Tasmania,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T2,North West Tasmania,TAS,Step Change,2027-28,offloading,0.02,North West Tasmania,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T3,Central Highlands,TAS,Step Change,2025-26,curtailment,0.0,Central Highlands,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T3,Central Highlands,TAS,Step Change,2026-27,curtailment,0.01,Central Highlands,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T3,Central Highlands,TAS,Step Change,2027-28,curtailment,0.01,Central Highlands,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T3,Central Highlands,TAS,Step Change,2025-26,offloading,0.0,Central Highlands,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T3,Central Highlands,TAS,Step Change,2026-27,offloading,0.03,Central Highlands,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T3,Central Highlands,TAS,Step Change,2027-28,offloading,0.02,Central Highlands,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T4,North Tasmania Coast,TAS,Step Change,2025-26,curtailment,,North Tasmania Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T4,North Tasmania Coast,TAS,Step Change,2026-27,curtailment,,North Tasmania Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T4,North Tasmania Coast,TAS,Step Change,2027-28,curtailment,,North Tasmania Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T4,North Tasmania Coast,TAS,Step Change,2025-26,offloading,,North Tasmania Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T4,North Tasmania Coast,TAS,Step Change,2026-27,offloading,,North Tasmania Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,T4,North Tasmania Coast,TAS,Step Change,2027-28,offloading,,North Tasmania Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V1,Ovens Murray,VIC,Step Change,2025-26,curtailment,,Ovens Murray,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V1,Ovens Murray,VIC,Step Change,2026-27,curtailment,0.0,Ovens Murray,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V1,Ovens Murray,VIC,Step Change,2027-28,curtailment,0.0,Ovens Murray,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V1,Ovens Murray,VIC,Step Change,2025-26,offloading,,Ovens Murray,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V1,Ovens Murray,VIC,Step Change,2026-27,offloading,0.52,Ovens Murray,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V1,Ovens Murray,VIC,Step Change,2027-28,offloading,0.57,Ovens Murray,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V2,Murray River,VIC,Step Change,2025-26,curtailment,0.02,Murray River,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V2,Murray River,VIC,Step Change,2026-27,curtailment,0.06,Murray River,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V2,Murray River,VIC,Step Change,2027-28,curtailment,0.0,Murray River,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V2,Murray River,VIC,Step Change,2025-26,offloading,0.11,Murray River,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V2,Murray River,VIC,Step Change,2026-27,offloading,0.17,Murray River,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V2,Murray River,VIC,Step Change,2027-28,offloading,0.08,Murray River,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V3,Western Victoria,VIC,Step Change,2025-26,curtailment,0.0,Western Victoria,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V3,Western Victoria,VIC,Step Change,2026-27,curtailment,0.0,Western Victoria,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V3,Western Victoria,VIC,Step Change,2027-28,curtailment,0.0,Western Victoria,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V3,Western Victoria,VIC,Step Change,2025-26,offloading,0.03,Western Victoria,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V3,Western Victoria,VIC,Step Change,2026-27,offloading,0.05,Western Victoria,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V3,Western Victoria,VIC,Step Change,2027-28,offloading,0.04,Western Victoria,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V4,South West Victoria,VIC,Step Change,2025-26,curtailment,0.0,South West Victoria,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V4,South West Victoria,VIC,Step Change,2026-27,curtailment,0.0,South West Victoria,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V4,South West Victoria,VIC,Step Change,2027-28,curtailment,0.0,South West Victoria,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V4,South West Victoria,VIC,Step Change,2025-26,offloading,0.02,South West Victoria,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V4,South West Victoria,VIC,Step Change,2026-27,offloading,0.02,South West Victoria,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V4,South West Victoria,VIC,Step Change,2027-28,offloading,0.03,South West Victoria,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V5,Gippsland,VIC,Step Change,2025-26,curtailment,0.0,Gippsland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V5,Gippsland,VIC,Step Change,2026-27,curtailment,0.0,Gippsland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V5,Gippsland,VIC,Step Change,2027-28,curtailment,0.0,Gippsland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V5,Gippsland,VIC,Step Change,2025-26,offloading,0.1,Gippsland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V5,Gippsland,VIC,Step Change,2026-27,offloading,0.05,Gippsland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V5,Gippsland,VIC,Step Change,2027-28,offloading,0.06,Gippsland,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V6,Central North Victoria,VIC,Step Change,2025-26,curtailment,0.0,Central North Victoria,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V6,Central North Victoria,VIC,Step Change,2026-27,curtailment,0.0,Central North Victoria,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V6,Central North Victoria,VIC,Step Change,2027-28,curtailment,0.0,Central North Victoria,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V6,Central North Victoria,VIC,Step Change,2025-26,offloading,0.04,Central North Victoria,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V6,Central North Victoria,VIC,Step Change,2026-27,offloading,0.07,Central North Victoria,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V6,Central North Victoria,VIC,Step Change,2027-28,offloading,0.1,Central North Victoria,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V7,Gippsland Coast,VIC,Step Change,2025-26,curtailment,,Gippsland Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V7,Gippsland Coast,VIC,Step Change,2026-27,curtailment,,Gippsland Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V7,Gippsland Coast,VIC,Step Change,2027-28,curtailment,,Gippsland Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V7,Gippsland Coast,VIC,Step Change,2025-26,offloading,,Gippsland Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V7,Gippsland Coast,VIC,Step Change,2026-27,offloading,,Gippsland Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V7,Gippsland Coast,VIC,Step Change,2027-28,offloading,,Gippsland Coast,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V8,Southern Ocean,VIC,Step Change,2025-26,curtailment,,Southern Ocean,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V8,Southern Ocean,VIC,Step Change,2026-27,curtailment,,Southern Ocean,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V8,Southern Ocean,VIC,Step Change,2027-28,curtailment,,Southern Ocean,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V8,Southern Ocean,VIC,Step Change,2025-26,offloading,,Southern Ocean,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V8,Southern Ocean,VIC,Step Change,2026-27,offloading,,Southern Ocean,exact,2026-10-06
+ELI 2025 regional appendices,2025,2024 ISP,V8,Southern Ocean,VIC,Step Change,2027-28,offloading,,Southern Ocean,exact,2026-10-06
+2026 ISP Appendix A3,,2026 ISP,N1,North West New South Wales,NSW,Slower Growth,2029-30,transmission_curtailment,0.0,Northwest New South Wales,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N1,North West New South Wales,NSW,Slower Growth,2039-40,transmission_curtailment,0.0,Northwest New South Wales,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N1,North West New South Wales,NSW,Slower Growth,2049-50,transmission_curtailment,0.06,Northwest New South Wales,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N1,North West New South Wales,NSW,Slower Growth,2029-30,economic_spill,0.11,Northwest New South Wales,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N1,North West New South Wales,NSW,Slower Growth,2039-40,economic_spill,0.1,Northwest New South Wales,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N1,North West New South Wales,NSW,Slower Growth,2049-50,economic_spill,0.34,Northwest New South Wales,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N1,North West New South Wales,NSW,Step Change,2029-30,transmission_curtailment,0.06,Northwest New South Wales,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N1,North West New South Wales,NSW,Step Change,2039-40,transmission_curtailment,0.01,Northwest New South Wales,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N1,North West New South Wales,NSW,Step Change,2049-50,transmission_curtailment,0.05,Northwest New South Wales,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N1,North West New South Wales,NSW,Step Change,2029-30,economic_spill,0.18,Northwest New South Wales,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N1,North West New South Wales,NSW,Step Change,2039-40,economic_spill,0.36,Northwest New South Wales,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N1,North West New South Wales,NSW,Step Change,2049-50,economic_spill,0.52,Northwest New South Wales,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N1,North West New South Wales,NSW,Accelerated Transition,2029-30,transmission_curtailment,0.02,Northwest New South Wales,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N1,North West New South Wales,NSW,Accelerated Transition,2039-40,transmission_curtailment,0.0,Northwest New South Wales,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N1,North West New South Wales,NSW,Accelerated Transition,2049-50,transmission_curtailment,0.0,Northwest New South Wales,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N1,North West New South Wales,NSW,Accelerated Transition,2029-30,economic_spill,0.08,Northwest New South Wales,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N1,North West New South Wales,NSW,Accelerated Transition,2039-40,economic_spill,0.35,Northwest New South Wales,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N1,North West New South Wales,NSW,Accelerated Transition,2049-50,economic_spill,0.48,Northwest New South Wales,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N2,New England,NSW,Slower Growth,2029-30,transmission_curtailment,0.0,New England,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N2,New England,NSW,Slower Growth,2039-40,transmission_curtailment,0.0,New England,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N2,New England,NSW,Slower Growth,2049-50,transmission_curtailment,0.0,New England,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N2,New England,NSW,Slower Growth,2029-30,economic_spill,0.16,New England,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N2,New England,NSW,Slower Growth,2039-40,economic_spill,0.03,New England,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N2,New England,NSW,Slower Growth,2049-50,economic_spill,0.04,New England,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N2,New England,NSW,Step Change,2029-30,transmission_curtailment,0.09,New England,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N2,New England,NSW,Step Change,2039-40,transmission_curtailment,0.0,New England,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N2,New England,NSW,Step Change,2049-50,transmission_curtailment,0.0,New England,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N2,New England,NSW,Step Change,2029-30,economic_spill,0.2,New England,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N2,New England,NSW,Step Change,2039-40,economic_spill,0.08,New England,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N2,New England,NSW,Step Change,2049-50,economic_spill,0.06,New England,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N2,New England,NSW,Accelerated Transition,2029-30,transmission_curtailment,0.1,New England,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N2,New England,NSW,Accelerated Transition,2039-40,transmission_curtailment,0.0,New England,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N2,New England,NSW,Accelerated Transition,2049-50,transmission_curtailment,0.0,New England,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N2,New England,NSW,Accelerated Transition,2029-30,economic_spill,0.2,New England,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N2,New England,NSW,Accelerated Transition,2039-40,economic_spill,0.1,New England,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N2,New England,NSW,Accelerated Transition,2049-50,economic_spill,0.15,New England,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N3,Central-West Orana,NSW,Slower Growth,2029-30,transmission_curtailment,0.0,Central West Orana,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N3,Central-West Orana,NSW,Slower Growth,2039-40,transmission_curtailment,0.0,Central West Orana,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N3,Central-West Orana,NSW,Slower Growth,2049-50,transmission_curtailment,0.0,Central West Orana,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N3,Central-West Orana,NSW,Slower Growth,2029-30,economic_spill,0.02,Central West Orana,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N3,Central-West Orana,NSW,Slower Growth,2039-40,economic_spill,0.02,Central West Orana,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N3,Central-West Orana,NSW,Slower Growth,2049-50,economic_spill,0.05,Central West Orana,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N3,Central-West Orana,NSW,Step Change,2029-30,transmission_curtailment,0.0,Central West Orana,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N3,Central-West Orana,NSW,Step Change,2039-40,transmission_curtailment,0.0,Central West Orana,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N3,Central-West Orana,NSW,Step Change,2049-50,transmission_curtailment,0.0,Central West Orana,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N3,Central-West Orana,NSW,Step Change,2029-30,economic_spill,0.01,Central West Orana,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N3,Central-West Orana,NSW,Step Change,2039-40,economic_spill,0.11,Central West Orana,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N3,Central-West Orana,NSW,Step Change,2049-50,economic_spill,0.11,Central West Orana,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N3,Central-West Orana,NSW,Accelerated Transition,2029-30,transmission_curtailment,0.0,Central West Orana,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N3,Central-West Orana,NSW,Accelerated Transition,2039-40,transmission_curtailment,0.0,Central West Orana,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N3,Central-West Orana,NSW,Accelerated Transition,2049-50,transmission_curtailment,0.0,Central West Orana,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N3,Central-West Orana,NSW,Accelerated Transition,2029-30,economic_spill,0.0,Central West Orana,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N3,Central-West Orana,NSW,Accelerated Transition,2039-40,economic_spill,0.13,Central West Orana,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N3,Central-West Orana,NSW,Accelerated Transition,2049-50,economic_spill,0.16,Central West Orana,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Dubbo distribution,NSW,Slower Growth,2029-30,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Dubbo distribution,NSW,Slower Growth,2039-40,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Dubbo distribution,NSW,Slower Growth,2049-50,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Dubbo distribution,NSW,Slower Growth,2029-30,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Dubbo distribution,NSW,Slower Growth,2039-40,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Dubbo distribution,NSW,Slower Growth,2049-50,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Dubbo distribution,NSW,Step Change,2029-30,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Dubbo distribution,NSW,Step Change,2039-40,transmission_curtailment,0.0,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Dubbo distribution,NSW,Step Change,2049-50,transmission_curtailment,0.01,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Dubbo distribution,NSW,Step Change,2029-30,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Dubbo distribution,NSW,Step Change,2039-40,economic_spill,0.18,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Dubbo distribution,NSW,Step Change,2049-50,economic_spill,0.1,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Dubbo distribution,NSW,Accelerated Transition,2029-30,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Dubbo distribution,NSW,Accelerated Transition,2039-40,transmission_curtailment,0.0,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Dubbo distribution,NSW,Accelerated Transition,2049-50,transmission_curtailment,0.0,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Dubbo distribution,NSW,Accelerated Transition,2029-30,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Dubbo distribution,NSW,Accelerated Transition,2039-40,economic_spill,0.23,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Dubbo distribution,NSW,Accelerated Transition,2049-50,economic_spill,0.32,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N4,Broken Hill,NSW,Slower Growth,2029-30,transmission_curtailment,0.0,Broken Hill,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N4,Broken Hill,NSW,Slower Growth,2039-40,transmission_curtailment,0.0,Broken Hill,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N4,Broken Hill,NSW,Slower Growth,2049-50,transmission_curtailment,0.0,Broken Hill,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N4,Broken Hill,NSW,Slower Growth,2029-30,economic_spill,0.07,Broken Hill,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N4,Broken Hill,NSW,Slower Growth,2039-40,economic_spill,0.17,Broken Hill,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N4,Broken Hill,NSW,Slower Growth,2049-50,economic_spill,0.33,Broken Hill,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N4,Broken Hill,NSW,Step Change,2029-30,transmission_curtailment,0.01,Broken Hill,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N4,Broken Hill,NSW,Step Change,2039-40,transmission_curtailment,0.0,Broken Hill,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N4,Broken Hill,NSW,Step Change,2049-50,transmission_curtailment,0.0,Broken Hill,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N4,Broken Hill,NSW,Step Change,2029-30,economic_spill,0.11,Broken Hill,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N4,Broken Hill,NSW,Step Change,2039-40,economic_spill,0.34,Broken Hill,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N4,Broken Hill,NSW,Step Change,2049-50,economic_spill,0.46,Broken Hill,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N4,Broken Hill,NSW,Accelerated Transition,2029-30,transmission_curtailment,0.01,Broken Hill,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N4,Broken Hill,NSW,Accelerated Transition,2039-40,transmission_curtailment,0.0,Broken Hill,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N4,Broken Hill,NSW,Accelerated Transition,2049-50,transmission_curtailment,0.01,Broken Hill,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N4,Broken Hill,NSW,Accelerated Transition,2029-30,economic_spill,0.04,Broken Hill,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N4,Broken Hill,NSW,Accelerated Transition,2039-40,economic_spill,0.38,Broken Hill,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N4,Broken Hill,NSW,Accelerated Transition,2049-50,economic_spill,0.61,Broken Hill,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N5,South West New South Wales,NSW,Slower Growth,2029-30,transmission_curtailment,0.0,South West New South Wales,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N5,South West New South Wales,NSW,Slower Growth,2039-40,transmission_curtailment,0.0,South West New South Wales,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N5,South West New South Wales,NSW,Slower Growth,2049-50,transmission_curtailment,0.0,South West New South Wales,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N5,South West New South Wales,NSW,Slower Growth,2029-30,economic_spill,0.22,South West New South Wales,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N5,South West New South Wales,NSW,Slower Growth,2039-40,economic_spill,0.08,South West New South Wales,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N5,South West New South Wales,NSW,Slower Growth,2049-50,economic_spill,0.06,South West New South Wales,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N5,South West New South Wales,NSW,Step Change,2029-30,transmission_curtailment,0.17,South West New South Wales,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N5,South West New South Wales,NSW,Step Change,2039-40,transmission_curtailment,0.0,South West New South Wales,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N5,South West New South Wales,NSW,Step Change,2049-50,transmission_curtailment,0.0,South West New South Wales,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N5,South West New South Wales,NSW,Step Change,2029-30,economic_spill,0.22,South West New South Wales,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N5,South West New South Wales,NSW,Step Change,2039-40,economic_spill,0.11,South West New South Wales,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N5,South West New South Wales,NSW,Step Change,2049-50,economic_spill,0.08,South West New South Wales,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N5,South West New South Wales,NSW,Accelerated Transition,2029-30,transmission_curtailment,0.18,South West New South Wales,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N5,South West New South Wales,NSW,Accelerated Transition,2039-40,transmission_curtailment,0.0,South West New South Wales,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N5,South West New South Wales,NSW,Accelerated Transition,2049-50,transmission_curtailment,0.0,South West New South Wales,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N5,South West New South Wales,NSW,Accelerated Transition,2029-30,economic_spill,0.22,South West New South Wales,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N5,South West New South Wales,NSW,Accelerated Transition,2039-40,economic_spill,0.1,South West New South Wales,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N5,South West New South Wales,NSW,Accelerated Transition,2049-50,economic_spill,0.22,South West New South Wales,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N6,Wagga Wagga,NSW,Slower Growth,2029-30,transmission_curtailment,0.0,Wagga Wagga,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N6,Wagga Wagga,NSW,Slower Growth,2039-40,transmission_curtailment,0.0,Wagga Wagga,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N6,Wagga Wagga,NSW,Slower Growth,2049-50,transmission_curtailment,0.0,Wagga Wagga,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N6,Wagga Wagga,NSW,Slower Growth,2029-30,economic_spill,0.05,Wagga Wagga,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N6,Wagga Wagga,NSW,Slower Growth,2039-40,economic_spill,0.07,Wagga Wagga,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N6,Wagga Wagga,NSW,Slower Growth,2049-50,economic_spill,0.11,Wagga Wagga,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N6,Wagga Wagga,NSW,Step Change,2029-30,transmission_curtailment,0.0,Wagga Wagga,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N6,Wagga Wagga,NSW,Step Change,2039-40,transmission_curtailment,0.0,Wagga Wagga,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N6,Wagga Wagga,NSW,Step Change,2049-50,transmission_curtailment,0.0,Wagga Wagga,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N6,Wagga Wagga,NSW,Step Change,2029-30,economic_spill,0.03,Wagga Wagga,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N6,Wagga Wagga,NSW,Step Change,2039-40,economic_spill,0.06,Wagga Wagga,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N6,Wagga Wagga,NSW,Step Change,2049-50,economic_spill,0.05,Wagga Wagga,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N6,Wagga Wagga,NSW,Accelerated Transition,2029-30,transmission_curtailment,0.0,Wagga Wagga,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N6,Wagga Wagga,NSW,Accelerated Transition,2039-40,transmission_curtailment,0.0,Wagga Wagga,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N6,Wagga Wagga,NSW,Accelerated Transition,2049-50,transmission_curtailment,0.0,Wagga Wagga,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N6,Wagga Wagga,NSW,Accelerated Transition,2029-30,economic_spill,0.01,Wagga Wagga,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N6,Wagga Wagga,NSW,Accelerated Transition,2039-40,economic_spill,0.15,Wagga Wagga,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N6,Wagga Wagga,NSW,Accelerated Transition,2049-50,economic_spill,0.27,Wagga Wagga,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N7,Tumut,NSW,Slower Growth,2029-30,transmission_curtailment,0.0,Tumut,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N7,Tumut,NSW,Slower Growth,2039-40,transmission_curtailment,0.0,Tumut,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N7,Tumut,NSW,Slower Growth,2049-50,transmission_curtailment,0.0,Tumut,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N7,Tumut,NSW,Slower Growth,2029-30,economic_spill,0.05,Tumut,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N7,Tumut,NSW,Slower Growth,2039-40,economic_spill,0.01,Tumut,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N7,Tumut,NSW,Slower Growth,2049-50,economic_spill,0.01,Tumut,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N7,Tumut,NSW,Step Change,2029-30,transmission_curtailment,0.0,Tumut,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N7,Tumut,NSW,Step Change,2039-40,transmission_curtailment,0.0,Tumut,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N7,Tumut,NSW,Step Change,2049-50,transmission_curtailment,0.0,Tumut,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N7,Tumut,NSW,Step Change,2029-30,economic_spill,0.05,Tumut,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N7,Tumut,NSW,Step Change,2039-40,economic_spill,0.01,Tumut,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N7,Tumut,NSW,Step Change,2049-50,economic_spill,0.01,Tumut,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N7,Tumut,NSW,Accelerated Transition,2029-30,transmission_curtailment,0.0,Tumut,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N7,Tumut,NSW,Accelerated Transition,2039-40,transmission_curtailment,0.0,Tumut,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N7,Tumut,NSW,Accelerated Transition,2049-50,transmission_curtailment,0.0,Tumut,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N7,Tumut,NSW,Accelerated Transition,2029-30,economic_spill,0.01,Tumut,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N7,Tumut,NSW,Accelerated Transition,2039-40,economic_spill,0.01,Tumut,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N7,Tumut,NSW,Accelerated Transition,2049-50,economic_spill,0.08,Tumut,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N8,Cooma-Monaro,NSW,Slower Growth,2029-30,transmission_curtailment,0.0,Cooma-Monaro,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N8,Cooma-Monaro,NSW,Slower Growth,2039-40,transmission_curtailment,0.0,Cooma-Monaro,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N8,Cooma-Monaro,NSW,Slower Growth,2049-50,transmission_curtailment,,Cooma-Monaro,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N8,Cooma-Monaro,NSW,Slower Growth,2029-30,economic_spill,0.01,Cooma-Monaro,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N8,Cooma-Monaro,NSW,Slower Growth,2039-40,economic_spill,0.0,Cooma-Monaro,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N8,Cooma-Monaro,NSW,Slower Growth,2049-50,economic_spill,,Cooma-Monaro,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N8,Cooma-Monaro,NSW,Step Change,2029-30,transmission_curtailment,0.0,Cooma-Monaro,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N8,Cooma-Monaro,NSW,Step Change,2039-40,transmission_curtailment,0.0,Cooma-Monaro,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N8,Cooma-Monaro,NSW,Step Change,2049-50,transmission_curtailment,0.0,Cooma-Monaro,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N8,Cooma-Monaro,NSW,Step Change,2029-30,economic_spill,0.09,Cooma-Monaro,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N8,Cooma-Monaro,NSW,Step Change,2039-40,economic_spill,0.22,Cooma-Monaro,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N8,Cooma-Monaro,NSW,Step Change,2049-50,economic_spill,0.2,Cooma-Monaro,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N8,Cooma-Monaro,NSW,Accelerated Transition,2029-30,transmission_curtailment,0.0,Cooma-Monaro,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N8,Cooma-Monaro,NSW,Accelerated Transition,2039-40,transmission_curtailment,0.0,Cooma-Monaro,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N8,Cooma-Monaro,NSW,Accelerated Transition,2049-50,transmission_curtailment,0.0,Cooma-Monaro,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N8,Cooma-Monaro,NSW,Accelerated Transition,2029-30,economic_spill,0.02,Cooma-Monaro,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N8,Cooma-Monaro,NSW,Accelerated Transition,2039-40,economic_spill,0.26,Cooma-Monaro,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N8,Cooma-Monaro,NSW,Accelerated Transition,2049-50,economic_spill,0.24,Cooma-Monaro,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N9,Hunter-Central Coast,NSW,Slower Growth,2029-30,transmission_curtailment,0.0,Hunter-Central Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N9,Hunter-Central Coast,NSW,Slower Growth,2039-40,transmission_curtailment,0.02,Hunter-Central Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N9,Hunter-Central Coast,NSW,Slower Growth,2049-50,transmission_curtailment,0.01,Hunter-Central Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N9,Hunter-Central Coast,NSW,Slower Growth,2029-30,economic_spill,0.29,Hunter-Central Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N9,Hunter-Central Coast,NSW,Slower Growth,2039-40,economic_spill,0.14,Hunter-Central Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N9,Hunter-Central Coast,NSW,Slower Growth,2049-50,economic_spill,0.11,Hunter-Central Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N9,Hunter-Central Coast,NSW,Step Change,2029-30,transmission_curtailment,0.13,Hunter-Central Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N9,Hunter-Central Coast,NSW,Step Change,2039-40,transmission_curtailment,0.0,Hunter-Central Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N9,Hunter-Central Coast,NSW,Step Change,2049-50,transmission_curtailment,0.0,Hunter-Central Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N9,Hunter-Central Coast,NSW,Step Change,2029-30,economic_spill,0.27,Hunter-Central Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N9,Hunter-Central Coast,NSW,Step Change,2039-40,economic_spill,0.19,Hunter-Central Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N9,Hunter-Central Coast,NSW,Step Change,2049-50,economic_spill,0.16,Hunter-Central Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N9,Hunter-Central Coast,NSW,Accelerated Transition,2029-30,transmission_curtailment,0.06,Hunter-Central Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N9,Hunter-Central Coast,NSW,Accelerated Transition,2039-40,transmission_curtailment,0.0,Hunter-Central Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N9,Hunter-Central Coast,NSW,Accelerated Transition,2049-50,transmission_curtailment,0.0,Hunter-Central Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N9,Hunter-Central Coast,NSW,Accelerated Transition,2029-30,economic_spill,0.1,Hunter-Central Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N9,Hunter-Central Coast,NSW,Accelerated Transition,2039-40,economic_spill,0.22,Hunter-Central Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N9,Hunter-Central Coast,NSW,Accelerated Transition,2049-50,economic_spill,0.28,Hunter-Central Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N10,Hunter Coast,NSW,Slower Growth,2029-30,transmission_curtailment,,Hunter Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N10,Hunter Coast,NSW,Slower Growth,2039-40,transmission_curtailment,,Hunter Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N10,Hunter Coast,NSW,Slower Growth,2049-50,transmission_curtailment,,Hunter Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N10,Hunter Coast,NSW,Slower Growth,2029-30,economic_spill,,Hunter Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N10,Hunter Coast,NSW,Slower Growth,2039-40,economic_spill,,Hunter Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N10,Hunter Coast,NSW,Slower Growth,2049-50,economic_spill,,Hunter Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N10,Hunter Coast,NSW,Step Change,2029-30,transmission_curtailment,,Hunter Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N10,Hunter Coast,NSW,Step Change,2039-40,transmission_curtailment,,Hunter Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N10,Hunter Coast,NSW,Step Change,2049-50,transmission_curtailment,,Hunter Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N10,Hunter Coast,NSW,Step Change,2029-30,economic_spill,,Hunter Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N10,Hunter Coast,NSW,Step Change,2039-40,economic_spill,,Hunter Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N10,Hunter Coast,NSW,Step Change,2049-50,economic_spill,,Hunter Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N10,Hunter Coast,NSW,Accelerated Transition,2029-30,transmission_curtailment,,Hunter Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N10,Hunter Coast,NSW,Accelerated Transition,2039-40,transmission_curtailment,,Hunter Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N10,Hunter Coast,NSW,Accelerated Transition,2049-50,transmission_curtailment,0.0,Hunter Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N10,Hunter Coast,NSW,Accelerated Transition,2029-30,economic_spill,,Hunter Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N10,Hunter Coast,NSW,Accelerated Transition,2039-40,economic_spill,,Hunter Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N10,Hunter Coast,NSW,Accelerated Transition,2049-50,economic_spill,0.12,Hunter Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N11,Illawarra Coast,NSW,Slower Growth,2029-30,transmission_curtailment,,Illawarra Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N11,Illawarra Coast,NSW,Slower Growth,2039-40,transmission_curtailment,,Illawarra Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N11,Illawarra Coast,NSW,Slower Growth,2049-50,transmission_curtailment,,Illawarra Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N11,Illawarra Coast,NSW,Slower Growth,2029-30,economic_spill,,Illawarra Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N11,Illawarra Coast,NSW,Slower Growth,2039-40,economic_spill,,Illawarra Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N11,Illawarra Coast,NSW,Slower Growth,2049-50,economic_spill,,Illawarra Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N11,Illawarra Coast,NSW,Step Change,2029-30,transmission_curtailment,,Illawarra Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N11,Illawarra Coast,NSW,Step Change,2039-40,transmission_curtailment,,Illawarra Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N11,Illawarra Coast,NSW,Step Change,2049-50,transmission_curtailment,,Illawarra Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N11,Illawarra Coast,NSW,Step Change,2029-30,economic_spill,,Illawarra Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N11,Illawarra Coast,NSW,Step Change,2039-40,economic_spill,,Illawarra Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N11,Illawarra Coast,NSW,Step Change,2049-50,economic_spill,,Illawarra Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N11,Illawarra Coast,NSW,Accelerated Transition,2029-30,transmission_curtailment,,Illawarra Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N11,Illawarra Coast,NSW,Accelerated Transition,2039-40,transmission_curtailment,,Illawarra Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N11,Illawarra Coast,NSW,Accelerated Transition,2049-50,transmission_curtailment,,Illawarra Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N11,Illawarra Coast,NSW,Accelerated Transition,2029-30,economic_spill,,Illawarra Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N11,Illawarra Coast,NSW,Accelerated Transition,2039-40,economic_spill,,Illawarra Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N11,Illawarra Coast,NSW,Accelerated Transition,2049-50,economic_spill,,Illawarra Coast,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N12,Illawarra,NSW,Slower Growth,2029-30,transmission_curtailment,,Illawarra,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N12,Illawarra,NSW,Slower Growth,2039-40,transmission_curtailment,,Illawarra,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N12,Illawarra,NSW,Slower Growth,2049-50,transmission_curtailment,0.0,Illawarra,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N12,Illawarra,NSW,Slower Growth,2029-30,economic_spill,,Illawarra,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N12,Illawarra,NSW,Slower Growth,2039-40,economic_spill,,Illawarra,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N12,Illawarra,NSW,Slower Growth,2049-50,economic_spill,0.09,Illawarra,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N12,Illawarra,NSW,Step Change,2029-30,transmission_curtailment,0.0,Illawarra,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N12,Illawarra,NSW,Step Change,2039-40,transmission_curtailment,0.0,Illawarra,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N12,Illawarra,NSW,Step Change,2049-50,transmission_curtailment,0.0,Illawarra,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N12,Illawarra,NSW,Step Change,2029-30,economic_spill,0.04,Illawarra,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N12,Illawarra,NSW,Step Change,2039-40,economic_spill,0.15,Illawarra,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N12,Illawarra,NSW,Step Change,2049-50,economic_spill,0.17,Illawarra,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N12,Illawarra,NSW,Accelerated Transition,2029-30,transmission_curtailment,0.0,Illawarra,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N12,Illawarra,NSW,Accelerated Transition,2039-40,transmission_curtailment,0.0,Illawarra,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N12,Illawarra,NSW,Accelerated Transition,2049-50,transmission_curtailment,0.0,Illawarra,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N12,Illawarra,NSW,Accelerated Transition,2029-30,economic_spill,0.01,Illawarra,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N12,Illawarra,NSW,Accelerated Transition,2039-40,economic_spill,0.12,Illawarra,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N12,Illawarra,NSW,Accelerated Transition,2049-50,economic_spill,0.17,Illawarra,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N13,South Cobar,NSW,Slower Growth,2029-30,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N13,South Cobar,NSW,Slower Growth,2039-40,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N13,South Cobar,NSW,Slower Growth,2049-50,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N13,South Cobar,NSW,Slower Growth,2029-30,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N13,South Cobar,NSW,Slower Growth,2039-40,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N13,South Cobar,NSW,Slower Growth,2049-50,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N13,South Cobar,NSW,Step Change,2029-30,transmission_curtailment,0.01,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N13,South Cobar,NSW,Step Change,2039-40,transmission_curtailment,0.0,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N13,South Cobar,NSW,Step Change,2049-50,transmission_curtailment,0.0,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N13,South Cobar,NSW,Step Change,2029-30,economic_spill,0.16,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N13,South Cobar,NSW,Step Change,2039-40,economic_spill,0.5,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N13,South Cobar,NSW,Step Change,2049-50,economic_spill,0.51,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N13,South Cobar,NSW,Accelerated Transition,2029-30,transmission_curtailment,0.01,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N13,South Cobar,NSW,Accelerated Transition,2039-40,transmission_curtailment,0.0,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N13,South Cobar,NSW,Accelerated Transition,2049-50,transmission_curtailment,0.0,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N13,South Cobar,NSW,Accelerated Transition,2029-30,economic_spill,0.07,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N13,South Cobar,NSW,Accelerated Transition,2039-40,economic_spill,0.6,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,N13,South Cobar,NSW,Accelerated Transition,2049-50,economic_spill,0.73,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Yass distribution,NSW,Slower Growth,2029-30,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Yass distribution,NSW,Slower Growth,2039-40,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Yass distribution,NSW,Slower Growth,2049-50,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Yass distribution,NSW,Slower Growth,2029-30,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Yass distribution,NSW,Slower Growth,2039-40,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Yass distribution,NSW,Slower Growth,2049-50,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Yass distribution,NSW,Step Change,2029-30,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Yass distribution,NSW,Step Change,2039-40,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Yass distribution,NSW,Step Change,2049-50,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Yass distribution,NSW,Step Change,2029-30,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Yass distribution,NSW,Step Change,2039-40,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Yass distribution,NSW,Step Change,2049-50,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Yass distribution,NSW,Accelerated Transition,2029-30,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Yass distribution,NSW,Accelerated Transition,2039-40,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Yass distribution,NSW,Accelerated Transition,2049-50,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Yass distribution,NSW,Accelerated Transition,2029-30,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Yass distribution,NSW,Accelerated Transition,2039-40,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Yass distribution,NSW,Accelerated Transition,2049-50,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Marulan distribution,NSW,Slower Growth,2029-30,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Marulan distribution,NSW,Slower Growth,2039-40,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Marulan distribution,NSW,Slower Growth,2049-50,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Marulan distribution,NSW,Slower Growth,2029-30,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Marulan distribution,NSW,Slower Growth,2039-40,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Marulan distribution,NSW,Slower Growth,2049-50,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Marulan distribution,NSW,Step Change,2029-30,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Marulan distribution,NSW,Step Change,2039-40,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Marulan distribution,NSW,Step Change,2049-50,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Marulan distribution,NSW,Step Change,2029-30,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Marulan distribution,NSW,Step Change,2039-40,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Marulan distribution,NSW,Step Change,2049-50,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Marulan distribution,NSW,Accelerated Transition,2029-30,transmission_curtailment,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Marulan distribution,NSW,Accelerated Transition,2039-40,transmission_curtailment,0.0,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Marulan distribution,NSW,Accelerated Transition,2049-50,transmission_curtailment,0.0,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Marulan distribution,NSW,Accelerated Transition,2029-30,economic_spill,,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Marulan distribution,NSW,Accelerated Transition,2039-40,economic_spill,0.06,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,,Marulan distribution,NSW,Accelerated Transition,2049-50,economic_spill,0.19,,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q1,Far North Queensland,QLD,Slower Growth,2029-30,transmission_curtailment,0.0,Far North Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q1,Far North Queensland,QLD,Slower Growth,2039-40,transmission_curtailment,0.0,Far North Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q1,Far North Queensland,QLD,Slower Growth,2049-50,transmission_curtailment,0.0,Far North Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q1,Far North Queensland,QLD,Slower Growth,2029-30,economic_spill,0.03,Far North Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q1,Far North Queensland,QLD,Slower Growth,2039-40,economic_spill,0.02,Far North Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q1,Far North Queensland,QLD,Slower Growth,2049-50,economic_spill,0.08,Far North Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q1,Far North Queensland,QLD,Step Change,2029-30,transmission_curtailment,0.0,Far North Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q1,Far North Queensland,QLD,Step Change,2039-40,transmission_curtailment,0.0,Far North Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q1,Far North Queensland,QLD,Step Change,2049-50,transmission_curtailment,0.01,Far North Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q1,Far North Queensland,QLD,Step Change,2029-30,economic_spill,0.0,Far North Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q1,Far North Queensland,QLD,Step Change,2039-40,economic_spill,0.09,Far North Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q1,Far North Queensland,QLD,Step Change,2049-50,economic_spill,0.16,Far North Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q1,Far North Queensland,QLD,Accelerated Transition,2029-30,transmission_curtailment,0.0,Far North Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q1,Far North Queensland,QLD,Accelerated Transition,2039-40,transmission_curtailment,0.0,Far North Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q1,Far North Queensland,QLD,Accelerated Transition,2049-50,transmission_curtailment,0.01,Far North Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q1,Far North Queensland,QLD,Accelerated Transition,2029-30,economic_spill,0.01,Far North Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q1,Far North Queensland,QLD,Accelerated Transition,2039-40,economic_spill,0.21,Far North Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q1,Far North Queensland,QLD,Accelerated Transition,2049-50,economic_spill,0.23,Far North Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q2,Hughenden Hub,QLD,Slower Growth,2029-30,transmission_curtailment,0.0,North Queensland Clean Energy Hub,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q2,Hughenden Hub,QLD,Slower Growth,2039-40,transmission_curtailment,0.0,North Queensland Clean Energy Hub,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q2,Hughenden Hub,QLD,Slower Growth,2049-50,transmission_curtailment,0.0,North Queensland Clean Energy Hub,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q2,Hughenden Hub,QLD,Slower Growth,2029-30,economic_spill,0.1,North Queensland Clean Energy Hub,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q2,Hughenden Hub,QLD,Slower Growth,2039-40,economic_spill,0.05,North Queensland Clean Energy Hub,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q2,Hughenden Hub,QLD,Slower Growth,2049-50,economic_spill,0.02,North Queensland Clean Energy Hub,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q2,Hughenden Hub,QLD,Step Change,2029-30,transmission_curtailment,0.0,North Queensland Clean Energy Hub,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q2,Hughenden Hub,QLD,Step Change,2039-40,transmission_curtailment,0.0,North Queensland Clean Energy Hub,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q2,Hughenden Hub,QLD,Step Change,2049-50,transmission_curtailment,0.0,North Queensland Clean Energy Hub,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q2,Hughenden Hub,QLD,Step Change,2029-30,economic_spill,0.01,North Queensland Clean Energy Hub,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q2,Hughenden Hub,QLD,Step Change,2039-40,economic_spill,0.06,North Queensland Clean Energy Hub,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q2,Hughenden Hub,QLD,Step Change,2049-50,economic_spill,0.06,North Queensland Clean Energy Hub,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q2,Hughenden Hub,QLD,Accelerated Transition,2029-30,transmission_curtailment,0.0,North Queensland Clean Energy Hub,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q2,Hughenden Hub,QLD,Accelerated Transition,2039-40,transmission_curtailment,0.0,North Queensland Clean Energy Hub,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q2,Hughenden Hub,QLD,Accelerated Transition,2049-50,transmission_curtailment,0.0,North Queensland Clean Energy Hub,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q2,Hughenden Hub,QLD,Accelerated Transition,2029-30,economic_spill,0.03,North Queensland Clean Energy Hub,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q2,Hughenden Hub,QLD,Accelerated Transition,2039-40,economic_spill,0.12,North Queensland Clean Energy Hub,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q2,Hughenden Hub,QLD,Accelerated Transition,2049-50,economic_spill,0.13,North Queensland Clean Energy Hub,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q3,Northern Queensland,QLD,Slower Growth,2029-30,transmission_curtailment,0.0,Northern Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q3,Northern Queensland,QLD,Slower Growth,2039-40,transmission_curtailment,0.0,Northern Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q3,Northern Queensland,QLD,Slower Growth,2049-50,transmission_curtailment,0.0,Northern Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q3,Northern Queensland,QLD,Slower Growth,2029-30,economic_spill,0.04,Northern Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q3,Northern Queensland,QLD,Slower Growth,2039-40,economic_spill,0.03,Northern Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q3,Northern Queensland,QLD,Slower Growth,2049-50,economic_spill,0.1,Northern Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q3,Northern Queensland,QLD,Step Change,2029-30,transmission_curtailment,0.0,Northern Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q3,Northern Queensland,QLD,Step Change,2039-40,transmission_curtailment,0.0,Northern Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q3,Northern Queensland,QLD,Step Change,2049-50,transmission_curtailment,0.0,Northern Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q3,Northern Queensland,QLD,Step Change,2029-30,economic_spill,0.0,Northern Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q3,Northern Queensland,QLD,Step Change,2039-40,economic_spill,0.16,Northern Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q3,Northern Queensland,QLD,Step Change,2049-50,economic_spill,0.25,Northern Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q3,Northern Queensland,QLD,Accelerated Transition,2029-30,transmission_curtailment,0.0,Northern Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q3,Northern Queensland,QLD,Accelerated Transition,2039-40,transmission_curtailment,0.0,Northern Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q3,Northern Queensland,QLD,Accelerated Transition,2049-50,transmission_curtailment,0.0,Northern Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q3,Northern Queensland,QLD,Accelerated Transition,2029-30,economic_spill,0.01,Northern Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q3,Northern Queensland,QLD,Accelerated Transition,2039-40,economic_spill,0.31,Northern Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q3,Northern Queensland,QLD,Accelerated Transition,2049-50,economic_spill,0.38,Northern Queensland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q4,Isaac,QLD,Slower Growth,2029-30,transmission_curtailment,0.0,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q4,Isaac,QLD,Slower Growth,2039-40,transmission_curtailment,0.0,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q4,Isaac,QLD,Slower Growth,2049-50,transmission_curtailment,0.0,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q4,Isaac,QLD,Slower Growth,2029-30,economic_spill,0.02,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q4,Isaac,QLD,Slower Growth,2039-40,economic_spill,0.01,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q4,Isaac,QLD,Slower Growth,2049-50,economic_spill,0.05,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q4,Isaac,QLD,Step Change,2029-30,transmission_curtailment,0.0,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q4,Isaac,QLD,Step Change,2039-40,transmission_curtailment,0.0,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q4,Isaac,QLD,Step Change,2049-50,transmission_curtailment,0.0,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q4,Isaac,QLD,Step Change,2029-30,economic_spill,0.0,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q4,Isaac,QLD,Step Change,2039-40,economic_spill,0.05,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q4,Isaac,QLD,Step Change,2049-50,economic_spill,0.12,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q4,Isaac,QLD,Accelerated Transition,2029-30,transmission_curtailment,0.0,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q4,Isaac,QLD,Accelerated Transition,2039-40,transmission_curtailment,0.0,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q4,Isaac,QLD,Accelerated Transition,2049-50,transmission_curtailment,0.0,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q4,Isaac,QLD,Accelerated Transition,2029-30,economic_spill,0.0,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q4,Isaac,QLD,Accelerated Transition,2039-40,economic_spill,0.17,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q4,Isaac,QLD,Accelerated Transition,2049-50,economic_spill,0.22,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q5,Barcaldine,QLD,Slower Growth,2029-30,transmission_curtailment,0.0,Barcaldine,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q5,Barcaldine,QLD,Slower Growth,2039-40,transmission_curtailment,0.0,Barcaldine,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q5,Barcaldine,QLD,Slower Growth,2049-50,transmission_curtailment,0.03,Barcaldine,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q5,Barcaldine,QLD,Slower Growth,2029-30,economic_spill,0.24,Barcaldine,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q5,Barcaldine,QLD,Slower Growth,2039-40,economic_spill,0.1,Barcaldine,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q5,Barcaldine,QLD,Slower Growth,2049-50,economic_spill,0.18,Barcaldine,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q5,Barcaldine,QLD,Step Change,2029-30,transmission_curtailment,0.0,Barcaldine,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q5,Barcaldine,QLD,Step Change,2039-40,transmission_curtailment,0.01,Barcaldine,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q5,Barcaldine,QLD,Step Change,2049-50,transmission_curtailment,0.01,Barcaldine,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q5,Barcaldine,QLD,Step Change,2029-30,economic_spill,0.03,Barcaldine,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q5,Barcaldine,QLD,Step Change,2039-40,economic_spill,0.2,Barcaldine,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q5,Barcaldine,QLD,Step Change,2049-50,economic_spill,0.25,Barcaldine,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q5,Barcaldine,QLD,Accelerated Transition,2029-30,transmission_curtailment,0.0,Barcaldine,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q5,Barcaldine,QLD,Accelerated Transition,2039-40,transmission_curtailment,0.01,Barcaldine,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q5,Barcaldine,QLD,Accelerated Transition,2049-50,transmission_curtailment,0.0,Barcaldine,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q5,Barcaldine,QLD,Accelerated Transition,2029-30,economic_spill,0.04,Barcaldine,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q5,Barcaldine,QLD,Accelerated Transition,2039-40,economic_spill,0.4,Barcaldine,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q5,Barcaldine,QLD,Accelerated Transition,2049-50,economic_spill,0.26,Barcaldine,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q6,Fitzroy,QLD,Slower Growth,2029-30,transmission_curtailment,0.0,Fitzroy,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q6,Fitzroy,QLD,Slower Growth,2039-40,transmission_curtailment,0.0,Fitzroy,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q6,Fitzroy,QLD,Slower Growth,2049-50,transmission_curtailment,0.0,Fitzroy,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q6,Fitzroy,QLD,Slower Growth,2029-30,economic_spill,0.05,Fitzroy,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q6,Fitzroy,QLD,Slower Growth,2039-40,economic_spill,0.03,Fitzroy,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q6,Fitzroy,QLD,Slower Growth,2049-50,economic_spill,0.08,Fitzroy,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q6,Fitzroy,QLD,Step Change,2029-30,transmission_curtailment,0.0,Fitzroy,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q6,Fitzroy,QLD,Step Change,2039-40,transmission_curtailment,0.0,Fitzroy,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q6,Fitzroy,QLD,Step Change,2049-50,transmission_curtailment,0.0,Fitzroy,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q6,Fitzroy,QLD,Step Change,2029-30,economic_spill,0.02,Fitzroy,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q6,Fitzroy,QLD,Step Change,2039-40,economic_spill,0.06,Fitzroy,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q6,Fitzroy,QLD,Step Change,2049-50,economic_spill,0.07,Fitzroy,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q6,Fitzroy,QLD,Accelerated Transition,2029-30,transmission_curtailment,0.0,Fitzroy,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q6,Fitzroy,QLD,Accelerated Transition,2039-40,transmission_curtailment,0.0,Fitzroy,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q6,Fitzroy,QLD,Accelerated Transition,2049-50,transmission_curtailment,0.0,Fitzroy,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q6,Fitzroy,QLD,Accelerated Transition,2029-30,economic_spill,0.01,Fitzroy,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q6,Fitzroy,QLD,Accelerated Transition,2039-40,economic_spill,0.11,Fitzroy,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q6,Fitzroy,QLD,Accelerated Transition,2049-50,economic_spill,0.12,Fitzroy,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q7,Wide Bay,QLD,Slower Growth,2029-30,transmission_curtailment,0.0,Wide Bay,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q7,Wide Bay,QLD,Slower Growth,2039-40,transmission_curtailment,0.0,Wide Bay,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q7,Wide Bay,QLD,Slower Growth,2049-50,transmission_curtailment,0.0,Wide Bay,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q7,Wide Bay,QLD,Slower Growth,2029-30,economic_spill,0.05,Wide Bay,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q7,Wide Bay,QLD,Slower Growth,2039-40,economic_spill,0.03,Wide Bay,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q7,Wide Bay,QLD,Slower Growth,2049-50,economic_spill,0.06,Wide Bay,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q7,Wide Bay,QLD,Step Change,2029-30,transmission_curtailment,0.0,Wide Bay,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q7,Wide Bay,QLD,Step Change,2039-40,transmission_curtailment,0.0,Wide Bay,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q7,Wide Bay,QLD,Step Change,2049-50,transmission_curtailment,0.0,Wide Bay,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q7,Wide Bay,QLD,Step Change,2029-30,economic_spill,0.04,Wide Bay,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q7,Wide Bay,QLD,Step Change,2039-40,economic_spill,0.1,Wide Bay,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q7,Wide Bay,QLD,Step Change,2049-50,economic_spill,0.13,Wide Bay,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q7,Wide Bay,QLD,Accelerated Transition,2029-30,transmission_curtailment,0.0,Wide Bay,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q7,Wide Bay,QLD,Accelerated Transition,2039-40,transmission_curtailment,0.0,Wide Bay,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q7,Wide Bay,QLD,Accelerated Transition,2049-50,transmission_curtailment,0.0,Wide Bay,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q7,Wide Bay,QLD,Accelerated Transition,2029-30,economic_spill,0.03,Wide Bay,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q7,Wide Bay,QLD,Accelerated Transition,2039-40,economic_spill,0.2,Wide Bay,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q7,Wide Bay,QLD,Accelerated Transition,2049-50,economic_spill,0.23,Wide Bay,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q8,Darling Downs,QLD,Slower Growth,2029-30,transmission_curtailment,0.0,Darling Downs,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q8,Darling Downs,QLD,Slower Growth,2039-40,transmission_curtailment,0.0,Darling Downs,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q8,Darling Downs,QLD,Slower Growth,2049-50,transmission_curtailment,0.0,Darling Downs,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q8,Darling Downs,QLD,Slower Growth,2029-30,economic_spill,0.02,Darling Downs,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q8,Darling Downs,QLD,Slower Growth,2039-40,economic_spill,0.01,Darling Downs,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q8,Darling Downs,QLD,Slower Growth,2049-50,economic_spill,0.04,Darling Downs,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q8,Darling Downs,QLD,Step Change,2029-30,transmission_curtailment,0.0,Darling Downs,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q8,Darling Downs,QLD,Step Change,2039-40,transmission_curtailment,0.0,Darling Downs,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q8,Darling Downs,QLD,Step Change,2049-50,transmission_curtailment,0.0,Darling Downs,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q8,Darling Downs,QLD,Step Change,2029-30,economic_spill,0.02,Darling Downs,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q8,Darling Downs,QLD,Step Change,2039-40,economic_spill,0.05,Darling Downs,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q8,Darling Downs,QLD,Step Change,2049-50,economic_spill,0.09,Darling Downs,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q8,Darling Downs,QLD,Accelerated Transition,2029-30,transmission_curtailment,0.0,Darling Downs,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q8,Darling Downs,QLD,Accelerated Transition,2039-40,transmission_curtailment,0.0,Darling Downs,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q8,Darling Downs,QLD,Accelerated Transition,2049-50,transmission_curtailment,0.0,Darling Downs,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q8,Darling Downs,QLD,Accelerated Transition,2029-30,economic_spill,0.01,Darling Downs,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q8,Darling Downs,QLD,Accelerated Transition,2039-40,economic_spill,0.13,Darling Downs,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q8,Darling Downs,QLD,Accelerated Transition,2049-50,economic_spill,0.17,Darling Downs,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q9,Banana,QLD,Slower Growth,2029-30,transmission_curtailment,,Banana,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q9,Banana,QLD,Slower Growth,2039-40,transmission_curtailment,,Banana,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q9,Banana,QLD,Slower Growth,2049-50,transmission_curtailment,,Banana,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q9,Banana,QLD,Slower Growth,2029-30,economic_spill,,Banana,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q9,Banana,QLD,Slower Growth,2039-40,economic_spill,,Banana,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q9,Banana,QLD,Slower Growth,2049-50,economic_spill,,Banana,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q9,Banana,QLD,Step Change,2029-30,transmission_curtailment,,Banana,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q9,Banana,QLD,Step Change,2039-40,transmission_curtailment,0.0,Banana,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q9,Banana,QLD,Step Change,2049-50,transmission_curtailment,0.0,Banana,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q9,Banana,QLD,Step Change,2029-30,economic_spill,,Banana,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q9,Banana,QLD,Step Change,2039-40,economic_spill,0.34,Banana,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q9,Banana,QLD,Step Change,2049-50,economic_spill,0.4,Banana,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q9,Banana,QLD,Accelerated Transition,2029-30,transmission_curtailment,0.0,Banana,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q9,Banana,QLD,Accelerated Transition,2039-40,transmission_curtailment,0.0,Banana,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q9,Banana,QLD,Accelerated Transition,2049-50,transmission_curtailment,0.0,Banana,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q9,Banana,QLD,Accelerated Transition,2029-30,economic_spill,0.02,Banana,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q9,Banana,QLD,Accelerated Transition,2039-40,economic_spill,0.58,Banana,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q9,Banana,QLD,Accelerated Transition,2049-50,economic_spill,0.63,Banana,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q10,Collinsville,QLD,Slower Growth,2029-30,transmission_curtailment,0.0,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q10,Collinsville,QLD,Slower Growth,2039-40,transmission_curtailment,0.0,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q10,Collinsville,QLD,Slower Growth,2049-50,transmission_curtailment,0.0,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q10,Collinsville,QLD,Slower Growth,2029-30,economic_spill,0.04,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q10,Collinsville,QLD,Slower Growth,2039-40,economic_spill,0.03,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q10,Collinsville,QLD,Slower Growth,2049-50,economic_spill,0.12,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q10,Collinsville,QLD,Step Change,2029-30,transmission_curtailment,0.0,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q10,Collinsville,QLD,Step Change,2039-40,transmission_curtailment,0.0,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q10,Collinsville,QLD,Step Change,2049-50,transmission_curtailment,0.0,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q10,Collinsville,QLD,Step Change,2029-30,economic_spill,0.0,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q10,Collinsville,QLD,Step Change,2039-40,economic_spill,0.19,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q10,Collinsville,QLD,Step Change,2049-50,economic_spill,0.19,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q10,Collinsville,QLD,Accelerated Transition,2029-30,transmission_curtailment,0.0,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q10,Collinsville,QLD,Accelerated Transition,2039-40,transmission_curtailment,0.0,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q10,Collinsville,QLD,Accelerated Transition,2049-50,transmission_curtailment,0.0,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q10,Collinsville,QLD,Accelerated Transition,2029-30,economic_spill,0.01,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q10,Collinsville,QLD,Accelerated Transition,2039-40,economic_spill,0.28,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,Q10,Collinsville,QLD,Accelerated Transition,2049-50,economic_spill,0.32,Isaac,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S1,South East,SA,Slower Growth,2029-30,transmission_curtailment,0.0,South East South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S1,South East,SA,Slower Growth,2039-40,transmission_curtailment,0.0,South East South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S1,South East,SA,Slower Growth,2049-50,transmission_curtailment,0.0,South East South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S1,South East,SA,Slower Growth,2029-30,economic_spill,0.08,South East South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S1,South East,SA,Slower Growth,2039-40,economic_spill,0.0,South East South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S1,South East,SA,Slower Growth,2049-50,economic_spill,0.11,South East South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S1,South East,SA,Step Change,2029-30,transmission_curtailment,0.0,South East South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S1,South East,SA,Step Change,2039-40,transmission_curtailment,0.0,South East South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S1,South East,SA,Step Change,2049-50,transmission_curtailment,0.0,South East South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S1,South East,SA,Step Change,2029-30,economic_spill,0.0,South East South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S1,South East,SA,Step Change,2039-40,economic_spill,0.01,South East South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S1,South East,SA,Step Change,2049-50,economic_spill,0.11,South East South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S1,South East,SA,Accelerated Transition,2029-30,transmission_curtailment,0.0,South East South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S1,South East,SA,Accelerated Transition,2039-40,transmission_curtailment,0.0,South East South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S1,South East,SA,Accelerated Transition,2049-50,transmission_curtailment,0.0,South East South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S1,South East,SA,Accelerated Transition,2029-30,economic_spill,0.03,South East South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S1,South East,SA,Accelerated Transition,2039-40,economic_spill,0.18,South East South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S1,South East,SA,Accelerated Transition,2049-50,economic_spill,0.15,South East South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S2,Riverland,SA,Slower Growth,2029-30,transmission_curtailment,0.0,Riverland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S2,Riverland,SA,Slower Growth,2039-40,transmission_curtailment,0.0,Riverland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S2,Riverland,SA,Slower Growth,2049-50,transmission_curtailment,0.0,Riverland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S2,Riverland,SA,Slower Growth,2029-30,economic_spill,0.08,Riverland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S2,Riverland,SA,Slower Growth,2039-40,economic_spill,0.0,Riverland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S2,Riverland,SA,Slower Growth,2049-50,economic_spill,0.07,Riverland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S2,Riverland,SA,Step Change,2029-30,transmission_curtailment,0.0,Riverland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S2,Riverland,SA,Step Change,2039-40,transmission_curtailment,0.0,Riverland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S2,Riverland,SA,Step Change,2049-50,transmission_curtailment,0.0,Riverland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S2,Riverland,SA,Step Change,2029-30,economic_spill,0.0,Riverland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S2,Riverland,SA,Step Change,2039-40,economic_spill,0.02,Riverland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S2,Riverland,SA,Step Change,2049-50,economic_spill,0.26,Riverland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S2,Riverland,SA,Accelerated Transition,2029-30,transmission_curtailment,0.0,Riverland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S2,Riverland,SA,Accelerated Transition,2039-40,transmission_curtailment,0.0,Riverland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S2,Riverland,SA,Accelerated Transition,2049-50,transmission_curtailment,0.0,Riverland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S2,Riverland,SA,Accelerated Transition,2029-30,economic_spill,0.03,Riverland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S2,Riverland,SA,Accelerated Transition,2039-40,economic_spill,0.42,Riverland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S2,Riverland,SA,Accelerated Transition,2049-50,economic_spill,0.41,Riverland,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S3,Mid-North,SA,Slower Growth,2029-30,transmission_curtailment,0.0,Mid-North South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S3,Mid-North,SA,Slower Growth,2039-40,transmission_curtailment,0.0,Mid-North South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S3,Mid-North,SA,Slower Growth,2049-50,transmission_curtailment,0.0,Mid-North South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S3,Mid-North,SA,Slower Growth,2029-30,economic_spill,0.02,Mid-North South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S3,Mid-North,SA,Slower Growth,2039-40,economic_spill,0.0,Mid-North South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S3,Mid-North,SA,Slower Growth,2049-50,economic_spill,0.02,Mid-North South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S3,Mid-North,SA,Step Change,2029-30,transmission_curtailment,0.0,Mid-North South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S3,Mid-North,SA,Step Change,2039-40,transmission_curtailment,0.0,Mid-North South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S3,Mid-North,SA,Step Change,2049-50,transmission_curtailment,0.0,Mid-North South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S3,Mid-North,SA,Step Change,2029-30,economic_spill,0.0,Mid-North South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S3,Mid-North,SA,Step Change,2039-40,economic_spill,0.0,Mid-North South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S3,Mid-North,SA,Step Change,2049-50,economic_spill,0.09,Mid-North South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S3,Mid-North,SA,Accelerated Transition,2029-30,transmission_curtailment,0.0,Mid-North South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S3,Mid-North,SA,Accelerated Transition,2039-40,transmission_curtailment,0.0,Mid-North South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S3,Mid-North,SA,Accelerated Transition,2049-50,transmission_curtailment,0.0,Mid-North South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S3,Mid-North,SA,Accelerated Transition,2029-30,economic_spill,0.01,Mid-North South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S3,Mid-North,SA,Accelerated Transition,2039-40,economic_spill,0.15,Mid-North South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S3,Mid-North,SA,Accelerated Transition,2049-50,economic_spill,0.15,Mid-North South Australia,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S4,Yorke Peninsula,SA,Slower Growth,2029-30,transmission_curtailment,0.0,Yorke Peninsula,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S4,Yorke Peninsula,SA,Slower Growth,2039-40,transmission_curtailment,,Yorke Peninsula,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S4,Yorke Peninsula,SA,Slower Growth,2049-50,transmission_curtailment,0.0,Yorke Peninsula,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S4,Yorke Peninsula,SA,Slower Growth,2029-30,economic_spill,0.15,Yorke Peninsula,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S4,Yorke Peninsula,SA,Slower Growth,2039-40,economic_spill,,Yorke Peninsula,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S4,Yorke Peninsula,SA,Slower Growth,2049-50,economic_spill,0.17,Yorke Peninsula,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S4,Yorke Peninsula,SA,Step Change,2029-30,transmission_curtailment,0.0,Yorke Peninsula,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S4,Yorke Peninsula,SA,Step Change,2039-40,transmission_curtailment,,Yorke Peninsula,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S4,Yorke Peninsula,SA,Step Change,2049-50,transmission_curtailment,0.0,Yorke Peninsula,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S4,Yorke Peninsula,SA,Step Change,2029-30,economic_spill,0.0,Yorke Peninsula,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S4,Yorke Peninsula,SA,Step Change,2039-40,economic_spill,,Yorke Peninsula,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S4,Yorke Peninsula,SA,Step Change,2049-50,economic_spill,0.25,Yorke Peninsula,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S4,Yorke Peninsula,SA,Accelerated Transition,2029-30,transmission_curtailment,0.0,Yorke Peninsula,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S4,Yorke Peninsula,SA,Accelerated Transition,2039-40,transmission_curtailment,0.0,Yorke Peninsula,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S4,Yorke Peninsula,SA,Accelerated Transition,2049-50,transmission_curtailment,0.0,Yorke Peninsula,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S4,Yorke Peninsula,SA,Accelerated Transition,2029-30,economic_spill,0.04,Yorke Peninsula,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S4,Yorke Peninsula,SA,Accelerated Transition,2039-40,economic_spill,0.37,Yorke Peninsula,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S4,Yorke Peninsula,SA,Accelerated Transition,2049-50,economic_spill,0.49,Yorke Peninsula,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S5,Northern South Australia,SA,Slower Growth,2029-30,transmission_curtailment,0.0,Northern South Australia,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S5,Northern South Australia,SA,Slower Growth,2039-40,transmission_curtailment,0.0,Northern South Australia,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S5,Northern South Australia,SA,Slower Growth,2049-50,transmission_curtailment,0.0,Northern South Australia,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S5,Northern South Australia,SA,Slower Growth,2029-30,economic_spill,0.08,Northern South Australia,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S5,Northern South Australia,SA,Slower Growth,2039-40,economic_spill,0.0,Northern South Australia,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S5,Northern South Australia,SA,Slower Growth,2049-50,economic_spill,0.06,Northern South Australia,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S5,Northern South Australia,SA,Step Change,2029-30,transmission_curtailment,0.0,Northern South Australia,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S5,Northern South Australia,SA,Step Change,2039-40,transmission_curtailment,0.0,Northern South Australia,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S5,Northern South Australia,SA,Step Change,2049-50,transmission_curtailment,0.0,Northern South Australia,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S5,Northern South Australia,SA,Step Change,2029-30,economic_spill,0.0,Northern South Australia,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S5,Northern South Australia,SA,Step Change,2039-40,economic_spill,0.08,Northern South Australia,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S5,Northern South Australia,SA,Step Change,2049-50,economic_spill,0.2,Northern South Australia,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S5,Northern South Australia,SA,Accelerated Transition,2029-30,transmission_curtailment,0.0,Northern South Australia,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S5,Northern South Australia,SA,Accelerated Transition,2039-40,transmission_curtailment,0.0,Northern South Australia,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S5,Northern South Australia,SA,Accelerated Transition,2049-50,transmission_curtailment,0.0,Northern South Australia,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S5,Northern South Australia,SA,Accelerated Transition,2029-30,economic_spill,0.03,Northern South Australia,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S5,Northern South Australia,SA,Accelerated Transition,2039-40,economic_spill,0.34,Northern South Australia,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S5,Northern South Australia,SA,Accelerated Transition,2049-50,economic_spill,0.27,Northern South Australia,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S6,Roxby Downs,SA,Slower Growth,2029-30,transmission_curtailment,,Roxby Downs,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S6,Roxby Downs,SA,Slower Growth,2039-40,transmission_curtailment,,Roxby Downs,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S6,Roxby Downs,SA,Slower Growth,2049-50,transmission_curtailment,,Roxby Downs,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S6,Roxby Downs,SA,Slower Growth,2029-30,economic_spill,,Roxby Downs,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S6,Roxby Downs,SA,Slower Growth,2039-40,economic_spill,,Roxby Downs,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S6,Roxby Downs,SA,Slower Growth,2049-50,economic_spill,,Roxby Downs,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S6,Roxby Downs,SA,Step Change,2029-30,transmission_curtailment,,Roxby Downs,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S6,Roxby Downs,SA,Step Change,2039-40,transmission_curtailment,,Roxby Downs,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S6,Roxby Downs,SA,Step Change,2049-50,transmission_curtailment,,Roxby Downs,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S6,Roxby Downs,SA,Step Change,2029-30,economic_spill,,Roxby Downs,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S6,Roxby Downs,SA,Step Change,2039-40,economic_spill,,Roxby Downs,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S6,Roxby Downs,SA,Step Change,2049-50,economic_spill,,Roxby Downs,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S6,Roxby Downs,SA,Accelerated Transition,2029-30,transmission_curtailment,,Roxby Downs,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S6,Roxby Downs,SA,Accelerated Transition,2039-40,transmission_curtailment,,Roxby Downs,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S6,Roxby Downs,SA,Accelerated Transition,2049-50,transmission_curtailment,0.0,Roxby Downs,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S6,Roxby Downs,SA,Accelerated Transition,2029-30,economic_spill,,Roxby Downs,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S6,Roxby Downs,SA,Accelerated Transition,2039-40,economic_spill,,Roxby Downs,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S6,Roxby Downs,SA,Accelerated Transition,2049-50,economic_spill,0.22,Roxby Downs,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S7,Eastern Eyre Peninsula,SA,Slower Growth,2029-30,transmission_curtailment,0.0,Eastern Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S7,Eastern Eyre Peninsula,SA,Slower Growth,2039-40,transmission_curtailment,,Eastern Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S7,Eastern Eyre Peninsula,SA,Slower Growth,2049-50,transmission_curtailment,0.0,Eastern Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S7,Eastern Eyre Peninsula,SA,Slower Growth,2029-30,economic_spill,0.1,Eastern Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S7,Eastern Eyre Peninsula,SA,Slower Growth,2039-40,economic_spill,,Eastern Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S7,Eastern Eyre Peninsula,SA,Slower Growth,2049-50,economic_spill,0.09,Eastern Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S7,Eastern Eyre Peninsula,SA,Step Change,2029-30,transmission_curtailment,0.0,Eastern Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S7,Eastern Eyre Peninsula,SA,Step Change,2039-40,transmission_curtailment,0.0,Eastern Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S7,Eastern Eyre Peninsula,SA,Step Change,2049-50,transmission_curtailment,0.0,Eastern Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S7,Eastern Eyre Peninsula,SA,Step Change,2029-30,economic_spill,0.0,Eastern Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S7,Eastern Eyre Peninsula,SA,Step Change,2039-40,economic_spill,0.13,Eastern Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S7,Eastern Eyre Peninsula,SA,Step Change,2049-50,economic_spill,0.18,Eastern Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S7,Eastern Eyre Peninsula,SA,Accelerated Transition,2029-30,transmission_curtailment,0.0,Eastern Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S7,Eastern Eyre Peninsula,SA,Accelerated Transition,2039-40,transmission_curtailment,0.0,Eastern Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S7,Eastern Eyre Peninsula,SA,Accelerated Transition,2049-50,transmission_curtailment,0.0,Eastern Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S7,Eastern Eyre Peninsula,SA,Accelerated Transition,2029-30,economic_spill,0.03,Eastern Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S7,Eastern Eyre Peninsula,SA,Accelerated Transition,2039-40,economic_spill,0.24,Eastern Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S7,Eastern Eyre Peninsula,SA,Accelerated Transition,2049-50,economic_spill,0.4,Eastern Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S8,Western Eyre Peninsula,SA,Slower Growth,2029-30,transmission_curtailment,,Western Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S8,Western Eyre Peninsula,SA,Slower Growth,2039-40,transmission_curtailment,,Western Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S8,Western Eyre Peninsula,SA,Slower Growth,2049-50,transmission_curtailment,,Western Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S8,Western Eyre Peninsula,SA,Slower Growth,2029-30,economic_spill,,Western Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S8,Western Eyre Peninsula,SA,Slower Growth,2039-40,economic_spill,,Western Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S8,Western Eyre Peninsula,SA,Slower Growth,2049-50,economic_spill,,Western Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S8,Western Eyre Peninsula,SA,Step Change,2029-30,transmission_curtailment,,Western Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S8,Western Eyre Peninsula,SA,Step Change,2039-40,transmission_curtailment,,Western Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S8,Western Eyre Peninsula,SA,Step Change,2049-50,transmission_curtailment,,Western Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S8,Western Eyre Peninsula,SA,Step Change,2029-30,economic_spill,,Western Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S8,Western Eyre Peninsula,SA,Step Change,2039-40,economic_spill,,Western Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S8,Western Eyre Peninsula,SA,Step Change,2049-50,economic_spill,,Western Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S8,Western Eyre Peninsula,SA,Accelerated Transition,2029-30,transmission_curtailment,,Western Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S8,Western Eyre Peninsula,SA,Accelerated Transition,2039-40,transmission_curtailment,,Western Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S8,Western Eyre Peninsula,SA,Accelerated Transition,2049-50,transmission_curtailment,,Western Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S8,Western Eyre Peninsula,SA,Accelerated Transition,2029-30,economic_spill,,Western Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S8,Western Eyre Peninsula,SA,Accelerated Transition,2039-40,economic_spill,,Western Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,S8,Western Eyre Peninsula,SA,Accelerated Transition,2049-50,economic_spill,,Western Eyre Peninsula,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T1,North East Tasmania,TAS,Slower Growth,2029-30,transmission_curtailment,0.07,North East Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T1,North East Tasmania,TAS,Slower Growth,2039-40,transmission_curtailment,0.03,North East Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T1,North East Tasmania,TAS,Slower Growth,2049-50,transmission_curtailment,0.0,North East Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T1,North East Tasmania,TAS,Slower Growth,2029-30,economic_spill,0.0,North East Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T1,North East Tasmania,TAS,Slower Growth,2039-40,economic_spill,0.0,North East Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T1,North East Tasmania,TAS,Slower Growth,2049-50,economic_spill,0.19,North East Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T1,North East Tasmania,TAS,Step Change,2029-30,transmission_curtailment,0.02,North East Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T1,North East Tasmania,TAS,Step Change,2039-40,transmission_curtailment,0.01,North East Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T1,North East Tasmania,TAS,Step Change,2049-50,transmission_curtailment,0.0,North East Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T1,North East Tasmania,TAS,Step Change,2029-30,economic_spill,0.0,North East Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T1,North East Tasmania,TAS,Step Change,2039-40,economic_spill,0.0,North East Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T1,North East Tasmania,TAS,Step Change,2049-50,economic_spill,0.21,North East Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T1,North East Tasmania,TAS,Accelerated Transition,2029-30,transmission_curtailment,0.0,North East Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T1,North East Tasmania,TAS,Accelerated Transition,2039-40,transmission_curtailment,0.0,North East Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T1,North East Tasmania,TAS,Accelerated Transition,2049-50,transmission_curtailment,0.0,North East Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T1,North East Tasmania,TAS,Accelerated Transition,2029-30,economic_spill,0.0,North East Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T1,North East Tasmania,TAS,Accelerated Transition,2039-40,economic_spill,0.0,North East Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T1,North East Tasmania,TAS,Accelerated Transition,2049-50,economic_spill,0.13,North East Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T2,North West Tasmania,TAS,Slower Growth,2029-30,transmission_curtailment,0.07,North West Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T2,North West Tasmania,TAS,Slower Growth,2039-40,transmission_curtailment,0.0,North West Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T2,North West Tasmania,TAS,Slower Growth,2049-50,transmission_curtailment,0.0,North West Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T2,North West Tasmania,TAS,Slower Growth,2029-30,economic_spill,0.01,North West Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T2,North West Tasmania,TAS,Slower Growth,2039-40,economic_spill,0.0,North West Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T2,North West Tasmania,TAS,Slower Growth,2049-50,economic_spill,0.09,North West Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T2,North West Tasmania,TAS,Step Change,2029-30,transmission_curtailment,0.07,North West Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T2,North West Tasmania,TAS,Step Change,2039-40,transmission_curtailment,0.0,North West Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T2,North West Tasmania,TAS,Step Change,2049-50,transmission_curtailment,0.0,North West Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T2,North West Tasmania,TAS,Step Change,2029-30,economic_spill,0.0,North West Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T2,North West Tasmania,TAS,Step Change,2039-40,economic_spill,0.0,North West Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T2,North West Tasmania,TAS,Step Change,2049-50,economic_spill,0.12,North West Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T2,North West Tasmania,TAS,Accelerated Transition,2029-30,transmission_curtailment,0.04,North West Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T2,North West Tasmania,TAS,Accelerated Transition,2039-40,transmission_curtailment,0.0,North West Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T2,North West Tasmania,TAS,Accelerated Transition,2049-50,transmission_curtailment,0.01,North West Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T2,North West Tasmania,TAS,Accelerated Transition,2029-30,economic_spill,0.03,North West Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T2,North West Tasmania,TAS,Accelerated Transition,2039-40,economic_spill,0.0,North West Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T2,North West Tasmania,TAS,Accelerated Transition,2049-50,economic_spill,0.12,North West Tasmania,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T3,Central Highlands,TAS,Slower Growth,2029-30,transmission_curtailment,0.0,Central Highlands,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T3,Central Highlands,TAS,Slower Growth,2039-40,transmission_curtailment,0.03,Central Highlands,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T3,Central Highlands,TAS,Slower Growth,2049-50,transmission_curtailment,0.01,Central Highlands,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T3,Central Highlands,TAS,Slower Growth,2029-30,economic_spill,0.08,Central Highlands,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T3,Central Highlands,TAS,Slower Growth,2039-40,economic_spill,0.0,Central Highlands,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T3,Central Highlands,TAS,Slower Growth,2049-50,economic_spill,0.16,Central Highlands,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T3,Central Highlands,TAS,Step Change,2029-30,transmission_curtailment,0.01,Central Highlands,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T3,Central Highlands,TAS,Step Change,2039-40,transmission_curtailment,0.04,Central Highlands,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T3,Central Highlands,TAS,Step Change,2049-50,transmission_curtailment,0.0,Central Highlands,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T3,Central Highlands,TAS,Step Change,2029-30,economic_spill,0.0,Central Highlands,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T3,Central Highlands,TAS,Step Change,2039-40,economic_spill,0.0,Central Highlands,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T3,Central Highlands,TAS,Step Change,2049-50,economic_spill,0.11,Central Highlands,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T3,Central Highlands,TAS,Accelerated Transition,2029-30,transmission_curtailment,0.02,Central Highlands,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T3,Central Highlands,TAS,Accelerated Transition,2039-40,transmission_curtailment,0.0,Central Highlands,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T3,Central Highlands,TAS,Accelerated Transition,2049-50,transmission_curtailment,0.0,Central Highlands,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T3,Central Highlands,TAS,Accelerated Transition,2029-30,economic_spill,0.01,Central Highlands,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T3,Central Highlands,TAS,Accelerated Transition,2039-40,economic_spill,0.0,Central Highlands,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,T3,Central Highlands,TAS,Accelerated Transition,2049-50,economic_spill,0.12,Central Highlands,exact,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V1,North West,VIC,Slower Growth,2029-30,transmission_curtailment,0.0,Murray River,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V1,North West,VIC,Slower Growth,2039-40,transmission_curtailment,0.0,Murray River,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V1,North West,VIC,Slower Growth,2049-50,transmission_curtailment,0.0,Murray River,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V1,North West,VIC,Slower Growth,2029-30,economic_spill,0.12,Murray River,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V1,North West,VIC,Slower Growth,2039-40,economic_spill,0.23,Murray River,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V1,North West,VIC,Slower Growth,2049-50,economic_spill,0.11,Murray River,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V1,North West,VIC,Step Change,2029-30,transmission_curtailment,0.0,Murray River,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V1,North West,VIC,Step Change,2039-40,transmission_curtailment,0.0,Murray River,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V1,North West,VIC,Step Change,2049-50,transmission_curtailment,0.0,Murray River,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V1,North West,VIC,Step Change,2029-30,economic_spill,0.08,Murray River,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V1,North West,VIC,Step Change,2039-40,economic_spill,0.27,Murray River,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V1,North West,VIC,Step Change,2049-50,economic_spill,0.2,Murray River,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V1,North West,VIC,Accelerated Transition,2029-30,transmission_curtailment,0.0,Murray River,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V1,North West,VIC,Accelerated Transition,2039-40,transmission_curtailment,0.0,Murray River,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V1,North West,VIC,Accelerated Transition,2049-50,transmission_curtailment,0.0,Murray River,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V1,North West,VIC,Accelerated Transition,2029-30,economic_spill,0.06,Murray River,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V1,North West,VIC,Accelerated Transition,2039-40,economic_spill,0.28,Murray River,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V1,North West,VIC,Accelerated Transition,2049-50,economic_spill,0.29,Murray River,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V2,Central Highlands,VIC,Slower Growth,2029-30,transmission_curtailment,0.0,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V2,Central Highlands,VIC,Slower Growth,2039-40,transmission_curtailment,0.01,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V2,Central Highlands,VIC,Slower Growth,2049-50,transmission_curtailment,0.0,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V2,Central Highlands,VIC,Slower Growth,2029-30,economic_spill,0.27,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V2,Central Highlands,VIC,Slower Growth,2039-40,economic_spill,0.31,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V2,Central Highlands,VIC,Slower Growth,2049-50,economic_spill,0.07,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V2,Central Highlands,VIC,Step Change,2029-30,transmission_curtailment,0.06,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V2,Central Highlands,VIC,Step Change,2039-40,transmission_curtailment,0.0,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V2,Central Highlands,VIC,Step Change,2049-50,transmission_curtailment,0.0,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V2,Central Highlands,VIC,Step Change,2029-30,economic_spill,0.13,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V2,Central Highlands,VIC,Step Change,2039-40,economic_spill,0.2,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V2,Central Highlands,VIC,Step Change,2049-50,economic_spill,0.12,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V2,Central Highlands,VIC,Accelerated Transition,2029-30,transmission_curtailment,0.08,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V2,Central Highlands,VIC,Accelerated Transition,2039-40,transmission_curtailment,0.0,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V2,Central Highlands,VIC,Accelerated Transition,2049-50,transmission_curtailment,0.01,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V2,Central Highlands,VIC,Accelerated Transition,2029-30,economic_spill,0.11,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V2,Central Highlands,VIC,Accelerated Transition,2039-40,economic_spill,0.3,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V2,Central Highlands,VIC,Accelerated Transition,2049-50,economic_spill,0.34,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,"V3,V4",Western Victoria,VIC,Slower Growth,2029-30,transmission_curtailment,0.0,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,"V3,V4",Western Victoria,VIC,Slower Growth,2039-40,transmission_curtailment,0.0,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,"V3,V4",Western Victoria,VIC,Slower Growth,2049-50,transmission_curtailment,0.0,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,"V3,V4",Western Victoria,VIC,Slower Growth,2029-30,economic_spill,0.13,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,"V3,V4",Western Victoria,VIC,Slower Growth,2039-40,economic_spill,0.09,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,"V3,V4",Western Victoria,VIC,Slower Growth,2049-50,economic_spill,0.03,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,"V3,V4",Western Victoria,VIC,Step Change,2029-30,transmission_curtailment,0.0,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,"V3,V4",Western Victoria,VIC,Step Change,2039-40,transmission_curtailment,0.0,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,"V3,V4",Western Victoria,VIC,Step Change,2049-50,transmission_curtailment,0.0,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,"V3,V4",Western Victoria,VIC,Step Change,2029-30,economic_spill,0.16,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,"V3,V4",Western Victoria,VIC,Step Change,2039-40,economic_spill,0.13,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,"V3,V4",Western Victoria,VIC,Step Change,2049-50,economic_spill,0.11,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,"V3,V4",Western Victoria,VIC,Accelerated Transition,2029-30,transmission_curtailment,0.0,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,"V3,V4",Western Victoria,VIC,Accelerated Transition,2039-40,transmission_curtailment,0.0,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,"V3,V4",Western Victoria,VIC,Accelerated Transition,2049-50,transmission_curtailment,0.0,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,"V3,V4",Western Victoria,VIC,Accelerated Transition,2029-30,economic_spill,0.04,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,"V3,V4",Western Victoria,VIC,Accelerated Transition,2039-40,economic_spill,0.15,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,"V3,V4",Western Victoria,VIC,Accelerated Transition,2049-50,economic_spill,0.24,Western Victoria,no one-to-one match,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V5,South West,VIC,Slower Growth,2029-30,transmission_curtailment,0.0,South West Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V5,South West,VIC,Slower Growth,2039-40,transmission_curtailment,0.0,South West Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V5,South West,VIC,Slower Growth,2049-50,transmission_curtailment,0.0,South West Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V5,South West,VIC,Slower Growth,2029-30,economic_spill,0.03,South West Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V5,South West,VIC,Slower Growth,2039-40,economic_spill,0.19,South West Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V5,South West,VIC,Slower Growth,2049-50,economic_spill,0.04,South West Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V5,South West,VIC,Step Change,2029-30,transmission_curtailment,0.0,South West Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V5,South West,VIC,Step Change,2039-40,transmission_curtailment,0.0,South West Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V5,South West,VIC,Step Change,2049-50,transmission_curtailment,0.0,South West Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V5,South West,VIC,Step Change,2029-30,economic_spill,0.08,South West Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V5,South West,VIC,Step Change,2039-40,economic_spill,0.12,South West Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V5,South West,VIC,Step Change,2049-50,economic_spill,0.06,South West Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V5,South West,VIC,Accelerated Transition,2029-30,transmission_curtailment,0.0,South West Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V5,South West,VIC,Accelerated Transition,2039-40,transmission_curtailment,0.0,South West Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V5,South West,VIC,Accelerated Transition,2049-50,transmission_curtailment,0.0,South West Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V5,South West,VIC,Accelerated Transition,2029-30,economic_spill,0.08,South West Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V5,South West,VIC,Accelerated Transition,2039-40,economic_spill,0.07,South West Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V5,South West,VIC,Accelerated Transition,2049-50,economic_spill,0.06,South West Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V6,Gippsland Onshore,VIC,Slower Growth,2029-30,transmission_curtailment,0.0,Gippsland,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V6,Gippsland Onshore,VIC,Slower Growth,2039-40,transmission_curtailment,0.0,Gippsland,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V6,Gippsland Onshore,VIC,Slower Growth,2049-50,transmission_curtailment,0.0,Gippsland,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V6,Gippsland Onshore,VIC,Slower Growth,2029-30,economic_spill,0.12,Gippsland,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V6,Gippsland Onshore,VIC,Slower Growth,2039-40,economic_spill,0.27,Gippsland,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V6,Gippsland Onshore,VIC,Slower Growth,2049-50,economic_spill,0.18,Gippsland,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V6,Gippsland Onshore,VIC,Step Change,2029-30,transmission_curtailment,0.0,Gippsland,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V6,Gippsland Onshore,VIC,Step Change,2039-40,transmission_curtailment,0.0,Gippsland,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V6,Gippsland Onshore,VIC,Step Change,2049-50,transmission_curtailment,0.0,Gippsland,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V6,Gippsland Onshore,VIC,Step Change,2029-30,economic_spill,0.07,Gippsland,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V6,Gippsland Onshore,VIC,Step Change,2039-40,economic_spill,0.27,Gippsland,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V6,Gippsland Onshore,VIC,Step Change,2049-50,economic_spill,0.24,Gippsland,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V6,Gippsland Onshore,VIC,Accelerated Transition,2029-30,transmission_curtailment,0.0,Gippsland,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V6,Gippsland Onshore,VIC,Accelerated Transition,2039-40,transmission_curtailment,0.0,Gippsland,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V6,Gippsland Onshore,VIC,Accelerated Transition,2049-50,transmission_curtailment,0.0,Gippsland,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V6,Gippsland Onshore,VIC,Accelerated Transition,2029-30,economic_spill,0.03,Gippsland,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V6,Gippsland Onshore,VIC,Accelerated Transition,2039-40,economic_spill,0.23,Gippsland,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V6,Gippsland Onshore,VIC,Accelerated Transition,2049-50,economic_spill,0.21,Gippsland,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V7,Central North,VIC,Slower Growth,2029-30,transmission_curtailment,0.0,Central North Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V7,Central North,VIC,Slower Growth,2039-40,transmission_curtailment,0.02,Central North Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V7,Central North,VIC,Slower Growth,2049-50,transmission_curtailment,0.05,Central North Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V7,Central North,VIC,Slower Growth,2029-30,economic_spill,0.2,Central North Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V7,Central North,VIC,Slower Growth,2039-40,economic_spill,0.35,Central North Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V7,Central North,VIC,Slower Growth,2049-50,economic_spill,0.28,Central North Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V7,Central North,VIC,Step Change,2029-30,transmission_curtailment,0.07,Central North Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V7,Central North,VIC,Step Change,2039-40,transmission_curtailment,0.0,Central North Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V7,Central North,VIC,Step Change,2049-50,transmission_curtailment,0.01,Central North Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V7,Central North,VIC,Step Change,2029-30,economic_spill,0.18,Central North Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V7,Central North,VIC,Step Change,2039-40,economic_spill,0.3,Central North Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V7,Central North,VIC,Step Change,2049-50,economic_spill,0.27,Central North Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V7,Central North,VIC,Accelerated Transition,2029-30,transmission_curtailment,0.12,Central North Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V7,Central North,VIC,Accelerated Transition,2039-40,transmission_curtailment,0.0,Central North Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V7,Central North,VIC,Accelerated Transition,2049-50,transmission_curtailment,0.0,Central North Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V7,Central North,VIC,Accelerated Transition,2029-30,economic_spill,0.18,Central North Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V7,Central North,VIC,Accelerated Transition,2039-40,economic_spill,0.33,Central North Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V7,Central North,VIC,Accelerated Transition,2049-50,economic_spill,0.42,Central North Victoria,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V8,Gippsland Offshore,VIC,Slower Growth,2029-30,transmission_curtailment,,Gippsland Coast,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V8,Gippsland Offshore,VIC,Slower Growth,2039-40,transmission_curtailment,0.0,Gippsland Coast,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V8,Gippsland Offshore,VIC,Slower Growth,2049-50,transmission_curtailment,0.0,Gippsland Coast,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V8,Gippsland Offshore,VIC,Slower Growth,2029-30,economic_spill,,Gippsland Coast,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V8,Gippsland Offshore,VIC,Slower Growth,2039-40,economic_spill,0.1,Gippsland Coast,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V8,Gippsland Offshore,VIC,Slower Growth,2049-50,economic_spill,0.02,Gippsland Coast,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V8,Gippsland Offshore,VIC,Step Change,2029-30,transmission_curtailment,,Gippsland Coast,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V8,Gippsland Offshore,VIC,Step Change,2039-40,transmission_curtailment,0.0,Gippsland Coast,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V8,Gippsland Offshore,VIC,Step Change,2049-50,transmission_curtailment,0.0,Gippsland Coast,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V8,Gippsland Offshore,VIC,Step Change,2029-30,economic_spill,,Gippsland Coast,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V8,Gippsland Offshore,VIC,Step Change,2039-40,economic_spill,0.06,Gippsland Coast,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V8,Gippsland Offshore,VIC,Step Change,2049-50,economic_spill,0.02,Gippsland Coast,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V8,Gippsland Offshore,VIC,Accelerated Transition,2029-30,transmission_curtailment,,Gippsland Coast,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V8,Gippsland Offshore,VIC,Accelerated Transition,2039-40,transmission_curtailment,0.0,Gippsland Coast,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V8,Gippsland Offshore,VIC,Accelerated Transition,2049-50,transmission_curtailment,0.0,Gippsland Coast,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V8,Gippsland Offshore,VIC,Accelerated Transition,2029-30,economic_spill,,Gippsland Coast,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V8,Gippsland Offshore,VIC,Accelerated Transition,2039-40,economic_spill,0.04,Gippsland Coast,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V8,Gippsland Offshore,VIC,Accelerated Transition,2049-50,economic_spill,0.03,Gippsland Coast,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V9,Southern Ocean,VIC,Slower Growth,2029-30,transmission_curtailment,,Southern Ocean,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V9,Southern Ocean,VIC,Slower Growth,2039-40,transmission_curtailment,0.0,Southern Ocean,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V9,Southern Ocean,VIC,Slower Growth,2049-50,transmission_curtailment,0.0,Southern Ocean,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V9,Southern Ocean,VIC,Slower Growth,2029-30,economic_spill,,Southern Ocean,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V9,Southern Ocean,VIC,Slower Growth,2039-40,economic_spill,0.2,Southern Ocean,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V9,Southern Ocean,VIC,Slower Growth,2049-50,economic_spill,0.05,Southern Ocean,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V9,Southern Ocean,VIC,Step Change,2029-30,transmission_curtailment,,Southern Ocean,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V9,Southern Ocean,VIC,Step Change,2039-40,transmission_curtailment,0.0,Southern Ocean,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V9,Southern Ocean,VIC,Step Change,2049-50,transmission_curtailment,0.0,Southern Ocean,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V9,Southern Ocean,VIC,Step Change,2029-30,economic_spill,,Southern Ocean,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V9,Southern Ocean,VIC,Step Change,2039-40,economic_spill,0.2,Southern Ocean,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V9,Southern Ocean,VIC,Step Change,2049-50,economic_spill,0.11,Southern Ocean,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V9,Southern Ocean,VIC,Accelerated Transition,2029-30,transmission_curtailment,,Southern Ocean,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V9,Southern Ocean,VIC,Accelerated Transition,2039-40,transmission_curtailment,0.0,Southern Ocean,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V9,Southern Ocean,VIC,Accelerated Transition,2049-50,transmission_curtailment,0.0,Southern Ocean,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V9,Southern Ocean,VIC,Accelerated Transition,2029-30,economic_spill,,Southern Ocean,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V9,Southern Ocean,VIC,Accelerated Transition,2039-40,economic_spill,0.15,Southern Ocean,renamed,2026-10-07
+2026 ISP Appendix A3,,2026 ISP,V9,Southern Ocean,VIC,Accelerated Transition,2049-50,economic_spill,0.19,Southern Ocean,renamed,2026-10-07

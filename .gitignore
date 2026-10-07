@@ -26,3 +26,7 @@ tools/
 data/*.zip
 data/*.json
 data/*.part
+
+# Committed reference files built by hand (src.isp_rez_appendix, src.rez_history)
+!data/isp_rez_crosswalk.csv
+!data/rez_forecast_history.csv

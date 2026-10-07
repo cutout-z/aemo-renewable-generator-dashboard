@@ -38,7 +38,9 @@ of exiting 128. The ELI chart-data workbook is downloaded once per edition and
 then read from the cache (if parsing or the first download fails, the last
 `eli_curtailment.feather` is reused); the REZ forecasts and membership are not
 fetched by the lane at all, but come from the committed `rez_*.feather` files
-built by hand with `python -m src.eli_appendix`.
+built by hand with `python -m src.eli_appendix`. Likewise the 2026 ISP REZ figures come from the
+committed `isp_rez_curtailment.feather`, `isp_rez_crosswalk.csv` and `rez_forecast_history.csv`,
+built by hand with `python -m src.isp_rez_appendix`.
 
 Every normal exit of `deploy/run-update.sh` (after the push, and on the no-change exits)
 runs `python -m src.post_publish_check` last. It exits non-zero while the ELI probe has

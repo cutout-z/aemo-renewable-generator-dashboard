@@ -99,7 +99,8 @@ def _write_summary_table(wb: Workbook, data: pd.DataFrame, region_name: str,
             # Number formatting
             if key.startswith(("MLF_", "ELI_CURTAILMENT_", "CURTAILMENT_ACTUAL_")):
                 cell.number_format = "0.0000"
-            elif key.startswith(("ISP_CURTAILMENT_", "ISP_OFFLOADING_")):
+            elif key.startswith(("ISP_CURTAILMENT_", "ISP_OFFLOADING_", "ISPA3_TRANSMISSION_",
+                                 "ISPA3_SPILL_")):
                 cell.number_format = "0.00"
             elif key == "NAMEPLATE_MW":
                 cell.number_format = "0.0"
@@ -130,6 +131,9 @@ def _write_heatmap(wb: Workbook, data: pd.DataFrame, region_name: str):
     value_cols = [c for c in data.columns
                   if c.startswith(("MLF_", "ELI_", "CURTAILMENT_ACTUAL_", "ISP_"))
                   and not c.endswith(("_SOURCE", "_EDITION"))]
+    # The ISP A3 figures (transmission curtailment, economic spill) after the existing columns
+    value_cols += [c for c in data.columns
+                   if c.startswith(("ISPA3_TRANSMISSION_", "ISPA3_SPILL_"))]
     if not value_cols:
         ws.cell(row=1, column=1, value="No numeric data available")
         return
@@ -240,5 +244,30 @@ def _get_column_spec(data: pd.DataFrame) -> list[tuple[str, str]]:
     if "ISP_OFFLOADING_AVG" in data.columns:
         spec.append(("ISP_OFFLOADING_AVG", "Offl Avg"))
 
+    # ISP A3 REZ figures (e.g. the 2026 ISP's, one scenario): labels from the data's edition,
+    # scenario and year columns, not hard-coded
+    spec += _isp_a3_spec(data)
+
     # Filter to columns that actually exist in data
     return [(key, label) for key, label in spec if key in data.columns]
+
+
+def _first(data: pd.DataFrame, col: str) -> str:
+    """The first non-blank value of a text column ("" if none)."""
+    if col not in data.columns:
+        return ""
+    values = data[col].dropna().astype(str).str.strip()
+    values = values[values != ""]
+    return values.iloc[0] if len(values) else ""
+
+
+def _isp_a3_spec(data: pd.DataFrame) -> list[tuple[str, str]]:
+    if "ISPA3_EDITION" not in data.columns:
+        return []
+    edition, scenario = _first(data, "ISPA3_EDITION"), _first(data, "ISPA3_SCENARIO")
+    spec = [("ISPA3_REZ_NAME", f"{edition} REZ"), ("ISPA3_MATCH", f"{edition} REZ match")]
+    for measure, name in (("TRANSMISSION", "Transm Curt"), ("SPILL", "Econ Spill")):
+        for i in (1, 2, 3):
+            year = _first(data, f"ISPA3_Y{i}_LABEL") or f"Y{i}"
+            spec.append((f"ISPA3_{measure}_Y{i}", f"{edition} {scenario} {name} {year}"))
+    return spec

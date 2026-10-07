@@ -15,6 +15,7 @@ import pandas as pd
 # Run as a script from the repo root (python tests/validate_outputs.py): make `src` importable
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.post_publish_check import newer_edition_message  # noqa: E402
+from src import config, eli_appendix, isp_rez_appendix, rez_history  # noqa: E402
 
 OUTPUTS_DIR = Path(__file__).parent.parent / "outputs"
 CACHE_DIR = Path(__file__).parent.parent / "data"
@@ -264,6 +265,8 @@ def validate_sources(cache_dir: Path, df=None):
 
     check_edition_match(status, df)
 
+    check_isp_a3(df, cache_dir)
+
 
 def expected_eli_edition(now=None):
     """The newest ELI edition that should be out by `now`: Y from 1 October of year Y (NEM time)."""
@@ -334,6 +337,69 @@ def check_edition_match(status, df=None):
                            f"{status.get('eli', {}).get('edition')}, published {published}")
     print(f"ELI appendices {rez.get('forecasts_eli_edition')}, ISP forecasts "
           f"{rez.get('isp_edition')}, chart data {', '.join(sorted(chart)) or 'unknown'}")
+
+
+def check_isp_a3(df, cache_dir):
+    """The ISP A3 REZ figures (ISPA3_* columns) against the reference files they come from.
+
+    Every REZ in rez_forecasts.feather has A3 values or is on the explicit not-in-A3 list (the
+    crosswalk's "no one-to-one match" rows, and A3 zones with no table); the summary's editions
+    are the data files' editions; the history file holds every edition the page shows.
+    """
+    cache_dir = Path(cache_dir)
+    path = cache_dir / config.ISP_A3_FILE
+    has_cols = df is not None and "ISPA3_EDITION" in df.columns
+    if not path.exists():
+        check(not has_cols, f"summary.csv has ISPA3_* columns but {path} is missing")
+        print(f"  WARN: no ISP A3 REZ table ({path}); run python -m src.isp_rez_appendix")
+        return
+    table = pd.read_feather(path)
+    edition = isp_rez_appendix.edition(table)
+    if not check(edition is not None, f"{config.ISP_A3_FILE} carries no single ISP_EDITION"):
+        return
+    rez_path = cache_dir / Path(config.REZ_FORECAST_CACHE).name
+    eli_forecasts = pd.read_feather(rez_path) if rez_path.exists() else None
+    crosswalk = isp_rez_appendix.load_crosswalk(cache_dir)
+    for problem in isp_rez_appendix.check_crosswalk(crosswalk, table, eli_forecasts):
+        check(False, f"{config.ISP_REZ_CROSSWALK_FILE}: {problem}")
+    if eli_forecasts is not None:
+        gaps = isp_rez_appendix.not_in_a3(crosswalk, table, eli_forecasts)
+        print(f"{edition} A3: {len(set(eli_forecasts['REZ_NAME']))} ELI-appendix REZs, "
+              f"{len(gaps)} without A3 values (listed in the crosswalk): " + "; ".join(gaps))
+
+    if not check(has_cols, f"summary.csv has no ISPA3_* columns although {config.ISP_A3_FILE} "
+                           "exists: rerun the pipeline"):
+        return
+    check(_single(df, "ISPA3_EDITION") == edition,
+          f"summary.csv ISPA3_EDITION {_single(df, 'ISPA3_EDITION')} is not {config.ISP_A3_FILE}'s {edition}")
+    check(_single(df, "ISPA3_SCENARIO") == config.ISP_A3_SCENARIO,
+          f"summary.csv ISPA3_SCENARIO is {_single(df, 'ISPA3_SCENARIO')}, not {config.ISP_A3_SCENARIO}")
+    for i in (1, 2, 3):
+        years = set(table[f"Y{i}_LABEL"])
+        check({_single(df, f"ISPA3_Y{i}_LABEL")} == years,
+              f"summary.csv ISPA3_Y{i}_LABEL is {_single(df, f'ISPA3_Y{i}_LABEL')}, the A3 table has {sorted(years)}")
+    if eli_forecasts is not None and "ISP_EDITION" in df.columns:
+        ed = eli_appendix.editions(eli_forecasts)
+        check(_single(df, "ISP_EDITION") in (None, ed["isp_edition"]),
+              f"summary.csv ISP_EDITION {_single(df, 'ISP_EDITION')} is not rez_forecasts.feather's "
+              f"{ed['isp_edition']}")
+    for col in [c for c in df.columns if c.startswith(("ISPA3_TRANSMISSION_", "ISPA3_SPILL_"))]:
+        vals = pd.to_numeric(df[col], errors="coerce").dropna()
+        check(vals.empty or (vals.min() >= 0 and vals.max() <= 1), f"{col} has values outside [0, 1]")
+    if "REZ" in df.columns and "ISPA3_MATCH" in df.columns:
+        match = _text(df, "ISPA3_MATCH")
+        lost = sorted(set(_text(df, "REZ_NAME")[(_text(df, "REZ") == "Y") & (match == "not in the crosswalk")]))
+        check(not lost, f"REZ(s) on the page not in {config.ISP_REZ_CROSSWALK_FILE}: {lost}")
+
+    history = rez_history.load(cache_dir / config.REZ_HISTORY_FILE)
+    held = rez_history.editions(history)
+    shown = {(f"{edition} {config.ISP_A3_SOURCE}", "", edition)}
+    eli_ed, isp_ed = _single(df, "ELI_EDITION"), _single(df, "ISP_EDITION")
+    if eli_ed and isp_ed:
+        shown.add((rez_history.eli_source(eli_ed), str(eli_ed), isp_ed))
+    for key in sorted(shown - held):
+        check(False, f"{config.REZ_HISTORY_FILE} lacks the edition the page shows: {key} "
+                     "(python -m src.rez_history eli, or python -m src.isp_rez_appendix)")
 
 
 def current_fy_start(now=None):
