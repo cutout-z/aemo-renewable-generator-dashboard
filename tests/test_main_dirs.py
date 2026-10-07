@@ -42,6 +42,7 @@ def test_run_writes_only_to_the_given_directories(tmp_path, monkeypatch):
     assert seen["generators"] == str(cache)
     assert (out / "summary.csv").exists()
     assert (out / "NSW_curtailment.xlsx").exists()
+    assert (out / "source_status.json").exists()   # the footer's trimmed status (S3-1)
     assert (cache / "generators.feather").exists()
     after = repo_summary.stat().st_mtime if repo_summary.exists() else None
     assert before == after

@@ -119,6 +119,12 @@ def run(full_refresh: bool = False, cache_dir: str | None = None,
     # ── Step 8: Generate Excel workbooks ─────────────────────────────────
     generate_all_workbooks(summary, output_dir)
 
+    # ── Step 9: Publish source editions and fetch dates for the page footer ──
+    # (a trimmed copy of data/source_status.json; deploy/run-update.sh commits it with
+    # outputs/, so it only moves when summary.csv changes)
+    status_path = source_status.publish(cache_root, output_root)
+    logger.info(f"Published {status_path.name}")
+
     logger.info("Done.")
 
 

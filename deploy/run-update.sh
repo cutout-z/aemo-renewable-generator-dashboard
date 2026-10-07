@@ -25,6 +25,9 @@ if [[ "${RUN_TESTS}" == "1" ]]; then
   "${PYTHON}" tests/validate_outputs.py
 fi
 
+# outputs/ includes source_status.json (source editions and fetch dates for the page footer).
+# It is published only with a summary.csv change (the trigger below), so the footer dates are
+# those of the last run that changed values, not of the last run.
 git add outputs/ data/*.feather
 
 if [[ -s "${before_summary}" ]] && cmp -s "${before_summary}" outputs/summary.csv; then

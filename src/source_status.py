@@ -44,6 +44,43 @@ def update(cache_dir: str | Path, key: str, record: dict) -> dict:
     return status
 
 
+# What the page footer shows, per source (outputs/source_status.json): editions and
+# fetch dates, not URLs or cross-check detail. Errors are cut short.
+PUBLISHED_FIELDS = {
+    "registration_list": ("fetched_at", "refreshed", "error"),
+    "eli": ("edition", "checked_at", "last_conclusive_check", "newer_edition_available", "error"),
+    "rez": ("forecasts_eli_edition", "membership_eli_edition", "isp_edition"),
+    "mlf": ("newest_fy", "fetched_at", "refreshed", "used_cache", "error"),
+    "actual_curtailment": ("fys", "upstream_last_month", "fetched_at", "refreshed",
+                           "used_cache", "error"),
+    "gen_info": ("edition", "fetched_at"),
+}
+MAX_ERROR_CHARS = 160
+
+
+def trimmed(status: dict) -> dict:
+    """The published subset of a status dict."""
+    out = {}
+    for key, fields in PUBLISHED_FIELDS.items():
+        rec = status.get(key)
+        if not rec:
+            continue
+        out[key] = {f: rec.get(f) for f in fields if f in rec}
+        err = out[key].get("error")
+        if isinstance(err, str) and len(err) > MAX_ERROR_CHARS:
+            out[key]["error"] = err[:MAX_ERROR_CHARS - 1] + "…"
+    return out
+
+
+def publish(cache_dir: str | Path, output_dir: str | Path) -> Path:
+    """Write the trimmed status next to summary.csv, for the page footer."""
+    path = Path(output_dir) / STATUS_FILE
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(trimmed(load(cache_dir)), indent=2, sort_keys=True, default=str)
+                    + "\n", encoding="utf-8")
+    return path
+
+
 def age_days(iso: str | None, now: datetime | None = None) -> float | None:
     """Age of an ISO timestamp in days (None if missing or unparseable)."""
     if not iso:

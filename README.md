@@ -154,7 +154,7 @@ logs `REGISTRATION LIST REFRESH FAILED` with that copy's age. The newest MMSDM
 DUDETAILSUMMARY on nemweb is then checked: every GENERATOR DUID whose registration
 took effect in the last 24 months but is absent from the list is logged as a warning
 (DUDETAILSUMMARY has no fuel type, so such units are reported, never added).
-Each run records what it fetched in `data/source_status.json` (not committed).
+Each run records what it fetched in `data/source_status.json` (not committed), and publishes a trimmed copy, `outputs/source_status.json` (per source: edition, fetch dates, whether this run refreshed it, any error), which the page footer shows as "Sources at the last publish". The lane commits it with `outputs/` only when `summary.csv` changes, so its dates are those of the last run that changed values, not of the last run.
 
 NEM Generation Information is republished about quarterly under a new file name, so
 it is not pinned: each run reads the edition links off AEMO's Generation Information
@@ -250,6 +250,7 @@ If any check fails, the NAS lane or manual fallback workflow exits before commit
 | File | Description |
 |------|-------------|
 | `outputs/summary.csv` | All generators, all columns — loaded by the dashboard |
+| `outputs/source_status.json` | Each source's edition and fetch dates at the last publish — the page footer |
 | `outputs/NSW_curtailment.xlsx` | NSW generators — summary table + heatmap sheets |
 | `outputs/QLD_curtailment.xlsx` | QLD generators |
 | `outputs/VIC_curtailment.xlsx` | VIC generators |

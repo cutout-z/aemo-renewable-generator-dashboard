@@ -749,6 +749,56 @@ document.getElementById('themeToggle').onclick = () => {
 };
 syncThemeButton();
 
+// ── Source status (footer) ───────────────────────────────────────────────
+// outputs/source_status.json is a trimmed copy of the pipeline's run record: per source, its edition and
+// when it was last fetched. It is committed with summary.csv, so these are the dates of the last publish
+// (the run that last changed values), not of the last run. A missing file leaves the footer as it was.
+
+function fmtDate(iso) {
+  const d = iso ? new Date(iso) : null;
+  return d && !isNaN(d) ? d.toLocaleDateString('en-AU', {day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Australia/Brisbane'}) : null;
+}
+function fmtMonth(ym) {
+  const m = /^(\d{4})-(\d{2})$/.exec(ym || '');
+  return m ? new Date(Date.UTC(+m[1], +m[2] - 1, 1)).toLocaleDateString('en-AU', {month: 'short', year: 'numeric', timeZone: 'UTC'}) : null;
+}
+function fetchedText(rec) {
+  const when = fmtDate(rec.fetched_at);
+  if (rec.used_cache || rec.refreshed === false) return when ? `cached copy, last fetched ${when}` : 'cached copy';
+  return when ? `fetched ${when}` : null;
+}
+function sourceStatusText(st) {
+  const parts = [];
+  const reg = st.registration_list;
+  if (reg) parts.push(`Registration List ${fetchedText(reg) || 'fetch date unknown'}`);
+  const eli = st.eli;
+  const eliEd = (eli && eli.edition) || EDITIONS.eli;
+  const checked = eli && fmtDate(eli.last_conclusive_check || (eli.newer_edition_available != null ? eli.checked_at : null));
+  parts.push(`ELI ${eliEd} edition` + (checked ? ` (checked for a newer one ${checked})` : ''));
+  const rez = st.rez || {};
+  parts.push(`ISP: ${rez.isp_edition || EDITIONS.isp} via the ${rez.forecasts_eli_edition || eliEd} ELI appendices`);
+  const mlf = st.mlf;
+  if (mlf && mlf.newest_fy) parts.push(`MLFs to ${mlf.newest_fy}` + (fetchedText(mlf) ? ` (tracker ${fetchedText(mlf)})` : ''));
+  const act = st.actual_curtailment;
+  if (act) {
+    const to = fmtMonth(act.upstream_last_month);
+    parts.push('Actuals' + (to ? ` from rollup data to ${to}` : '') + (fetchedText(act) ? ` (${fetchedText(act)})` : ''));
+  }
+  return 'Sources at the last publish: ' + parts.join(' · ');
+}
+function renderSourceStatus() {
+  fetch('outputs/source_status.json', {cache: 'no-cache'})
+    .then(r => r.ok ? r.json() : null)
+    .then(st => {
+      if (!st || typeof st !== 'object') return;
+      const span = document.createElement('span');
+      span.id = 'sourceStatus';
+      span.textContent = sourceStatusText(st);
+      document.getElementById('footer').appendChild(span);
+    })
+    .catch(() => {});
+}
+
 // ── Init ─────────────────────────────────────────────────────────────────
 
 function renderAll() {
@@ -807,6 +857,7 @@ Papa.parse('outputs/summary.csv', {
       'Two rhythms: actuals monthly (last two completed FYs), ELI and ISP annual (July), MLFs annual (July/Oct)',
       'The CSV carries no publish date; the dashboard refreshes daily and republishes only when values change'
     ].join(' · ') + '</span>';
+    renderSourceStatus();
   },
   error: showLoadError
 });
