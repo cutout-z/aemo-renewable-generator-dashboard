@@ -2,7 +2,7 @@
 
 deploy/run-update.sh runs this last, after anything publishable has been pushed (and on
 its no-change exit paths), so a new ELI edition makes the lane fail without holding back
-the MLF, actual-curtailment and generator-list updates (Zalen's decision 6(b)). The
+the MLF, actual-curtailment and generator-list updates (the owner's decision 6(b)). The
 output validator prints the same message as a warning.
 
     python -m src.post_publish_check [--cache-dir data]

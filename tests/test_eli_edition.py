@@ -71,7 +71,7 @@ def test_fetch_records_a_newer_edition_and_warns(tmp_path, caplog):
 
 
 def test_validator_warns_with_the_steps_but_does_not_fail(tmp_path, capsys):
-    # Zalen's decision 6(b): the lane goes red after publishing (src.post_publish_check), so the
+    # The owner's decision 6(b): the lane goes red after publishing (src.post_publish_check), so the
     # validator must not fail here or the run's MLF / actuals / listing updates are held back
     status = _status() | {"eli": {"edition": 2025, "newer_edition_available": True,
                                   "checked_at": source_status.now_iso(),
