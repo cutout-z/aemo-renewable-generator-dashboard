@@ -6,7 +6,7 @@ builds it. The family conventions and shared AEMO facts below are generated from
 repo; where this file's repo-specific rules are stricter, they win.
 
 <!-- BEGIN agent-contracts:family -->
-<!-- source: family/AGENTS.family.md sha256:deb5ca36fc99 — edit in cutout-z/agent-contracts, not here -->
+<!-- source: family/AGENTS.family.md sha256:116b1391e2bb — edit in cutout-z/agent-contracts, not here -->
 ## Family conventions (every repo, every agent)
 
 *Generated from `agent-contracts/family/AGENTS.family.md`. Edit it there, never here: a drift check
@@ -66,8 +66,9 @@ for a yes:
   say so and leave it.
 - **Infra**: ports, scheduled jobs, servers, publish pipelines. Other jobs, and the owner, rely on
   them running as they are.
-- **Another agent's state**: another agent's memory, config or notes. The owning agent can't see
-  your edit, and may overwrite it or break on it.
+- **Another agent's state**: another agent's memory, config or notes. With the owner's yes any agent
+  may change them; no agent is the only writer. The owning agent can't see your edit, so commit it
+  where it's visible, and edit the source rather than a generated copy.
 
 Never read, quote or commit secrets (`.env`, auth files, keys, tokens): repos, transcripts and
 handback notes get copied and published.
