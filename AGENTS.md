@@ -6,60 +6,103 @@ builds it. The family conventions and shared AEMO facts below are generated from
 repo; where this file's repo-specific rules are stricter, they win.
 
 <!-- BEGIN agent-contracts:family -->
-<!-- source: family/AGENTS.family.md sha256:f43f0fc253a7 — edit in cutout-z/agent-contracts, not here -->
+<!-- source: family/AGENTS.family.md sha256:1b841cde6116 — edit in cutout-z/agent-contracts, not here -->
 ## Family conventions (every repo, every agent)
 
 *Generated from `agent-contracts/family/AGENTS.family.md`. Edit it there, never here: a drift check
 reports any local edit.* These apply to every agent (Hermes, Claude Code, Codex or any other),
 whatever app drives it. Where this repo's own rules (above or below this block) are stricter, they
 win. Machine-specific conventions (which checkout is which, the lane runtime, where memory lives)
-are in the owner's private contract, which each harness loads separately.
+are in the owner's private contract, which reaches agents through their user-level instructions
+where a harness supports it.
 
 ### Branches, concurrency, cleanup
 
-- Work in a working clone, on a branch, never in a live or serving checkout. Merge to `main` only if
-  this repo's contract says the agent may; otherwise push the branch and hand back for review.
+- Work in a working clone, on a branch, never in a live or serving checkout: a live checkout is what
+  serves or publishes, so an edit there goes out unreviewed. Merge to `main` only if this repo's
+  contract says the agent may; otherwise push the branch and hand back for review.
 - Other agents may be working in this repo right now. Fetch before you act. If a branch moved
   unexpectedly, or files you didn't touch changed, stop and report rather than reconcile.
-- Use a worktree for parallel work, not a second clone. At session end, remove the worktrees you
-  created and leave each checkout on the branch it was on when you arrived.
+- Use a worktree for parallel work, not a second clone. The exception is a live checkout: use a
+  separate clone, because adding a worktree writes into the live checkout's `.git`. At session end,
+  remove the worktrees you created and leave each checkout on the branch it was on when you arrived:
+  a leftover worktree pins its branch, and a checkout left on your branch changes what the next
+  agent, or a server running from it, sees.
 - Push every branch you want kept. An unpushed branch is one disk failure from gone.
+
+### Instructions and automation
+
+- **`AGENTS.md` is the only instruction file.** `CLAUDE.md`, or any other harness-specific file, holds
+  just a comment line and `@AGENTS.md`. Other harnesses never read those files, so a rule or fact put
+  there reaches only one agent.
+- **Nothing you depend on lives only in one harness or app.** Hooks, slash commands, plugins, app
+  quick actions and app-scheduled tasks may speed things up. The only copy of any automation or rule
+  goes in this repo (scripts, `AGENTS.md`) or the owner's scheduler, because the harness or app may be
+  swapped.
+- **A fact other agents need goes where they load it**: this repo's `AGENTS.md` Facts, with source
+  and date. If it applies across repos, propose it for the shared facts block in your handback. Your
+  own memory or skills are invisible to the other agents.
 
 ### What needs the owner's yes
 
 An explicit instruction from the owner in the current session covers that action only, not similar
-later ones. Without one, declare these and wait for a yes:
+later ones: the yes was for what the owner saw, not for what follows. A repo contract may record a
+standing permission from the owner (e.g. "the agent merges to `main` once `check.sh` is green"). It
+counts as the owner's yes only for the actions and the agents it names, only in the repo whose
+contract records it, and only as that text stands on `origin/main` when you start. It never covers
+adding, widening or rewording a standing permission, or any change to `AGENTS.md` or this block:
+those always need the owner's yes in the current session. Without either, declare these and wait
+for a yes:
 
 - **Publishing**: anything that changes what other people can see (`main` on a published repo,
   Pages, public data files).
 - **Data and ETL**: data files, pipeline code, data contracts (columns, keys, paths, schemas).
-- **The instruments**: `check.sh`, guard tests, audit and verify scripts. Never weaken one to make
-  something pass. If one is wrong, say so and leave it.
-- **Infra**: ports, scheduled jobs, servers, publish pipelines.
-- **Another agent's state**: another agent's memory, config or notes.
+  Lanes, dashboards and other repos read them, and a change breaks them silently.
+- **The instruments**: `check.sh`, guard tests, audit and verify scripts. They are how anyone,
+  including you, knows a change works. Never weaken one to make something pass. If one is wrong,
+  say so and leave it.
+- **Infra**: ports, scheduled jobs, servers, publish pipelines. Other jobs, and the owner, rely on
+  them running as they are.
+- **Another agent's state**: another agent's memory, config or notes. The owning agent can't see
+  your edit, and may overwrite it or break on it.
 
-Never read, quote or commit secrets: `.env`, auth files, keys, tokens.
+Never read, quote or commit secrets (`.env`, auth files, keys, tokens): repos, transcripts and
+handback notes get copied and published.
 
 ### Verification standard
 
 - A change is done when you have seen the evidence yourself: tests run (exact counts, failures
-  named, pre-existing failures shown to exist on `main`), and for UI, a real browser render.
-- For a fix, show its test fails with the fix reverted and passes with it applied.
-- Don't relay another agent's or subagent's numbers. Re-run or read the evidence yourself.
+  named, pre-existing failures shown to exist on `main`), and for UI, a real browser render, or a
+  plain statement that it wasn't rendered and why. A reviewer can check evidence, not belief.
+- For a fix, show its test fails with the fix reverted and passes with it applied; otherwise nothing
+  shows the test exercises the fix.
+- Don't relay another agent's or subagent's numbers. Re-run or read the evidence yourself: a relayed
+  number can't be traced, and you are the one signing the handback.
 
 ### Attribution and handback
 
-- **Every commit names its agent** in a trailer: `Co-Authored-By: <Agent> <model> <email>`, e.g.
-  `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`, `Co-Authored-By: Codex …`,
-  `Co-Authored-By: Hermes …`. Audits match on the `Co-Authored-By: <Agent>` prefix.
-- **End every piece of work with a handback note on the branch**, using the repo's own path
-  convention, or `docs/handback-<YYYY-MM-DD>-<topic>.md` if it has none. On a repo whose `main` is
-  published, keep notes and evidence on the branch; they don't merge. Start the note with:
+- **Every commit names its agent** in a trailer, so audits and the owner's digest can tell which agent
+  made each change, whatever app drove it: `Co-Authored-By: <Agent> <model> <email>`, e.g.
+  `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. `<Agent>` is one word (`Claude`,
+  `Codex`, `Hermes`, …); `<model>` is the model name without a provider prefix (e.g. `Opus 5.5`,
+  `deepseek-v4.1-flash`). The email goes in angle brackets: Claude `noreply@anthropic.com`, Hermes
+  `noreply@nousresearch.com` (as in existing commits), any other agent `<agent>@agents.invalid`.
+  Audits match the key case-insensitively and the first word of the value.
+- **Commit with the repo's configured identity.** Never set or override `user.name` or `user.email`,
+  and never pass `--author`: on a public repo, author fields are published.
+- **End every piece of work with a handback note.** It is the durable record; app session lists and
+  an agent's memory are not, and both may be swapped. Use the repo's own path and branch convention
+  if it has one; it wins, including whether notes merge. Otherwise use
+  `handbacks/<YYYY-MM-DD>-<topic>.md`. On a repo whose `main` is published (a public repo, or one that
+  deploys or builds a site from `main`), commit the note on its own branch, `handback/<your-branch>`:
+  push it, and never merge or delete it, so the record survives the work branch's merge without
+  landing on `main`. On a public repo every pushed branch is public too, so keep notes there free of
+  private details. The frontmatter goes above the first line of any repo template:
 
   ```yaml
   ---
-  project: <project name as on the owner's board>
-  agent: claude | codex | hermes
+  project: <project name as on the owner's dashboard>
+  agent: <the trailer's Agent, lowercase: claude, codex, hermes, …>
   branch: <branch>
   merged: false
   status: <one line>
@@ -72,7 +115,7 @@ Never read, quote or commit secrets: `.env`, auth files, keys, tokens.
 <!-- END agent-contracts:family -->
 
 <!-- BEGIN agent-contracts:aemo-facts -->
-<!-- source: facts/AEMO-FACTS.md sha256:c6c3cdf689bd — edit in cutout-z/agent-contracts, not here -->
+<!-- source: facts/AEMO-FACTS.md sha256:c32c596c4a5d — edit in cutout-z/agent-contracts, not here -->
 ## AEMO shared facts — every agent, every repo
 
 One canonical home for cross-repo AEMO domain facts, so a fact established in one repo is never
@@ -89,7 +132,7 @@ Location: `agent-contracts/facts/AEMO-FACTS.md` (git, `cutout-z/agent-contracts`
 
 | Fact | Detail | Verified | Source |
 |---|---|---|---|
-| TLF orientation | `TRANSMISSIONLOSSFACTOR` = **Import** MLF; `SECONDARY_TLF` = **Export** MLF for BIDIRECTIONAL (battery) units. A battery's export MLF comes from `SECONDARY_TLF`, never `TRANSMISSIONLOSSFACTOR`. Confirmed 51/51 differing batteries against AEMO's 2026-27 workbook. The MLF Tracker used the import factor for FY24-25/FY25-26 battery export values until fix `dbaf6f7` (2026-10-05); downstream battery revenue was restated (~−$13.1M across 26 batteries' months) after the fix. | 2026-10-05 | AEMO 2026-27 MLF workbook; `aemo-credit-design/audits/Logic Pass Rollout 2026-10-05.md` |
+| TLF orientation | `TRANSMISSIONLOSSFACTOR` = **Import** MLF; `SECONDARY_TLF` = **Export** MLF for BIDIRECTIONAL (battery) units. A battery's export MLF comes from `SECONDARY_TLF`, never `TRANSMISSIONLOSSFACTOR`. Confirmed 51/51 differing batteries against AEMO's 2026-27 workbook. The MLF Tracker used the import factor for FY24-25/FY25-26 battery export values until fix `dbaf6f7` (2026-10-05); downstream battery revenue was restated (~−$13.1M across 26 batteries' months) after the fix. | 2026-10-05 | AEMO 2026-27 MLF workbook; `cutout-z/aemo-generator-credit-dashboard`: `audits/Logic Pass Rollout 2026-10-05.md` |
 | FCAS regime | FCAS causer-pays contribution factors are DEAD — replaced by the Frequency Performance Payment (FPP) on 8 June 2025 (5-minute contribution factors on NEMWEB). Never recommend or resurrect causer-pays factor tracking; FPP cost-allocation factors per DUID are the future extension. | 2026-09-01 | AEMO/NEMWEB; `aemo-audit` skill; credit repo `docs/FUTURE_DATA_SOURCES.md` |
 <!-- END agent-contracts:aemo-facts -->
 
@@ -123,11 +166,11 @@ Location: `agent-contracts/facts/AEMO-FACTS.md` (git, `cutout-z/agent-contracts`
 | Served by | GitHub Pages, `main` at `/`, no deploy workflow, no build at deploy; live at `cutout-z.github.io/aemo-renewable-generator-dashboard` (`gh api .../pages`, README) |
 | Stack | Python 3 pipeline (`src/`, pandas, pyarrow, openpyxl, requests: `requirements.txt`); page: vanilla JS, PapaParse 5.4.1 + SheetJS 0.18.5 from jsDelivr, compiled Tailwind `assets/css/app.css` (committed) from `assets/css/tailwind.src.css` (`index.html`) |
 | Data lane | NAS runner (QNAP `ai-wif-runner`), `nas-job aemo-renewable-generator-dashboard` → `deploy/run-update.sh --full-refresh`: fetch, `checkout main`, `pull --ff-only` else **`reset --hard origin/main`**, `src.main`, `tests/validate_outputs.py`, commit `outputs/` + `data/*.feather` as `aemo-nas-bot` **only if `summary.csv` changed**, push, then `src.post_publish_check` (deploy/README.md, run-update.sh) |
-| Lane schedule | Daily at 09:15 AWST (NAS crontab `15 9 * * *`, checked 2026-10-08), matching README and `deploy/README.md`. Daily since 2026-10-07; before that, monthly on the 1st. The lane registry (`tools/nas-runner/configs/brain-ops.nas.toml`) is not in this repo |
+| Lane schedule | README says the lane fires "daily" (README.md:280, no time given; `deploy/README.md` gives no cadence). The time, `15 9 * * *` (09:15 AWST), is from the owner's host crontab, checked 2026-10-08 (unverified: not in this repo). The lane registry is not in this repo |
 | Fallback runner | `.github/workflows/update.yml`, manual `workflow_dispatch` only; `full_refresh` defaults `true`; commits as `github-actions[bot]` |
 | Upstream | `aemo-generator-credit-dashboard` (`curtailment_by_fy.csv`) and `aemo-mlf-tracker` (`outputs/summary.csv`), both read over Pages (`src/config.py`); AEMO Registration List, MMSDM DUDETAILSUMMARY, Generation Information, ELI chart data + appendices, 2026 ISP A3 |
 | Lane goes red | when `data/source_status.json` records a confirmed newer ELI edition; the run's other updates still publish (decision 6(b), `src/post_publish_check.py`) |
-| Design tooling | `scripts/build-css.sh` (Tailwind v3.4.17 standalone), `scripts/verify-design.py`, `scripts/verify-interactions.py`, `design/`, the design `AGENTS.md`/`BRIEF.md` live **only on `origin/design/2026-10`** (21 commits not on `main`); `main` got `index.html` + `assets/css/**` + `tailwind.config.js` by path (private design-pass notes) |
+| Design tooling | `scripts/build-css.sh` (Tailwind v3.4.17 standalone), `scripts/verify-design.py`, `scripts/verify-interactions.py`, `design/`, the design `AGENTS.md`/`BRIEF.md` live **only on `origin/design/2026-10`** (21 commits not on `main`); `main` got `index.html` + `assets/css/**` + `tailwind.config.js` by path (commits `48870ec`, `0bdf704`, `2e4b9b2`, `e25f6e2`) |
 
 ## Data contracts (the owner's yes before any change)
 
@@ -147,19 +190,27 @@ Location: `agent-contracts/facts/AEMO-FACTS.md` (git, `cutout-z/agent-contracts`
 ## Verify
 
 ```bash
-cd <worktree> && /opt/anaconda3/bin/python3 -m pytest -q tests      # offline; conftest blocks requests
-/opt/anaconda3/bin/python3 tests/validate_outputs.py                 # the publish gate the lane runs
-# a pipeline run on a copy of data/ that leaves data/ and outputs/ alone (still fetches upstream):
-/opt/anaconda3/bin/python3 -m src.main --cache-dir /tmp/ren-cache --output-dir /tmp/ren-out
-/opt/anaconda3/bin/python3 tests/validate_outputs.py --outputs-dir /tmp/ren-out --cache-dir /tmp/ren-cache
+cd <worktree> && python3 -m pytest -q tests      # offline; conftest blocks requests
+python3 tests/validate_outputs.py                # the publish gate the lane runs
+```
+
+Run the pipeline only when the task needs it, with the owner's yes in this session: it fetches upstream (AEMO, Cloudflare-fronted). Use a
+per-run temp dir, never a fixed shared path (concurrent agents would clobber it) and never the worktree's
+`outputs/` or `data/`. `src.main` takes `--cache-dir` and `--output-dir` (`src/main.py`); the cache dir
+must hold the committed reference files (`rez_*.feather`, the ISP crosswalk, `rez_forecast_history.csv`):
+
+```bash
+T=$(mktemp -d) && cp -R data "$T/data"
+python3 -m src.main --cache-dir "$T/data" --output-dir "$T/out"
+python3 tests/validate_outputs.py --outputs-dir "$T/out" --cache-dir "$T/data"   # flags: tests/validate_outputs.py
 ```
 
 **Baseline (2026-10-08, `ebc6cd6`, fresh worktree): `pytest` 182 passed, 0 failed (23 test files).**
 `validate_outputs.py` exits 1 on a fresh checkout: `data/source_status.json missing`. That file is
 gitignored and written only by a pipeline run, so this is environmental, not a regression.
 
-**Local preview:** port **9370** (private design-pass notes; design-branch `AGENTS.md`):
-`cd <worktree> && /opt/anaconda3/bin/python3 -m http.server 9370 --bind 127.0.0.1`, then open
+**Local preview:** port **9370** (`AGENTS.md` on `origin/design/2026-10`, "9370 is this pass's port"):
+`cd <worktree> && python3 -m http.server 9370 --bind 127.0.0.1`, then open
 `http://127.0.0.1:9370/index.html` (`?theme=light|dark` forces a theme). The design-branch gates
 hard-code **9381** (`scripts/verify-*.py` on `origin/design/2026-10`); serve there to run them. Verify a
 page change in a real browser (rows render, heat cells filled, no JS errors), not by grep.
@@ -171,7 +222,7 @@ page change in a real browser (rows render, heat cells filled, no JS errors), no
 - **A branch merge of `design/2026-10` would publish its evidence** (`design/`, `docs/`, `scripts/`),
   because Pages serves the whole tree; design work reaches `main` by path. The first by-path merge used
   an anchored filter that missed `assets/css/app.css` and published the new page on the old stylesheet
-  (`0bdf704`, fixed in `2e4b9b2`; private design-pass notes).
+  (`0bdf704`, fixed in `2e4b9b2`; see that commit's message).
 - **Tests pin wording** in `index.html`, `README.md` and `deploy/README.md` (`test_cadence_wording`,
   `test_eli_horizons`, `test_isp_labels`, `test_measure_definitions`, `test_isp_rez_appendix`). A copy
   edit can turn the suite red; change the test in the same commit and say why.
@@ -183,18 +234,18 @@ page change in a real browser (rows render, heat cells filled, no JS errors), no
 - **The ELI chart workbook is downloaded once per edition**; a corrected re-issue under the same URL is
   not picked up (README). A new edition needs `src/config.py` + `src.eli_appendix` + crosswalk rows.
 - **AEMO pages sit behind Cloudflare**; cached-source fallback is the intended path, not a bug to
-  route around (private ops log, closed 2026-06-08).
+  route around (README.md:215, `src/download_generators.py`).
 - **The GitHub Actions fallback with `full_refresh=false`** would republish feather caches the lane
   has since replaced (`update.yml` comment, `940b8a5`).
 - **FY rollover is read in NEM time** (`config.NEM_TZ`, AEST), not the host clock (`827709f`).
 
 ## Working alongside other agents
 
-- `aemo-nas-bot` commits to `main` whenever `summary.csv` changes, touching only `outputs/**` and
-  `data/*.feather` (run-update.sh); a branch that holds neither merges past those commits cleanly.
-- Hermes triggers and inspects the lane (`brain-ops-nas workflow aemo-renewable-generator-dashboard`,
-  skill `aemo-audit`). `deploy/run-update.sh` and the Actions workflow both push to `main`: run them
-  only with the owner's yes.
+- `aemo-nas-bot` commits to `main` whenever `summary.csv` changes; lane commits touch only `outputs/**`
+  and `data/*.feather` (`deploy/run-update.sh`), so a branch that holds neither merges past them cleanly.
+  The identity also authored docs/refactor commits on 2026-09-19 (`88b1c5b`, `cfd1680`).
+- Hermes triggers and inspects the lane (skill `aemo-audit`; unverified: not in this repo).
+  `deploy/run-update.sh` and the Actions workflow both push to `main`: run them only with the owner's yes.
 - `origin/design/2026-10` carries an older, design-pass-only `AGENTS.md`/`CLAUDE.md`; on `main` this file is the contract.
 
 ## Handback checklist
