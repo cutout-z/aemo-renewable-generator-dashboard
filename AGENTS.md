@@ -6,7 +6,7 @@ builds it. The family conventions and shared AEMO facts below are generated from
 repo; where this file's repo-specific rules are stricter, they win.
 
 <!-- BEGIN agent-contracts:family -->
-<!-- source: family/AGENTS.family.md sha256:1b841cde6116 — edit in cutout-z/agent-contracts, not here -->
+<!-- source: family/AGENTS.family.md sha256:deb5ca36fc99 — edit in cutout-z/agent-contracts, not here -->
 ## Family conventions (every repo, every agent)
 
 *Generated from `agent-contracts/family/AGENTS.family.md`. Edit it there, never here: a drift check
@@ -39,6 +39,9 @@ where a harness supports it.
   quick actions and app-scheduled tasks may speed things up. The only copy of any automation or rule
   goes in this repo (scripts, `AGENTS.md`) or the owner's scheduler, because the harness or app may be
   swapped.
+- **Name the tier, not the model.** Briefs, skills and procedures say a tier and an effort (tier 0
+  mechanical, 1 routine, 2 standard, 3 hard or review, 4 vision); `agent-contracts/tiers.yaml` maps
+  each tier to a model per harness. Models change often, so a name in a skill goes stale.
 - **A fact other agents need goes where they load it**: this repo's `AGENTS.md` Facts, with source
   and date. If it applies across repos, propose it for the shared facts block in your handback. Your
   own memory or skills are invisible to the other agents.
