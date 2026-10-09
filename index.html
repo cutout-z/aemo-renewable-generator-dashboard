@@ -92,6 +92,9 @@
   /* The legend swatches reuse the ramp classes themselves, so a swatch can never disagree with a cell. */
   .lg { display: inline-flex; height: 24px; min-width: 54px; align-items: center; justify-content: center; padding: 0 6px; border-radius: 4px; font-size: 12px; font-variant-numeric: tabular-nums; }
 </style>
+<!-- Shared AEMO Dashboards sidebar (cutout-z/aemo-dashboards). Plain, not defer: it reserves its
+     width before first paint. The page works unchanged if it fails to load. -->
+<script src="https://cutout-z.github.io/aemo-dashboards/nav.js" data-current="renewable-generators"></script>
 </head>
 <body>
 <main class="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6">
