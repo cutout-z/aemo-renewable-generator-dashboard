@@ -1,7 +1,7 @@
 {
   "actual_curtailment": {
     "error": null,
-    "fetched_at": "2026-10-13T01:15:26+00:00",
+    "fetched_at": "2026-10-14T01:15:16+00:00",
     "fys": [
       "FY24-25",
       "FY25-26"
@@ -11,10 +11,10 @@
     "used_cache": false
   },
   "eli": {
-    "checked_at": "2026-10-13T01:15:24+00:00",
+    "checked_at": "2026-10-14T01:15:15+00:00",
     "edition": 2025,
     "error": null,
-    "last_conclusive_check": "2026-10-13T01:15:24+00:00",
+    "last_conclusive_check": "2026-10-14T01:15:15+00:00",
     "newer_edition_available": false
   },
   "gen_info": {
@@ -23,14 +23,14 @@
   },
   "mlf": {
     "error": null,
-    "fetched_at": "2026-10-13T01:15:23+00:00",
+    "fetched_at": "2026-10-14T01:15:15+00:00",
     "newest_fy": "FY26-27",
     "refreshed": true,
     "used_cache": false
   },
   "registration_list": {
     "error": null,
-    "fetched_at": "2026-10-13T01:15:14+00:00",
+    "fetched_at": "2026-10-14T01:15:11+00:00",
     "refreshed": true
   },
   "rez": {
