@@ -1,5 +1,7 @@
 # Frequency-Driven Updates — NAS runner (production)
 
+> **VPS retired 2026-05-29.** The NAS runner runs every lane; any VPS or systemd setup described in this repo is historical. The current estate (hosts, lanes, schedules) is in ARCHITECTURE.md in the agent-contracts repo.
+
 The production model:
 
 - The **NAS runner** (QNAP `ai-wif-runner` container) runs the scheduled
