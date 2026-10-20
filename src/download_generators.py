@@ -11,7 +11,9 @@ from __future__ import annotations
 import io
 import logging
 import time
+import zipfile
 from datetime import datetime, timezone
+from xml.etree import ElementTree
 from pathlib import Path
 
 import pandas as pd
@@ -130,6 +132,10 @@ def refresh_registration_list(cache_path: Path) -> Path:
     requests with an HTML challenge page). On failure the previous copy is used
     and the failure is logged at ERROR with its age; with no previous copy the
     run cannot continue.
+
+    A well-formed download is also refused when it is an OLDER edition than the
+    cached copy (AEMO has served older and newer editions on different days,
+    which flipped units in and out of the spine): see `_older_than_cache`.
     """
     reg_path = cache_path / REGISTRATION_FILE
     previous = source_status.load(cache_path).get("registration_list", {})
@@ -144,11 +150,20 @@ def refresh_registration_list(cache_path: Path) -> Path:
         logger.info("Downloading NEM Registration List from AEMO...")
         content = _fetch_bytes(REGISTRATION_URL)
         check_workbook_bytes(content, REGISTRATION_SHEET)
+        cached = reg_path.read_bytes() if reg_path.exists() else None
+        refusal = _older_than_cache(content, cached) if cached is not None else None
+        if refusal:
+            record.update(edition=workbook_edition(cached), refused_download=refusal)
+            logger.warning(f"Registration List download refused, keeping the cached copy: {refusal}")
+            source_status.update(cache_path, "registration_list", record)
+            return reg_path
         tmp = reg_path.with_name(reg_path.name + ".part")
         tmp.write_bytes(content)
         tmp.replace(reg_path)
-        record.update(fetched_at=source_status.now_iso(), refreshed=True)
-        logger.info(f"Registration List refreshed ({len(content) / 1024:.0f} KB)")
+        record.update(fetched_at=source_status.now_iso(), refreshed=True,
+                      edition=workbook_edition(content))
+        logger.info(f"Registration List refreshed ({len(content) / 1024:.0f} KB, "
+                    f"edition {record['edition'] or 'unknown'})")
     except Exception as e:
         record["error"] = str(e)
         if not reg_path.exists():
@@ -164,6 +179,51 @@ def refresh_registration_list(cache_path: Path) -> Path:
 
     source_status.update(cache_path, "registration_list", record)
     return reg_path
+
+
+_CORE_PROPS = "docProps/core.xml"
+_DCTERMS_MODIFIED = "{http://purl.org/dc/terms/}modified"
+
+
+def workbook_edition(content: bytes) -> str | None:
+    """The workbook's last-saved stamp (xlsx `docProps/core.xml` dcterms:modified), or None.
+
+    AEMO serves the list as xlsx under an .xls name; Excel rewrites this stamp on
+    every save, so it orders editions. A legacy xls, or an xlsx without the stamp,
+    has no edition here (None)."""
+    if not content or not content.startswith(_XLSX_MAGIC):
+        return None
+    try:
+        with zipfile.ZipFile(io.BytesIO(content)) as zf:
+            root = ElementTree.fromstring(zf.read(_CORE_PROPS))
+        text = (root.findtext(_DCTERMS_MODIFIED) or "").strip()
+        stamp = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except (KeyError, ValueError, zipfile.BadZipFile, ElementTree.ParseError):
+        return None
+    if stamp.tzinfo is None:
+        stamp = stamp.replace(tzinfo=timezone.utc)
+    return stamp.astimezone(timezone.utc).isoformat()
+
+
+def _older_than_cache(content: bytes, cached: bytes) -> str | None:
+    """Why the downloaded list must not replace the cached one, or None to accept it.
+
+    Both editions known: refuse only a strictly older download. Either unknown:
+    the conservative rule, refuse a download that drops units the cached list
+    has on its generator sheet (a newer edition that genuinely removes a unit
+    needs a readable edition stamp to get through)."""
+    new_ed, old_ed = workbook_edition(content), workbook_edition(cached)
+    if new_ed and old_ed:
+        if datetime.fromisoformat(new_ed) < datetime.fromisoformat(old_ed):
+            return f"downloaded edition {new_ed} is older than the cached edition {old_ed}"
+        return None
+    dropped = (_registered_duids(io.BytesIO(cached))
+               - _registered_duids(io.BytesIO(content)))
+    if dropped:
+        return (f"edition unknown (downloaded {new_ed or 'unknown'}, cached {old_ed or 'unknown'}) "
+                f"and the download drops {len(dropped)} cached unit(s): "
+                f"{', '.join(sorted(dropped)[:10])}")
+    return None
 
 
 def check_workbook_bytes(content: bytes, required_sheet: str | None = None) -> None:
@@ -182,8 +242,8 @@ def check_workbook_bytes(content: bytes, required_sheet: str | None = None) -> N
         raise ValueError(f"workbook lacks sheet {required_sheet!r} (has {sheets})")
 
 
-def _registered_duids(xls_path: Path) -> set[str]:
-    """Every DUID on the Registration List's generator sheet, any fuel."""
+def _registered_duids(xls_path) -> set[str]:
+    """Every DUID on the Registration List's generator sheet, any fuel (a path or file object)."""
     try:
         df = pd.read_excel(xls_path, sheet_name=REGISTRATION_SHEET)
     except Exception as e:

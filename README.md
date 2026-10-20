@@ -213,7 +213,12 @@ ELI 2025 / 2024 ISP by hand, from what they already held, not re-parsed.)
 The Registration and Exemption List is downloaded on every run. A download only
 replaces the cached copy if it is a real workbook with the `PU and Scheduled Loads`
 sheet; a failed fetch or a Cloudflare challenge page keeps the last good copy and
-logs `REGISTRATION LIST REFRESH FAILED` with that copy's age. The newest MMSDM
+logs `REGISTRATION LIST REFRESH FAILED` with that copy's age. A download that is an
+older edition than the cached copy (by the workbook's last-saved stamp,
+`docProps/core.xml` `dcterms:modified`) is refused with a warning and the cached copy
+kept, because AEMO has served older and newer editions on different days; when either
+copy has no stamp, a download that drops units the cached list has is refused instead.
+The edition in use is recorded as `registration_list.edition`. The newest MMSDM
 DUDETAILSUMMARY on nemweb is then checked: every GENERATOR DUID whose registration
 took effect in the last 24 months but is absent from the list is logged as a warning
 (DUDETAILSUMMARY has no fuel type, so such units are reported, never added).
