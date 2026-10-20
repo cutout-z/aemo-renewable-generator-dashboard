@@ -36,7 +36,10 @@ The lane registry, cadence windows and report paths live in
 `deploy/run-update.sh` runs the full test suite and commits/pushes only when
 `outputs/` changed, and the script self-heals a rewritten `main`: if
 `git pull --ff-only` is impossible it resets onto the fetched remote instead
-of exiting 128. The ELI chart-data workbook is downloaded once per edition and
+of exiting 128. Each run then restores `outputs/` and `data/*.feather` to `HEAD`
+and removes stray files there, so a failed or manual run's leftovers are neither
+read nor published, and "changed" means changed versus the committed
+`outputs/summary.csv`. The ELI chart-data workbook is downloaded once per edition and
 then read from the cache (if parsing or the first download fails, the last
 `eli_curtailment.feather` is reused); the REZ forecasts and membership are not
 fetched by the lane at all, but come from the committed `rez_*.feather` files

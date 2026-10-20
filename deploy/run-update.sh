@@ -25,8 +25,15 @@ if ! git pull --ff-only origin main; then
   echo "origin/main is not fast-forwardable (rewritten?) — resetting onto it."
   git reset --hard origin/main
 fi
+# Start from the COMMITTED outputs and feather caches. A failed or manual run may have left them
+# edited or left stray files; the pipeline would read an edited cache as its fallback, the check
+# below would compare against an edited summary, and `git add` would publish the strays.
+# Gitignored upstream snapshots in data/ (xls, xlsx, zip, json) are left alone.
+git checkout HEAD -- outputs/ 'data/*.feather' 2>/dev/null || true
+git clean -fdq -- outputs/ 'data/*.feather'
+# Baseline = the COMMITTED summary, not the working tree.
 before_summary="$(mktemp)"
-cp outputs/summary.csv "${before_summary}" 2>/dev/null || true
+git show HEAD:outputs/summary.csv > "${before_summary}" 2>/dev/null || : > "${before_summary}"
 
 "${PYTHON}" -m src.main ${PIPELINE_ARGS}
 
