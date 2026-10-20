@@ -199,6 +199,7 @@ def test_older_edition_does_not_replace_the_cached_list(tmp_path, monkeypatch, c
     assert rec["fetched_at"] == "2026-10-14T01:00:00+00:00"    # the cache was not refreshed
     assert rec["edition"] == "2026-10-14T03:00:00+00:00"
     assert "older" in rec["refused_download"]
+    assert rec["confirmed_current_at"]                          # the freshness gate counts this check
 
 
 def test_newer_edition_replaces_the_cache_even_when_it_drops_a_unit(tmp_path, monkeypatch):

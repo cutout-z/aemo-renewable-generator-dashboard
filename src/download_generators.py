@@ -145,7 +145,11 @@ def refresh_registration_list(cache_path: Path) -> Path:
 
     record = {"url": REGISTRATION_URL, "file": REGISTRATION_FILE,
               "fetched_at": last_good, "refreshed": False, "error": None,
-              "checked_at": source_status.now_iso()}
+              "checked_at": source_status.now_iso(),
+              # Last time AEMO served a list that was NOT newer than the cached copy:
+              # the cached copy was then confirmed current, so the freshness gate
+              # counts it (a refused older edition must not stall the lane at 30 days).
+              "confirmed_current_at": previous.get("confirmed_current_at")}
     try:
         logger.info("Downloading NEM Registration List from AEMO...")
         content = _fetch_bytes(REGISTRATION_URL)
@@ -153,7 +157,8 @@ def refresh_registration_list(cache_path: Path) -> Path:
         cached = reg_path.read_bytes() if reg_path.exists() else None
         refusal = _older_than_cache(content, cached) if cached is not None else None
         if refusal:
-            record.update(edition=workbook_edition(cached), refused_download=refusal)
+            record.update(edition=workbook_edition(cached), refused_download=refusal,
+                          confirmed_current_at=source_status.now_iso())
             logger.warning(f"Registration List download refused, keeping the cached copy: {refusal}")
             source_status.update(cache_path, "registration_list", record)
             return reg_path

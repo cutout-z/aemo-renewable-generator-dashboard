@@ -119,3 +119,22 @@ def test_many_unlisted_new_generators_fail(tmp_path):
 def test_missing_status_file_fails(tmp_path):
     errs = _run(tmp_path, _summary(), None)
     assert any("source_status.json missing" in e for e in errs)
+
+
+def test_refused_older_edition_confirms_the_cache_current(tmp_path):
+    # AEMO keeps serving an older edition for weeks: the cached list is still the
+    # newest known, so the lane must keep publishing past MAX_REGISTRATION_AGE_DAYS.
+    status = _status(reg_age_days=45)
+    status["registration_list"].update(
+        refreshed=False, refused_download="download edition is older than the cached edition",
+        confirmed_current_at=(datetime.now(timezone.utc) - timedelta(days=1)).isoformat())
+    errs = _run(tmp_path, _summary(), status)
+    assert not any("Registration List is" in e for e in errs)
+
+
+def test_old_confirmation_still_fails(tmp_path):
+    status = _status(reg_age_days=200)
+    status["registration_list"]["confirmed_current_at"] = (
+        datetime.now(timezone.utc) - timedelta(days=60)).isoformat()
+    errs = _run(tmp_path, _summary(), status)
+    assert any("Registration List is 60 days old" in e for e in errs)
