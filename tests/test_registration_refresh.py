@@ -1,6 +1,8 @@
 """The Registration List is refreshed every run and cross-checked against DUDETAILSUMMARY."""
 
+import io
 import logging
+import zipfile
 from datetime import date
 
 import pandas as pd
@@ -134,3 +136,113 @@ def test_fetch_generators_warns_about_units_the_list_lacks(tmp_path, monkeypatch
     rec = source_status.load(tmp_path)["dudetailsummary"]
     assert rec["month"] == "2026-08"
     assert [m["DUID"] for m in rec["missing_from_registration"]] == ["WANDSF2"]
+
+
+# ── Editions: never replace the cached list with an older one ────────────
+
+_CORE = ('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+         '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/'
+         'core-properties" xmlns:dcterms="http://purl.org/dc/terms/" '
+         'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
+         '<dcterms:modified xsi:type="dcterms:W3CDTF">{}</dcterms:modified></cp:coreProperties>')
+
+
+def _edition(content: bytes, modified: str | None) -> bytes:
+    """`content` with its last-saved stamp set to `modified` (AEMO's form), or removed (None)."""
+    src, buf = zipfile.ZipFile(io.BytesIO(content)), io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as out:
+        for item in src.infolist():
+            if item.filename == "docProps/core.xml":
+                if modified is not None:
+                    out.writestr(item, _CORE.format(modified))
+            else:
+                out.writestr(item, src.read(item.filename))
+    return buf.getvalue()
+
+
+WITH_UWF1 = DEFAULT_REG_ROWS + [reg_row("UWF1", "Uungula Wind Farm", "NSW1", "Wind", "Wind - Onshore", 414)]
+
+
+def _cache_and_download(tmp_path, monkeypatch, cached: bytes, download: bytes):
+    path = tmp_path / dg.REGISTRATION_FILE
+    path.write_bytes(cached)
+    source_status.update(tmp_path, "registration_list",
+                         {"fetched_at": "2026-10-14T01:00:00+00:00"})
+    monkeypatch.setattr(dg, "_fetch_bytes", lambda url: download)
+    _no_dudetail(monkeypatch)
+    return path
+
+
+def test_workbook_edition_reads_the_last_saved_stamp():
+    assert dg.workbook_edition(_edition(registration_xlsx(), "2026-09-29T00:58:42Z")) \
+        == "2026-09-29T00:58:42+00:00"
+    assert dg.workbook_edition(_edition(registration_xlsx(), None)) is None
+    assert dg.workbook_edition(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1 legacy xls") is None
+    assert dg.workbook_edition(CHALLENGE_PAGE) is None
+
+
+def test_older_edition_does_not_replace_the_cached_list(tmp_path, monkeypatch, caplog):
+    # The UWF1 flap: the cached 10-14 edition lists UWF1; AEMO then serves the 09-29 one without it.
+    newer = _edition(registration_xlsx(WITH_UWF1), "2026-10-14T03:00:00Z")
+    older = _edition(registration_xlsx(), "2026-09-29T00:58:42Z")
+    path = _cache_and_download(tmp_path, monkeypatch, cached=newer, download=older)
+
+    with caplog.at_level(logging.WARNING):
+        gens = dg.fetch_generators(str(tmp_path))
+
+    assert path.read_bytes() == newer
+    assert "UWF1" in set(gens["DUID"])
+    assert any("download refused" in r.message and "older than the cached edition" in r.message
+               for r in caplog.records if r.levelno == logging.WARNING)
+    rec = source_status.load(tmp_path)["registration_list"]
+    assert rec["refreshed"] is False and rec["error"] is None
+    assert rec["fetched_at"] == "2026-10-14T01:00:00+00:00"    # the cache was not refreshed
+    assert rec["edition"] == "2026-10-14T03:00:00+00:00"
+    assert "older" in rec["refused_download"]
+    assert rec["confirmed_current_at"]                          # the freshness gate counts this check
+
+
+def test_newer_edition_replaces_the_cache_even_when_it_drops_a_unit(tmp_path, monkeypatch):
+    older = _edition(registration_xlsx(WITH_UWF1), "2026-09-29T00:58:42Z")
+    newer = _edition(registration_xlsx(), "2026-10-14T03:00:00Z")
+    path = _cache_and_download(tmp_path, monkeypatch, cached=older, download=newer)
+
+    gens = dg.fetch_generators(str(tmp_path))
+
+    assert path.read_bytes() == newer
+    assert "UWF1" not in set(gens["DUID"])
+    rec = source_status.load(tmp_path)["registration_list"]
+    assert rec["refreshed"] is True and rec["edition"] == "2026-10-14T03:00:00+00:00"
+    assert "refused_download" not in rec
+
+
+def test_same_edition_is_accepted(tmp_path, monkeypatch):
+    same = _edition(registration_xlsx(), "2026-10-14T03:00:00Z")
+    _cache_and_download(tmp_path, monkeypatch, cached=same, download=same)
+    dg.fetch_generators(str(tmp_path))
+    assert source_status.load(tmp_path)["registration_list"]["refreshed"] is True
+
+
+def test_without_an_edition_a_download_that_drops_units_is_refused(tmp_path, monkeypatch, caplog):
+    cached = _edition(registration_xlsx(WITH_UWF1), None)
+    download = _edition(registration_xlsx(), "2026-10-14T03:00:00Z")
+    path = _cache_and_download(tmp_path, monkeypatch, cached=cached, download=download)
+
+    with caplog.at_level(logging.WARNING):
+        gens = dg.fetch_generators(str(tmp_path))
+
+    assert path.read_bytes() == cached and "UWF1" in set(gens["DUID"])
+    assert any("drops 1 cached unit(s): UWF1" in r.message for r in caplog.records)
+    assert source_status.load(tmp_path)["registration_list"]["refreshed"] is False
+
+
+def test_without_an_edition_a_download_that_only_adds_units_is_accepted(tmp_path, monkeypatch):
+    cached = _edition(registration_xlsx(), None)
+    download = _edition(registration_xlsx(WITH_UWF1), None)
+    path = _cache_and_download(tmp_path, monkeypatch, cached=cached, download=download)
+
+    gens = dg.fetch_generators(str(tmp_path))
+
+    assert path.read_bytes() == download and "UWF1" in set(gens["DUID"])
+    rec = source_status.load(tmp_path)["registration_list"]
+    assert rec["refreshed"] is True and rec["edition"] is None

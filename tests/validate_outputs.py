@@ -233,6 +233,13 @@ def validate_sources(cache_dir: Path, df=None):
     if age is not None:
         print(f"Registration List: last good fetch {age:.1f} days ago"
               + (f" (this run failed: {reg.get('error')})" if reg.get("error") else ""))
+        # A download refused as an OLDER edition still confirms the cached copy is
+        # the newest AEMO serves: age the list from that confirmation.
+        confirmed = _age_days(reg.get("confirmed_current_at"))
+        if confirmed is not None and confirmed < age:
+            print(f"Registration List: cached copy confirmed current {confirmed:.1f} days ago"
+                  + (f" (refused: {reg.get('refused_download')})" if reg.get("refused_download") else ""))
+            age = confirmed
         check(age <= MAX_REGISTRATION_AGE_DAYS,
               f"Registration List is {age:.0f} days old (> {MAX_REGISTRATION_AGE_DAYS}); "
               "refreshes keep failing, new units are missing")
