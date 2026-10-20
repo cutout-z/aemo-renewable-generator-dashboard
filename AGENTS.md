@@ -252,7 +252,7 @@ page change in a real browser (rows render, heat cells filled, no JS errors), no
 - `aemo-nas-bot` commits to `main` whenever `summary.csv` changes; lane commits touch only `outputs/**`
   and `data/*.feather` (`deploy/run-update.sh`), so a branch that holds neither merges past them cleanly.
   The identity also authored docs/refactor commits on 2026-09-19 (`88b1c5b`, `cfd1680`).
-- Hermes triggers and inspects the lane (skill `aemo-audit`; unverified: not in this repo).
+- Any agent inspects or triggers the lane over the bridge (`nas-lane-ops` skill; the lane row is `agent-contracts/ARCHITECTURE.md` §8.5).
   `deploy/run-update.sh` and the Actions workflow both push to `main`: run them only with the owner's yes.
 - `origin/design/2026-10` carries an older, design-pass-only `AGENTS.md`/`CLAUDE.md`; on `main` this file is the contract.
 
