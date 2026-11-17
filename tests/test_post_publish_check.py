@@ -5,18 +5,24 @@ path, after any push, so the run's other updates are still published.
 """
 
 import json
-import os
 import re
 import shutil
 import subprocess
 from pathlib import Path
 
 import pytest
+from _run_update_harness import SCRIPT, make_lane, run_script
 
 from src import post_publish_check as ppc
 
 ROOT = Path(__file__).resolve().parent.parent
-SCRIPT = ROOT / "deploy" / "run-update.sh"
+# Stands in for the pipeline and the check: appends a line when $CHANGE is set, records that the check ran.
+STUB = """#!/usr/bin/env bash
+case "$2" in
+  src.main) [[ -n "${CHANGE:-}" ]] && echo B >> outputs/summary.csv; exit 0 ;;
+  src.post_publish_check) echo ran > "${MARKER}"; exit "${CHECK_RC}" ;;
+esac
+"""
 NEWER = {"edition": 2025, "newer_edition_available": True,
          "probed_url": "https://x/2026/2026-eli-report-chart-data.xlsx"}
 
@@ -62,41 +68,18 @@ def test_every_normal_exit_of_the_wrapper_runs_the_check():
     assert script.rstrip().endswith("finish")  # and so does the end, after the push
 
 
-def _git(cwd, *args):
-    subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True)
-
-
 @pytest.fixture
 def lane(tmp_path):
     """A clone with an origin, plus a stub PYTHON standing in for the pipeline and the check."""
     if not shutil.which("git"):
         pytest.skip("git not available")
-    origin, app = tmp_path / "origin.git", tmp_path / "app"
-    _git(tmp_path, "init", "-q", "--bare", "-b", "main", str(origin))
-    _git(tmp_path, "clone", "-q", str(origin), str(app))
-    (app / "outputs").mkdir()
-    (app / "data").mkdir()
-    (app / "outputs" / "summary.csv").write_text("DUID\nA\n")
-    (app / "data" / "x.feather").write_bytes(b"x")
-    _git(app, "-c", "user.name=t", "-c", "user.email=t@t", "checkout", "-q", "-b", "main")
-    _git(app, "add", ".")
-    _git(app, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "init")
-    _git(app, "push", "-q", "origin", "main")
-    stub = tmp_path / "python"
-    stub.write_text('#!/usr/bin/env bash\n'
-                    'case "$2" in\n'
-                    '  src.main) [[ -n "${CHANGE:-}" ]] && echo B >> outputs/summary.csv; exit 0 ;;\n'
-                    '  src.post_publish_check) echo ran > "${MARKER}"; exit "${CHECK_RC}" ;;\n'
-                    'esac\n')
-    stub.chmod(0o755)
-    return {"origin": origin, "app": app, "stub": stub, "marker": tmp_path / "marker"}
+    made = make_lane(tmp_path, STUB)
+    return made | {"marker": tmp_path / "marker"}
 
 
 def _run_lane(lane, check_rc, change):
-    env = os.environ | {"APP_DIR": str(lane["app"]), "PYTHON": str(lane["stub"]), "RUN_TESTS": "0",
-                        "MARKER": str(lane["marker"]), "CHECK_RC": str(check_rc),
-                        "CHANGE": "1" if change else ""}
-    return subprocess.run(["bash", str(SCRIPT)], env=env, capture_output=True, text=True)
+    return run_script(lane, MARKER=str(lane["marker"]), CHECK_RC=str(check_rc),
+                      CHANGE="1" if change else "")
 
 
 @pytest.mark.parametrize("check_rc", [0, 1])
