@@ -5,11 +5,21 @@ copy, SheetJS to a no-op stub, nav.js to an empty script, and aborts (and record
 """
 
 import csv
+import datetime as dt
+import json
 import re
+from zoneinfo import ZoneInfo
 
 import pytest
 
-pytest.importorskip("playwright")
+try:
+    import playwright  # noqa: F401
+except ImportError as exc:  # a collection ERROR, which the merge gate counts; never a silent skip
+    raise RuntimeError(
+        "these smoke tests need Playwright (pinned in requirements-dev.txt); run the suite with "
+        "/opt/anaconda3/bin/python3 (playwright 1.58.0 + chromium) or: pip install -r requirements-dev.txt "
+        "&& playwright install chromium"
+    ) from exc
 
 from page_harness import ROOT, assert_clean, loaded_page  # noqa: E402
 
@@ -44,7 +54,14 @@ def test_page_renders_the_committed_data_with_no_errors():
         assert page.locator("#noMatch").is_hidden()
         assert page.locator("#loading").is_hidden()
         assert f"{total} generators tracked" in page.locator("#footer").inner_text()
-        assert "Sources at the last publish" in page.locator("#sourceStatus").inner_text()
+        status = page.locator("#sourceStatus").inner_text()
+        assert "Sources at the last publish" in status
+        # filled from the committed source_status.json, not just the fixed prefix: a source name and a date from it
+        rec = json.loads((ROOT / "outputs" / "source_status.json").read_text())["registration_list"]
+        when = dt.datetime.fromisoformat(rec["fetched_at"]).astimezone(ZoneInfo("Australia/Brisbane"))
+        assert "Registration List" in status, status
+        # en-AU abbreviates the month ("Nov", or "Sept" in newer ICU), so match its first three letters
+        assert re.search(rf"\b{when.day} {when.strftime('%b')}\w* {when.year}\b", status), (when, status)
 
 
 def test_region_filter_and_selection_export_use_the_stubbed_sheetjs():

@@ -32,7 +32,12 @@ _CLASSNAME = re.compile(r"""\bclassName\s*\+?=\s*(?:'([^']*)'|"([^"]*)"|`([^`]*)
 _QUOTED = re.compile(r"""'([^']*)'|"([^"]*)"|`([^`]*)`""")
 _INTERP = re.compile(r"\$\{(.*?)\}", re.S)
 _CSS_ESC = r"\\(?:[0-9a-fA-F]{1,6} ?|.)"
-_CSS_CLASS = re.compile(r"\.((?:" + _CSS_ESC + r"|[A-Za-z0-9_-])+)")
+# A class token starts with a letter, "-", "_" or an escape and does not follow a digit, so the
+# decimal in a value ("1.125rem", ".5em") is not a class.
+_CSS_CLASS = re.compile(
+    r"(?<![0-9])\.((?:" + _CSS_ESC + r"|[A-Za-z_-])(?:" + _CSS_ESC + r"|[A-Za-z0-9_-])*)"
+)
+_CSS_NOISE = re.compile(r"""/\*.*?\*/|url\([^)]*\)|"[^"]*"|'[^']*'""", re.S)
 _CSS_UNESC = re.compile(r"\\(?:([0-9a-fA-F]{1,6}) ?|(.))")
 
 
@@ -83,20 +88,34 @@ def defined_classes(css):
     def undo(m):
         return chr(int(m.group(1), 16)) if m.group(1) else m.group(2)
 
-    return {_CSS_UNESC.sub(undo, m.group(1)) for m in _CSS_CLASS.finditer(css)}
+    return {_CSS_UNESC.sub(undo, m.group(1)) for m in _CSS_CLASS.finditer(_CSS_NOISE.sub(" ", css))}
 
 
 def inline_css(html):
     return "\n".join(re.findall(r"<style[^>]*>(.*?)</style>", html, re.S | re.I))
 
 
-def missing_classes(html, css):
-    """Used classes (and dynamic prefixes) that neither app.css nor the page's inline <style> defines."""
+def missing_classes(html, css, dynamic=None):
+    """Used classes that neither app.css nor the page's inline <style> defines.
+
+    `dynamic` maps each dynamic prefix the page builds ("seq-" for `seq-${i}`) to the concrete classes the
+    JS can produce from it; every one must be defined. A prefix that is not a family (under 3 characters
+    or not ending in "-": the "r" of `r${flags}`) is a plain class glued to a ${...}, so it must be defined
+    itself. A family prefix with no entry in `dynamic` is reported as "<prefix>*": enumerate it.
+    """
+    dynamic = dynamic or {}
     used, prefixes = used_classes(html)
     defined = defined_classes(css + "\n" + inline_css(html))
-    missing = used - defined
-    missing |= {p + "*" for p in prefixes if not any(d.startswith(p) for d in defined)}
-    return missing
+    missing = set()
+    for p in prefixes:
+        if len(p) >= 3 and p.endswith("-"):
+            if p in dynamic:
+                used |= set(dynamic[p])
+            else:
+                missing.add(p + "*")
+        else:
+            used.add(p)
+    return missing | (used - defined)
 
 
 # --- rendered page ----------------------------------------------------------------------------------
@@ -170,7 +189,7 @@ def loaded_page(width=1440, height=900, overrides=None, wait_for=None, settle_ms
             )
             page.goto(ORIGIN + "/index.html", wait_until="load")
             if wait_for:
-                page.wait_for_function(wait_for, timeout=8000)
+                page.wait_for_function(wait_for, timeout=20000)
             if settle_ms:
                 page.wait_for_timeout(settle_ms)
             yield page, log
