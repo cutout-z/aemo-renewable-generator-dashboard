@@ -24,3 +24,8 @@ def no_network(monkeypatch):
     monkeypatch.setattr(requests, "get", _blocked)
     monkeypatch.setattr(requests, "head", _blocked)
     monkeypatch.setattr(requests.Session, "request", _blocked)
+
+try:  # dev-only: load the fixed Hypothesis profile for every run when Hypothesis is installed
+    import hypothesis_gate  # noqa: F401
+except ImportError:
+    pass
