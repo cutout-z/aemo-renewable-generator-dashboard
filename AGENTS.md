@@ -250,7 +250,7 @@ python3 -m src.main --cache-dir "$T/data" --output-dir "$T/out"
 python3 tests/validate_outputs.py --outputs-dir "$T/out" --cache-dir "$T/data"   # flags: tests/validate_outputs.py
 ```
 
-**Baseline (2026-10-08, `ebc6cd6`, fresh worktree): `pytest` 182 passed, 0 failed (23 test files).**
+**Baseline (2026-11-17, `70bb45b`, fresh worktree): `pytest` 203 passed, 0 failed, 0 skipped (27 test files).**
 `validate_outputs.py` exits 1 on a fresh checkout: `data/source_status.json missing`. That file is
 gitignored and written only by a pipeline run, so this is environmental, not a regression.
 
@@ -295,7 +295,7 @@ page change in a real browser (rows render, heat cells filled, no JS errors), no
 
 ## Handback checklist
 
-- [ ] `pytest -q tests` run; exact counts stated, every failure named and classed (yours / environmental).
+- [ ] `pytest -q tests` run (baseline 203 passed at 70bb45b, 2026-11-17); exact counts stated, every failure named and classed (yours / environmental).
 - [ ] `git diff --stat origin/main` shows no `outputs/**` or `data/**` unless the owner approved a data change.
 - [ ] No data-contract change (columns, enumerations, file names) without the owner's yes, stated in the report.
 - [ ] Page changes verified in a real browser on 9370 (or the gates on 9381), dark and light, desktop and phone.
