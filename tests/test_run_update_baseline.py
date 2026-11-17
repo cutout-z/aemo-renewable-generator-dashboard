@@ -6,16 +6,11 @@ drop the same new data as "no change") nor read or publish the leftovers. No net
 origin and a stub PYTHON stand in for GitHub and the pipeline.
 """
 
-import os
 import shutil
-import subprocess
-from pathlib import Path
 
 import pytest
+from _run_update_harness import COMMITTED, git, make_lane, run_script
 
-SCRIPT = Path(__file__).resolve().parent.parent / "deploy" / "run-update.sh"
-
-COMMITTED = "DUID\nA\n"
 NEW = "DUID\nA\nUWF1\n"
 
 # Stands in for the pipeline: records the summary and feather it would read, writes $NEW_SUMMARY.
@@ -33,39 +28,17 @@ esac
 pytestmark = pytest.mark.skipif(shutil.which("git") is None, reason="needs git")
 
 
-def _git(cwd, *args):
-    return subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", *args], cwd=cwd,
-                          check=True, capture_output=True, text=True).stdout
-
-
 @pytest.fixture
 def lane(tmp_path):
-    origin, app, log = tmp_path / "origin.git", tmp_path / "app", tmp_path / "log"
-    _git(tmp_path, "init", "-q", "--bare", "-b", "main", str(origin))
-    _git(tmp_path, "clone", "-q", str(origin), str(app))
-    _git(app, "checkout", "-q", "-b", "main")
-    (app / "outputs").mkdir()
-    (app / "data").mkdir()
-    (app / "outputs" / "summary.csv").write_text(COMMITTED)
-    (app / "data" / "x.feather").write_text("committed")
-    _git(app, "add", ".")
-    _git(app, "commit", "-qm", "init")
-    _git(app, "push", "-q", "origin", "main")
-    # A gitignored upstream snapshot: the restore must leave it alone.
-    (app / ".git" / "info" / "exclude").write_text("data/*.xls\n")
-    (app / "data" / "list.xls").write_text("snapshot")
+    log = tmp_path / "log"
     log.mkdir()
-    stub = tmp_path / "python"
-    stub.write_text(STUB)
-    stub.chmod(0o755)
+    made = make_lane(tmp_path, STUB)
 
     def run(new_summary):
-        env = os.environ | {"APP_DIR": str(app), "PYTHON": str(stub), "RUN_TESTS": "0",
-                            "PUSH_CHANGES": "0", "STUB_LOG": str(log), "NEW_SUMMARY": new_summary,
-                            "GIT_AUTHOR_NAME": "bot", "GIT_AUTHOR_EMAIL": "bot@example.invalid"}
-        return subprocess.run(["bash", str(SCRIPT)], env=env, capture_output=True, text=True)
+        return run_script(made, PUSH_CHANGES="0", STUB_LOG=str(log), NEW_SUMMARY=new_summary,
+                          GIT_AUTHOR_NAME="bot", GIT_AUTHOR_EMAIL="bot@example.invalid")
 
-    return {"app": app, "log": log, "run": run}
+    return {"app": made["app"], "log": log, "run": run}
 
 
 def _leave_failed_run_behind(app):
@@ -81,7 +54,7 @@ def test_leftover_summary_is_not_the_baseline(lane):
     run = lane["run"](NEW)  # the next run produces the same new data
     assert run.returncode == 0, run.stderr
     assert "No canonical summary.csv changes" not in run.stdout
-    assert _git(app, "show", "HEAD:outputs/summary.csv") == NEW
+    assert git(app, "show", "HEAD:outputs/summary.csv") == NEW
 
 
 def test_run_starts_from_committed_outputs_not_leftovers(lane):
@@ -93,7 +66,7 @@ def test_run_starts_from_committed_outputs_not_leftovers(lane):
     assert (log / "input").read_text() == COMMITTED
     assert (log / "feather").read_text() == "committed"
     # ... only its own outputs are published, and the strays are gone ...
-    published = _git(app, "show", "--name-only", "--format=", "HEAD").split()
+    published = git(app, "show", "--name-only", "--format=", "HEAD").split()
     assert published == ["outputs/summary.csv"]
     assert not (app / "outputs" / "stray.xlsx").exists()
     assert not (app / "data" / "stray.feather").exists()
@@ -105,4 +78,4 @@ def test_unchanged_data_still_publishes_nothing(lane):
     run = lane["run"](COMMITTED)
     assert run.returncode == 0, run.stderr
     assert "No canonical summary.csv changes" in run.stdout
-    assert _git(lane["app"], "rev-list", "--count", "HEAD").strip() == "1"
+    assert git(lane["app"], "rev-list", "--count", "HEAD").strip() == "1"
