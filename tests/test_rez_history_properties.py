@@ -46,24 +46,39 @@ def _figures(df):
     return sorted(df[[c for c in rez_history.COLUMNS if c != "retrieved_at"]].itertuples(index=False, name=None))
 
 
-@given(seq=st.lists(edition_rows(), min_size=1, max_size=8))
-def test_append_never_rewrites_earlier_rows(seq):
+@st.composite
+def append_calls(draw):
+    """One append call: a single edition's rows, or (sometimes) two distinct editions concatenated."""
+    first = draw(edition_rows())
+    if draw(st.booleans()):
+        second = draw(edition_rows())
+        if second[0] != first[0]:
+            return [first, second]
+    return [first]
+
+
+@given(calls=st.lists(append_calls(), min_size=1, max_size=8))
+def test_append_never_rewrites_earlier_rows(calls):
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "history.csv"
         held = {}  # edition key -> figures, the model of what is on file
-        for key, rows in seq:
+        for call in calls:
             before = path.read_bytes() if path.exists() else b""
-            figures = _figures(rows)
-            if key not in held:
-                assert rez_history.append(path, rows) == len(rows)
-                held[key] = figures
-            elif held[key] == figures:
-                assert rez_history.append(path, rows) == 0           # same edition again: skipped
-            else:
+            rows = pd.concat([r for _, r in call], ignore_index=True)
+            conflict = any(k in held and held[k] != _figures(r) for k, r in call)
+            added = sum(len(r) for k, r in call if k not in held)
+            if conflict:
                 with pytest.raises(rez_history.HistoryConflict, match="append-only"):
-                    rez_history.append(path, rows)                    # same edition, other figures
-            after = path.read_bytes()
+                    rez_history.append(path, rows)
+                added = 0
+            else:
+                assert rez_history.append(path, rows) == added
+                for k, r in call:
+                    held.setdefault(k, _figures(r))
+            after = path.read_bytes() if path.exists() else b""
             assert after.startswith(before)                          # earlier bytes never rewritten
+            if conflict:
+                assert after == before                               # a refused call writes nothing
             if before:
                 assert after.split(b"\n", 1)[0] == before.split(b"\n", 1)[0]  # one header, still first
             assert rez_history.editions(rez_history.load(path)) == set(held)
