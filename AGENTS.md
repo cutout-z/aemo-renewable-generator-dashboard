@@ -250,7 +250,7 @@ python3 -m src.main --cache-dir "$T/data" --output-dir "$T/out"
 python3 tests/validate_outputs.py --outputs-dir "$T/out" --cache-dir "$T/data"   # flags: tests/validate_outputs.py
 ```
 
-**Baseline (2026-10-08, `ebc6cd6`, fresh worktree): `pytest` 182 passed, 0 failed (23 test files).**
+**Baseline (2026-11-17, `93331ae`, fresh worktree): `pytest` 193 passed, 0 failed (24 test files).**
 `validate_outputs.py` exits 1 on a fresh checkout: `data/source_status.json missing`. That file is
 gitignored and written only by a pipeline run, so this is environmental, not a regression.
 
