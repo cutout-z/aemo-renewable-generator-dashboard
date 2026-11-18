@@ -6,7 +6,7 @@ builds it. The family conventions and shared AEMO facts below are generated from
 repo; where this file's repo-specific rules are stricter, they win.
 
 <!-- BEGIN agent-contracts:family -->
-<!-- source: family/AGENTS.family.md sha256:03ed1aa793eb — edit in cutout-z/agent-contracts, not here -->
+<!-- source: family/AGENTS.family.md sha256:70dec07a9b96 — edit in cutout-z/agent-contracts, not here -->
 ## Family conventions (every repo, every agent)
 
 *Generated from `agent-contracts/family/AGENTS.family.md`. Edit it there, never here: a drift check
@@ -138,6 +138,7 @@ handback notes get copied and published.
   branch: <branch>
   pr: <owner/repo#number, one per PR; or none>
   status: <one line>
+  closes: []                      # dashboard To-Do ids (c + 16 hex) this work finishes
   noticed:                        # everything seen and not finished; [] when nothing was
     - "<item> -> done: <evidence>"
     - "<item> -> tracked: <where it will be picked up>"
@@ -148,6 +149,11 @@ handback notes get copied and published.
     - "to-do [mac-local] <item>; blocked on: <what>"   # the words `blocked on:` literally; [mac-local] = the owner's hands or login
   ---
   ```
+
+  **A finished To-Do closes with the work.** When your work finishes a To-Do on the owner's dashboard,
+  name its id (`GET /api/capture` lists the open ones): a line `Closes To-Do: <id>` in the PR body, and
+  the id in `closes:`. The landing script closes each one when the PR merges; with no PR to land, close
+  it yourself (`POST /api/capture/<id>/close` with an `X-Requested-With` header). A To-Do the work only mentions stays open.
 
   Then cover what changed, the evidence, what's left, and any decision the brief didn't cover. A
   `noticed:` item without one of the four dispositions, or an `outstanding:` item that names no
@@ -214,7 +220,7 @@ Location: `agent-contracts/facts/AEMO-FACTS.md` (git, `cutout-z/agent-contracts`
 | Lane schedule | README says the lane fires "daily" (README.md:280, no time given; `deploy/README.md` gives no cadence). The time, `15 9 * * *` (09:15 AWST), is from the owner's host crontab, checked 2026-10-08 (unverified: not in this repo). The lane registry is not in this repo |
 | Fallback runner | `.github/workflows/update.yml`, manual `workflow_dispatch` only; `full_refresh` defaults `true`; commits as `github-actions[bot]` |
 | Upstream | `aemo-generator-credit-dashboard` (`curtailment_by_fy.csv`) and `aemo-mlf-tracker` (`outputs/summary.csv`), both read over Pages (`src/config.py`); AEMO Registration List, MMSDM DUDETAILSUMMARY, Generation Information, ELI chart data + appendices, 2026 ISP A3 |
-| Lane goes red | when `data/source_status.json` records a confirmed newer ELI edition; the run's other updates still publish (decision 6(b), `src/post_publish_check.py`). Also when a lane data check fails (tests red, pytest missing, the ISP A3 reference changed): warn-only, the run still publishes its changes, if any. `LANE_TESTS_BLOCK_PUSH=1` holds the run back instead (red, nothing published, `outputs/` + `data/*.feather` back at `HEAD`); with it, a venv without pytest holds back every run until pytest is reinstalled (Zalen, 2026-11-18) |
+| Lane goes red | when `data/source_status.json` records a confirmed newer ELI edition; the run's other updates still publish (decision 6(b), `src/post_publish_check.py`). Also when a lane data check fails (tests red, pytest missing, the ISP A3 reference changed): warn-only, the run still publishes its changes, if any. `LANE_TESTS_BLOCK_PUSH=1` holds the run back instead (red, nothing published, `outputs/` + `data/*.feather` back at `HEAD`); with it, a venv without pytest holds back every run until pytest is reinstalled (owner, 2026-11-18) |
 | Design tooling | `scripts/build-css.sh` (Tailwind v3.4.17 standalone), `scripts/verify-design.py`, `scripts/verify-interactions.py`, `design/`, the design `AGENTS.md`/`BRIEF.md` live **only on `origin/design/2026-10`** (21 commits not on `main`); `main` got `index.html` + `assets/css/**` + `tailwind.config.js` by path (commits `48870ec`, `0bdf704`, `2e4b9b2`, `e25f6e2`) |
 
 ## Data contracts (the owner's yes before any change)
