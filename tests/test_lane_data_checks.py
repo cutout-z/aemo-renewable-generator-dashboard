@@ -74,7 +74,8 @@ def test_suite_runs_before_the_commit_and_a_pass_publishes(lane):
     run = lane["run"]()
     assert run.returncode == 0, run.stdout + run.stderr
     assert lane["log"].read_text().split() == ["-q", "-p", "no:cacheprovider", "--basetemp",
-                                              str(lane["app"] / ".lane-pytest-tmp"), "tests"]
+                                              str(lane["app"] / ".lane-pytest-tmp"),
+                                              "--ignore=tests/test_page_smoke.py", "tests"]
     assert lane["published"]() == "DUID\nA\nB\n"
     assert not (lane["app"] / ".lane-pytest-tmp").exists()
 
@@ -101,10 +102,12 @@ def test_block_push_switch_publishes_a_passing_run(lane):
     assert lane["published"]() == "DUID\nA\nB\n"
 
 
-def test_venv_without_pytest_warns_and_publishes_as_before(lane):
-    run = lane["run"](STUB_IMPORT_RC="1", LANE_TESTS_BLOCK_PUSH="1")
-    assert run.returncode == 0, run.stdout + run.stderr
+def test_venv_without_pytest_is_red_but_still_publishes_by_default(lane):
+    """A venv that lost pytest cannot vouch for the data: red, not a quiet green (adversary M2, 2026-11-18)."""
+    run = lane["run"](STUB_IMPORT_RC="1")
+    assert run.returncode == 1, run.stdout + run.stderr
     assert "WARN: pytest is not importable" in run.stdout
+    assert "Lane data checks failed: pytest missing" in run.stdout
     assert not lane["log"].exists()
     assert lane["published"]() == "DUID\nA\nB\n"
 
@@ -114,6 +117,9 @@ def test_a_changed_isp_a3_reference_is_flagged(lane):
     assert run.returncode == 1, run.stdout + run.stderr
     assert f"WARN: {REF} differs from HEAD" in run.stdout
     assert f"Lane data checks failed: {REF} changed" in run.stdout
+    # the run still publishes its other outputs, but never the changed reference
+    assert lane["published"]() == "DUID\nA\nB\n"
+    assert _git(lane["app"], "--git-dir", str(lane["app"].parent / "origin.git"), "show", f"main:{REF}") != "rebuilt"
 
 
 def test_a_changed_isp_a3_reference_is_flagged_even_with_nothing_to_publish(lane):
@@ -133,3 +139,14 @@ def test_a_mode_only_change_to_the_reference_is_not_flagged(lane):
 def test_red_post_publish_check_keeps_its_exit_code(lane):
     run = lane["run"](STUB_PYTEST_RC="1", CHECK_RC="3")
     assert run.returncode == 3, run.stdout + run.stderr
+
+
+def test_the_lane_test_set_collects_in_the_lane_venv():
+    """The lane runs `pytest --ignore=tests/test_page_smoke.py tests` in a venv with requirements.txt, pytest and
+    hypothesis but no Playwright: everything else must collect there, or the step errors on every run."""
+    import sys
+    code = ("import sys; sys.modules['playwright'] = None; import pytest; "
+            "raise SystemExit(pytest.main(['--collect-only', '-q', '-p', 'no:cacheprovider', "
+            "'--ignore=tests/test_page_smoke.py', 'tests']))")
+    r = subprocess.run([sys.executable, "-c", code], cwd=SCRIPT.parent.parent, capture_output=True, text=True)
+    assert r.returncode == 0, r.stdout[-3000:] + r.stderr[-3000:]

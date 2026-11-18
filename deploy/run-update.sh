@@ -57,18 +57,22 @@ if [[ "${RUN_TESTS}" == "1" ]]; then
   # suite also checks the committed reference files against hand-checked values (test_committed_files_agree),
   # which no lane run tested before. It reads the data this run is about to commit, blocks the network
   # (tests/conftest.py) and runs in seconds. A failure ends the lane red; by default (warn-only) the run still
-  # publishes. LANE_TESTS_BLOCK_PUSH=1 holds it back instead. pytest is not in requirements.txt: a venv without
-  # it skips the suite with a WARN and publishes as before. --basetemp keeps pytest's temporary files in the clone.
+  # publishes. LANE_TESTS_BLOCK_PUSH=1 holds it back instead. pytest and hypothesis are dev dependencies, installed
+  # by hand in the NAS lane venv (2026-11-18); a venv without pytest cannot vouch for the data, so that is a failed
+  # check too. tests/test_page_smoke.py is a browser test (it needs Playwright, which the lane venv does not have,
+  # and raises at import without it) and is left to the Mac. --basetemp keeps pytest's temporary files in the clone.
   if "${PYTHON}" -c 'import pytest' >/dev/null 2>&1; then
     tests_rc=0
-    "${PYTHON}" -m pytest -q -p no:cacheprovider --basetemp "${APP_DIR}/.lane-pytest-tmp" tests || tests_rc=$?
+    "${PYTHON}" -m pytest -q -p no:cacheprovider --basetemp "${APP_DIR}/.lane-pytest-tmp" \
+      --ignore=tests/test_page_smoke.py tests || tests_rc=$?
     rm -rf "${APP_DIR}/.lane-pytest-tmp"
     if [[ "${tests_rc}" -ne 0 ]]; then
       echo "WARN: the offline test suite failed on this run's data (pytest exit ${tests_rc}, output above)."
       LANE_CHECKS_FAILED+=("pytest tests (exit ${tests_rc})")
     fi
   else
-    echo "WARN: pytest is not importable by ${PYTHON}; the offline test suite did not run (publishing as before)."
+    echo "WARN: pytest is not importable by ${PYTHON}; the offline test suite did not run."
+    LANE_CHECKS_FAILED+=("pytest missing")
   fi
 fi
 
@@ -78,7 +82,8 @@ ISP_A3_REF="data/isp_rez_curtailment.feather"
 committed_ref="$(git rev-parse -q --verify "HEAD:${ISP_A3_REF}" 2>/dev/null || true)"
 current_ref="$(git hash-object -- "${ISP_A3_REF}" 2>/dev/null || true)"
 if [[ -n "${committed_ref}" && "${current_ref}" != "${committed_ref}" ]]; then
-  echo "WARN: ${ISP_A3_REF} differs from HEAD after the refresh; it is the fixed 2026 ISP A3 reference and a lane run must not change it."
+  echo "WARN: ${ISP_A3_REF} differs from HEAD after the refresh; it is the fixed 2026 ISP A3 reference and a lane run must not change it. Restored from HEAD: not published."
+  git checkout HEAD -- "${ISP_A3_REF}"
   LANE_CHECKS_FAILED+=("${ISP_A3_REF} changed")
 fi
 
