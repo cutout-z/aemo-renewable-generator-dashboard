@@ -210,11 +210,11 @@ Location: `agent-contracts/facts/AEMO-FACTS.md` (git, `cutout-z/agent-contracts`
 | Served by | GitHub Pages, `main` at `/`, no deploy workflow, no build at deploy; live at `cutout-z.github.io/aemo-renewable-generator-dashboard` (`gh api .../pages`, README) |
 | Stack | Python 3 pipeline (`src/`, pandas, pyarrow, openpyxl, requests: `requirements.txt`); page: vanilla JS, PapaParse 5.4.1 + SheetJS 0.18.5 from jsDelivr, compiled Tailwind `assets/css/app.css` (committed) from `assets/css/tailwind.src.css` (`index.html`) |
 | Shared sidebar | `index.html` loads `https://cutout-z.github.io/aemo-dashboards/nav.js` (repo `cutout-z/aemo-dashboards`, added 2026-10-10): the sidebar and phone top bar every AEMO dashboard shares. It changes there, not here, and a change there reaches this page with no PR here. It pads `body` by 232px at 1024px and wider, so check layout changes at that width. Keep the tag plain (not `defer`) at the end of `<head>` |
-| Data lane | NAS runner (QNAP `ai-wif-runner`), `nas-job aemo-renewable-generator-dashboard` → `deploy/run-update.sh --full-refresh`: fetch, `checkout main`, `pull --ff-only` else **`reset --hard origin/main`**, `src.main`, `tests/validate_outputs.py`, commit `outputs/` + `data/*.feather` as `aemo-nas-bot` **only if `summary.csv` changed**, push, then `src.post_publish_check` (deploy/README.md, run-update.sh) |
+| Data lane | NAS runner (QNAP `ai-wif-runner`), `nas-job aemo-renewable-generator-dashboard` → `deploy/run-update.sh --full-refresh`: fetch, `checkout main`, `pull --ff-only` else **`reset --hard origin/main`**, restore and clean `outputs/` + `data/*.feather` at `HEAD`, `src.main`, `tests/validate_outputs.py`, the lane data checks (offline `pytest` minus `tests/test_page_smoke.py` when `RUN_TESTS=1`, the default; always, `data/isp_rez_curtailment.feather` restored from `HEAD` if a run changed it), commit `outputs/` + `data/*.feather` as `aemo-nas-bot` **only if `summary.csv` changed**, push, then `src.post_publish_check` (deploy/README.md, run-update.sh). The lane venv's pytest and hypothesis are hand-installed dev dependencies (2026-11-18; never playwright) |
 | Lane schedule | README says the lane fires "daily" (README.md:280, no time given; `deploy/README.md` gives no cadence). The time, `15 9 * * *` (09:15 AWST), is from the owner's host crontab, checked 2026-10-08 (unverified: not in this repo). The lane registry is not in this repo |
 | Fallback runner | `.github/workflows/update.yml`, manual `workflow_dispatch` only; `full_refresh` defaults `true`; commits as `github-actions[bot]` |
 | Upstream | `aemo-generator-credit-dashboard` (`curtailment_by_fy.csv`) and `aemo-mlf-tracker` (`outputs/summary.csv`), both read over Pages (`src/config.py`); AEMO Registration List, MMSDM DUDETAILSUMMARY, Generation Information, ELI chart data + appendices, 2026 ISP A3 |
-| Lane goes red | when `data/source_status.json` records a confirmed newer ELI edition; the run's other updates still publish (decision 6(b), `src/post_publish_check.py`) |
+| Lane goes red | when `data/source_status.json` records a confirmed newer ELI edition; the run's other updates still publish (decision 6(b), `src/post_publish_check.py`). Also when a lane data check fails (tests red, pytest missing, the ISP A3 reference changed): warn-only, the run still publishes its changes, if any. `LANE_TESTS_BLOCK_PUSH=1` holds the run back instead (red, nothing published, `outputs/` + `data/*.feather` back at `HEAD`); with it, a venv without pytest holds back every run until pytest is reinstalled (Zalen, 2026-11-18) |
 | Design tooling | `scripts/build-css.sh` (Tailwind v3.4.17 standalone), `scripts/verify-design.py`, `scripts/verify-interactions.py`, `design/`, the design `AGENTS.md`/`BRIEF.md` live **only on `origin/design/2026-10`** (21 commits not on `main`); `main` got `index.html` + `assets/css/**` + `tailwind.config.js` by path (commits `48870ec`, `0bdf704`, `2e4b9b2`, `e25f6e2`) |
 
 ## Data contracts (the owner's yes before any change)
@@ -250,7 +250,7 @@ python3 -m src.main --cache-dir "$T/data" --output-dir "$T/out"
 python3 tests/validate_outputs.py --outputs-dir "$T/out" --cache-dir "$T/data"   # flags: tests/validate_outputs.py
 ```
 
-**Baseline (2026-11-17, `70bb45b`, fresh worktree): `pytest` 203 passed, 0 failed, 0 skipped (27 test files).**
+**Baseline (2026-11-18, `1aaf325`, fresh worktree): `pytest` 215 passed, 0 failed, 0 skipped (30 test files).**
 `validate_outputs.py` exits 1 on a fresh checkout: `data/source_status.json missing`. That file is
 gitignored and written only by a pipeline run, so this is environmental, not a regression.
 
@@ -295,7 +295,7 @@ page change in a real browser (rows render, heat cells filled, no JS errors), no
 
 ## Handback checklist
 
-- [ ] `pytest -q tests` run (baseline 203 passed at 70bb45b, 2026-11-17); exact counts stated, every failure named and classed (yours / environmental).
+- [ ] `pytest -q tests` run (baseline 215 passed at 1aaf325, 2026-11-18); exact counts stated, every failure named and classed (yours / environmental).
 - [ ] `git diff --stat origin/main` shows no `outputs/**` or `data/**` unless the owner approved a data change.
 - [ ] No data-contract change (columns, enumerations, file names) without the owner's yes, stated in the report.
 - [ ] Page changes verified in a real browser on 9370 (or the gates on 9381), dark and light, desktop and phone.
