@@ -55,17 +55,22 @@ updates are still published; its message says how to wire the edition in.
 ## Lane data checks
 
 With `RUN_TESTS=1`, after the validator and before `git add`, the lane runs the
-offline test suite (`python -m pytest -q tests`; the network is blocked in
-`tests/conftest.py`), which checks the committed reference files such as
+offline test suite (`python -m pytest -q --ignore=tests/test_page_smoke.py tests`;
+the network is blocked in `tests/conftest.py`; the page smoke test needs Playwright,
+which the lane venv does not have), which checks the committed reference files such as
 `isp_rez_curtailment.feather` against hand-checked values. It also flags the
-run when `data/isp_rez_curtailment.feather` differs in content from `HEAD`:
+run when `data/isp_rez_curtailment.feather` differs in content from `HEAD`, and
+restores it from `HEAD` before `git add`, so a changed copy is never published:
 that file is a fixed-edition reference (2026 ISP A3) built by hand, and a lane
 run must never change it. A failure turns the lane red. By default the run
 still commits and pushes (warn-only); `LANE_TESTS_BLOCK_PUSH=1` holds it back
 instead: nothing is committed or pushed, `outputs/` and `data/*.feather` go back
 to `HEAD`, and the next run starts again, so the held run's data is published
-only when a later run passes. pytest is not in `requirements.txt`; a venv
-without it prints a WARN, skips the suite and publishes as before.
+only when a later run passes. pytest and hypothesis are dev dependencies, not in
+`requirements.txt`; they were installed by hand in the NAS lane venv (2026-11-18).
+A venv without pytest is a failed check (`pytest missing`): under the default it
+still publishes, and with `LANE_TESTS_BLOCK_PUSH=1` it holds every run back until
+pytest is reinstalled.
 
 ## Env
 
